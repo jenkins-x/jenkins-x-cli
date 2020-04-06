@@ -1,0 +1,77 @@
+# override the build pod images
+jenkins:
+  Agent:
+    PodTemplates:
+      Maven:
+        Containers:
+          Maven:
+            Image: gcr.io/jenkinsxio/builder-maven:$VERSION
+      Nodejs:
+        Containers:
+          Nodejs:
+            Image: gcr.io/jenkinsxio/builder-nodejs:$VERSION
+      Go:
+        Containers:
+          Go:
+            Image: gcr.io/jenkinsxio/builder-go:$VERSION
+
+{{- if eq .Requirements.webhook "lighthouse" }}
+controllerbuild:
+  enabled: true
+  args:
+  - "controller"
+  - "build"
+  - "--git-reporting"
+  - "--batch-mode"
+  - "--git-credentials"
+  - "--verbose"
+  image:
+    repository: gcr.io/jenkinsxio/builder-go
+    tag: $VERSION
+{{- else }}
+controllerbuild:
+  enabled: true
+  args:
+  - "controller"
+  - "build"
+  - "--batch-mode"
+  - "--verbose"
+  image:
+    repository: gcr.io/jenkinsxio/builder-go
+    tag: $VERSION
+{{- end }}
+
+gcpreviews:
+  image:
+    repository: gcr.io/jenkinsxio/builder-jx
+    tag: $VERSION
+
+gcactivities:
+  image:
+    repository: gcr.io/jenkinsxio/builder-jx
+    tag: $VERSION
+
+gcpods:
+  image:
+    repository: gcr.io/jenkinsxio/builder-jx
+    tag: $VERSION
+
+controllerworkflow:
+  image:
+    repository: gcr.io/jenkinsxio/builder-jx
+    tag: $VERSION
+
+controllercommitstatus:
+  image:
+    repository: gcr.io/jenkinsxio/builder-jx
+    tag: $VERSION
+
+controllerrole:
+  image:
+    repository: gcr.io/jenkinsxio/builder-jx
+    tag: $VERSION
+
+controllerteam:
+  image:
+    repository: gcr.io/jenkinsxio/builder-jx
+    tag: $VERSION

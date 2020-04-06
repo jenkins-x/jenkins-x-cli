@@ -1,0 +1,76 @@
+branch-protection:
+  orgs:
+    acme:
+      repos:
+        dummy:
+          protect: true
+          required_status_checks:
+            contexts:
+            - integration
+  protect-tested-repos: true
+# TODO reinstate this
+#deck:
+#  spyglass: {}
+#gerrit: {}
+#owners_dir_blacklist:
+#  default: null
+#  repos: null
+#plank: {}
+#pod_namespace: jx
+postsubmits:
+  acme/dummy:
+  - agent: tekton
+    branches:
+    - master
+    # TODO switch this to tekton
+    #build_spec:
+    #  serviceAccountName: knative-build-bot
+    #  template:
+    #    name: jenkins-base
+    context: ""
+    name: release
+presubmits:
+  acme/dummy:
+  - agent: tekton
+    always_run: true
+    #build_spec:
+    #  serviceAccountName: helm
+    #  template:
+    #    name: jenkins-base
+    context: integration
+    name: integration
+    rerun_command: /test this
+    trigger: (?m)^/test( all| this),?(\s+|$)
+#prowjob_namespace: jx
+#push_gateway: {}
+#sinker: {}
+tide:
+  target_url: http://targeturl
+  squash_label: squash
+  pr_status_base_url: http://fakeurl
+  blocker_label: /hold
+  max_goroutines: 10
+  context_options:
+    required-contexts:
+      - context3
+      - context1
+      - context2
+    from-branch-protection: true
+    required-if-present-contexts:
+      - context5
+      - context6
+    optional-contexts:
+      - opt1
+    skip-unknown-contexts: false
+  queries:
+  - labels:
+    - approved
+    missingLabels:
+    - do-not-merge
+    - do-not-merge/hold
+    - do-not-merge/work-in-progress
+    - needs-ok-to-test
+    - needs-rebase
+    repos:
+    - acme/dummy
+  #target_url: https://tide.foo.bar

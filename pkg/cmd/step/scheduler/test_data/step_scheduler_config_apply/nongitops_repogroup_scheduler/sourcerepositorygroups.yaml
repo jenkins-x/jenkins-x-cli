@@ -1,0 +1,23 @@
+apiVersion: v1
+items:
+  - apiVersion: jenkins.io/v1
+    kind: SourceRepositoryGroup
+    metadata:
+      name: my-source-repo-group
+      namespace: jx
+    spec:
+      repositories:
+        - apiVersion: jenkins.io/v1
+          kind: SourceRepository
+          name: jx-scheduler-test-repo
+        - apiVersion: jenkins.io/v1
+          kind: SourceRepository
+          name: jx-scheduler-group-test-repo
+      scheduler:
+        apiVersion: jenkins.io/v1
+        kind: Scheduler
+        name: jx-repo-group-scheduler
+kind: List
+metadata:
+  resourceVersion: ""
+  selfLink: ""

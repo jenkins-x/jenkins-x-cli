@@ -19,7 +19,7 @@ func RunCommandBackground(name string, output io.Writer, verbose bool, args ...s
 	os.Setenv("PATH", PathWithBinary())
 	err := e.Start()
 	if err != nil && verbose {
-		log.Errorf("Error: Command failed to start  %s %s\n", name, strings.Join(args, " "))
+		log.Logger().Errorf("Error: Command failed to start  %s %s", name, strings.Join(args, " "))
 	}
 	return err
 }
@@ -47,12 +47,12 @@ func KillProcessesTree(binary string, processes []*process.Process, m map[int32]
 				// if windows lets remove .exe
 				name = strings.TrimSuffix(name, ".exe")
 				if name == binary {
-					log.Infof("killing %s process with pid %d\n", binary, int(pid))
+					log.Logger().Infof("killing %s process with pid %d", binary, int(pid))
 					err = p.Terminate()
 					if err != nil {
-						log.Warnf("Failed to terminate process with pid %d: %s", int(pid), err)
+						log.Logger().Warnf("Failed to terminate process with pid %d: %s", int(pid), err)
 					} else {
-						log.Infof("killed %s process with pid %d\n", binary, int(pid))
+						log.Logger().Infof("killed %s process with pid %d", binary, int(pid))
 					}
 					return true, err
 				}

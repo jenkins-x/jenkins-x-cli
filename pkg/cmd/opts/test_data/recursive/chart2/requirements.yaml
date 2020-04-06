@@ -1,0 +1,5 @@
+dependencies:
+- name: chart3
+  # chart2 will be extracted in chart1/charts/chart2, so the path is different
+  repository: file://../../../chart3
+  version: v0.1.0

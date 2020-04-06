@@ -1,0 +1,11 @@
+pipelineConfig:
+  pipelines:
+    overrides:
+      # Replace the dir block in promote on release with a single step
+      - pipeline: release
+        stage: promote
+        name: dir-block
+        step:
+          sh: echo no dir here
+          name: new-step
+

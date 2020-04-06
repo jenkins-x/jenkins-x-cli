@@ -50,6 +50,14 @@ type ExtensionListerExpansion interface{}
 // ExtensionNamespaceLister.
 type ExtensionNamespaceListerExpansion interface{}
 
+// FactListerExpansion allows custom methods to be added to
+// FactLister.
+type FactListerExpansion interface{}
+
+// FactNamespaceListerExpansion allows custom methods to be added to
+// FactNamespaceLister.
+type FactNamespaceListerExpansion interface{}
+
 // GitServiceListerExpansion allows custom methods to be added to
 // GitServiceLister.
 type GitServiceListerExpansion interface{}
@@ -66,6 +74,22 @@ type PipelineActivityListerExpansion interface{}
 // PipelineActivityNamespaceLister.
 type PipelineActivityNamespaceListerExpansion interface{}
 
+// PipelineStructureListerExpansion allows custom methods to be added to
+// PipelineStructureLister.
+type PipelineStructureListerExpansion interface{}
+
+// PipelineStructureNamespaceListerExpansion allows custom methods to be added to
+// PipelineStructureNamespaceLister.
+type PipelineStructureNamespaceListerExpansion interface{}
+
+// PluginListerExpansion allows custom methods to be added to
+// PluginLister.
+type PluginListerExpansion interface{}
+
+// PluginNamespaceListerExpansion allows custom methods to be added to
+// PluginNamespaceLister.
+type PluginNamespaceListerExpansion interface{}
+
 // ReleaseListerExpansion allows custom methods to be added to
 // ReleaseLister.
 type ReleaseListerExpansion interface{}
@@ -73,6 +97,30 @@ type ReleaseListerExpansion interface{}
 // ReleaseNamespaceListerExpansion allows custom methods to be added to
 // ReleaseNamespaceLister.
 type ReleaseNamespaceListerExpansion interface{}
+
+// SchedulerListerExpansion allows custom methods to be added to
+// SchedulerLister.
+type SchedulerListerExpansion interface{}
+
+// SchedulerNamespaceListerExpansion allows custom methods to be added to
+// SchedulerNamespaceLister.
+type SchedulerNamespaceListerExpansion interface{}
+
+// SourceRepositoryListerExpansion allows custom methods to be added to
+// SourceRepositoryLister.
+type SourceRepositoryListerExpansion interface{}
+
+// SourceRepositoryNamespaceListerExpansion allows custom methods to be added to
+// SourceRepositoryNamespaceLister.
+type SourceRepositoryNamespaceListerExpansion interface{}
+
+// SourceRepositoryGroupListerExpansion allows custom methods to be added to
+// SourceRepositoryGroupLister.
+type SourceRepositoryGroupListerExpansion interface{}
+
+// SourceRepositoryGroupNamespaceListerExpansion allows custom methods to be added to
+// SourceRepositoryGroupNamespaceLister.
+type SourceRepositoryGroupNamespaceListerExpansion interface{}
 
 // TeamListerExpansion allows custom methods to be added to
 // TeamLister.

@@ -9,8 +9,6 @@ metadata:
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
 spec:
-  backoffLimit: {{ .Values.backoffLimit }}
-  activeDeadlineSeconds: {{ .Values.activeDeadlineSeconds }}
   selector:
     matchLabels:
       app: {{ template "jx.name" . }}
@@ -20,11 +18,17 @@ spec:
       labels:
         app: {{ template "jx.name" . }}
         release: {{ .Release.Name }}
+{{- if .Values.podAnnotations }}
+      annotations:
+{{ toYaml .Values.podAnnotations | indent 8 }}
+{{- end }}
     spec:
 {{- if .Values.restartPolicy }}
       restartPolicy: {{ .Values.restartPolicy }}
 {{- end }}
-{{- if .Values.serviceaccount.enabled }}
+{{- if .Values.serviceaccount.customName }}
+      serviceAccountName: {{ .Values.serviceaccount.customName }}
+{{- else if .Values.serviceaccount.enabled }}
       serviceAccountName: {{ template "jx.fullname" . }}
 {{- end }}
       containers:

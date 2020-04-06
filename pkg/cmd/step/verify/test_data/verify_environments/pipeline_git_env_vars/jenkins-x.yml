@@ -1,0 +1,230 @@
+buildPack: none
+pipelineConfig:
+  pipelines:
+    pullRequest:
+      pipeline:
+        agent:
+          image: gcr.io/jenkinsxio/builder-go
+        stages:
+        - name: pr-checks
+          steps:
+          - name: verify-parameters
+            command: jx
+            args:
+            - step
+            - verify
+            - values
+            - --values-file=parameters.yaml
+            - --schema-file=parameters.tmpl.schema.json
+            dir: /workspace/source/env
+          - name: lint-env-helm
+            command: make
+            args:
+            - build
+            dir: /workspace/source/env
+    release:
+      pipeline:
+        agent:
+          image: gcr.io/jenkinsxio/builder-go
+        environment:
+        - name: DEPLOY_NAMESPACE
+          value: jx
+        stages:
+        - name: release
+          steps:
+          - name: validate-git
+            command: jx
+            args:
+            - step
+            - git
+            - validate
+            dir: /workspace/source/env
+          - name: verify-preinstall
+            command: jx
+            args:
+            - step
+            - verify
+            - preinstall
+            dir: /workspace/source/env
+          - name: install-jx-crds
+            command: jx
+            args:
+            - upgrade
+            - crd
+          - name: install-velero
+            command: jx
+            args:
+            - step
+            - helm
+            - apply
+            - --boot
+            - --remote
+            - --no-vault
+            - --name
+            - velero
+            dir: /workspace/source/systems/velero
+            env:
+            - name: DEPLOY_NAMESPACE
+              value: velero
+          - name: install-velero-backups
+            command: jx
+            args:
+            - step
+            - helm
+            - apply
+            - --boot
+            - --remote
+            - --no-vault
+            - --name
+            - velero-backups
+            dir: /workspace/source/systems/velero-backups
+            env:
+            - name: DEPLOY_NAMESPACE
+              value: velero
+          - name: install-nginx-controller
+            command: jx
+            args:
+            - step
+            - helm
+            - apply
+            - --boot
+            - --remote
+            - --no-vault
+            - --name
+            - jxing
+            dir: /workspace/source/systems/jxing
+            env:
+            - name: DEPLOY_NAMESPACE
+              value: kube-system
+          - name: create-install-values
+            command: jx
+            args:
+            - step
+            - create
+            - install
+            - values
+            - -b
+            dir: /workspace/source/env
+          - name: install-external-dns
+            command: jx
+            args:
+            - step
+            - helm
+            - apply
+            - --boot
+            - --remote
+            - --no-vault
+            - --name
+            - exdns
+            dir: /workspace/source/systems/external-dns
+          - name: install-cert-manager-crds
+            command: kubectl
+            args:
+            - apply
+            - --wait
+            - --validate=true
+            - -f
+            - https://raw.githubusercontent.com/jetstack/cert-manager/release-0.8/deploy/manifests/00-crds.yaml
+            dir: /workspace/source
+            env:
+            - name: DEPLOY_NAMESPACE
+              value: cert-manager
+          - name: install-cert-manager
+            command: jx
+            args:
+            - step
+            - helm
+            - apply
+            - --boot
+            - --remote
+            - --no-vault
+            - --name
+            - cm
+            dir: /workspace/source/systems/cm
+            env:
+            - name: DEPLOY_NAMESPACE
+              value: cert-manager
+          - name: install-acme-issuer-and-certificate
+            command: jx
+            args:
+            - step
+            - helm
+            - apply
+            - --boot
+            - --remote
+            - --no-vault
+            - --name
+            - acme
+            dir: /workspace/source/systems/acme
+          - name: install-vault
+            command: jx
+            args:
+            - step
+            - boot
+            - vault
+            dir: /workspace/source/systems/vault
+          - name: create-helm-values
+            command: jx
+            args:
+            - step
+            - create
+            - values
+            - --name
+            - parameters
+            dir: /workspace/source/env
+          - name: install-jenkins-x
+            command: jx
+            args:
+            - step
+            - helm
+            - apply
+            - --boot
+            - --remote
+            - --name
+            - jenkins-x
+            - --provider-values-dir
+            - ../kubeProviders
+            dir: /workspace/source/env
+          - name: verify-jenkins-x-environment
+            command: jx
+            args:
+            - step
+            - verify
+            - env
+            dir: /workspace/source
+          - name: install-repositories
+            command: jx
+            args:
+            - step
+            - helm
+            - apply
+            - --boot
+            - --name
+            - repos
+            dir: /workspace/source/repositories
+          - name: install-pipelines
+            command: jx
+            args:
+            - step
+            - scheduler
+            - config
+            - apply
+            - --direct=true
+            dir: /workspace/source/prowConfig
+          - name: update-webhooks
+            command: jx
+            args:
+            - update
+            - webhooks
+            - --verbose
+            - --warn-on-fail
+            dir: /workspace/source/repositories
+          - name: verify-installation
+            command: jx
+            args:
+            - step
+            - verify
+            - install
+            - --pod-wait-time
+            - 30m
+            dir: /workspace/source/env

@@ -3,3 +3,146 @@ chat:
   url: http://kubernetes.slack.com/
   developerChannel: '#jenkins-x-dev'
   userChannel: '#jenkins-x-user'
+buildPack: none
+pipelineConfig:
+  pipelines:
+    release:
+      pipeline:
+        agent:
+          image: gcr.io/kaniko-project/executor:9912ccbf8d22bbafbf971124600fbb0b13b9cbd6
+        stages:
+          - name: release
+            environment:
+              - name: GIT_COMMITTER_EMAIL
+                value: jenkins-x@googlegroups.com
+              - name: GIT_AUTHOR_EMAIL
+                value: jenkins-x@googlegroups.com
+              - name: GIT_AUTHOR_NAME
+                value: jenkins-x-bot
+              - name: GIT_COMMITTER_NAME
+                value: jenkins-x-bot
+              - name: BASE_WORKSPACE
+                value: /workspace/source
+              - name: HELM_HOME
+                value: /builder/home/.helm
+              - name: GOPATH
+                value: /workspace/go
+              - name: GOPROXY
+                value: http://jenkins-x-athens-proxy
+              - name: PARALLEL_BUILDS
+                value: "2"
+              - name: DISABLE_TEST_CACHING
+                value: "true"
+              - name: GOOGLE_APPLICATION_CREDENTIALS
+                value: /secrets/kaniko/kaniko-secret.json
+              - name: CHARTMUSEUM_USER
+                valueFrom:
+                  secretKeyRef:
+                    name: jenkins-x-chartmuseum
+                    key: BASIC_AUTH_USER
+              - name: CHARTMUSEUM_PASS
+                valueFrom:
+                  secretKeyRef:
+                    name: jenkins-x-chartmuseum
+                    key: BASIC_AUTH_PASS
+              - name: GITHUB_ACCESS_TOKEN 
+                valueFrom:
+                  secretKeyRef:
+                    name: knative-git-user-pass
+                    key: password
+            options:
+              volumes:
+                - name: kaniko-secret
+                  secret:
+                    secretName: kaniko-secret
+                    items:
+                      - key: kaniko-secret
+                        path: kaniko/kaniko-secret.json
+              containerOptions:
+                volumeMounts:
+                  - name: kaniko-secret
+                    mountPath: /secrets
+                resources:
+                  limits:
+                    cpu: 4
+                    memory: 8Gi
+                  requests:
+                    cpu: 1
+                    memory: 3072Mi
+            steps:
+              - name: init-helm
+                image: alpine/helm:2.12.3
+                command: helm
+                args: ['init','--client-only']
+
+              - name: release
+                #image: docker.io/golang:1.11.5
+                # needs helm in the image for install_gitops_integration_test.go
+                image: gcr.io/jenkinsxio/builder-go-maven
+                command: make
+                args: ['release']
+
+
+              - name: build-and-push-image
+                image: gcr.io/kaniko-project/executor:9912ccbf8d22bbafbf971124600fbb0b13b9cbd6
+                command: /kaniko/executor
+                args: ['--dockerfile=/workspace/source/Dockerfile','--destination=gcr.io/jenkinsxio/jx:${inputs.params.version}','--destination=gcr.io/jenkinsxio/jx:latest','--context=/workspace/source','--cache-dir=/workspace']
+
+              - name: release-charts
+                image: gcr.io/jenkinsxio/builder-go
+                command: make
+                args:
+                - "release"
+                - -f
+                - /workspace/source/charts/jx/Makefile
+
+              - name: update-builders
+                image: gcr.io/jenkinsxio/builder-go
+                command: jx
+                args:
+                - step
+                - create
+                - pr
+                - docker
+                - --name
+                - JX_VERSION
+                - --version
+                - $VERSION
+                - --repo
+                - https://github.com/jenkins-x/jenkins-x-builders.git
+                - --repo
+                - https://github.com/jenkins-x/jenkins-x-builders-ml.git
+
+              - name: update-lighthouse
+                image: gcr.io/jenkinsxio/builder-go
+                command: jx
+                args:
+                - step
+                - create
+                - pr
+                - go
+                - --name
+                - github.com/jenkins-x/jx
+                - --version
+                - $VERSION
+                - --build
+                - "make mod"
+                - --repo
+                - https://github.com/jenkins-x/lighthouse.git
+
+              - name: update-jxui-backend
+                image: gcr.io/jenkinsxio/builder-go
+                command: jx
+                args:
+                - step
+                - create
+                - pr
+                - go
+                - --name
+                - github.com/jenkins-x/jx
+                - --version
+                - $VERSION
+                - --build
+                - "make build"
+                - --repo
+                - https://github.com/cloudbees/jxui-backend.git

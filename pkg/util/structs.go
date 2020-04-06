@@ -69,3 +69,32 @@ func ToStructFromMapStringInterface(m map[string]interface{}, str interface{}) e
 	}
 	return json.Unmarshal(j, str)
 }
+
+// ConvertAllMapKeysToString will recursively go through an object and convert all keys of a map (and any submaps) to
+// Strings. This is necessary for json handlers (eg vault) where an item of a submap must be map[string]interface{}
+// rather than the more lenient map[interface{}]interface{} that you get from yaml unmarshalling
+func ConvertAllMapKeysToString(i interface{}) interface{} {
+	switch x := i.(type) {
+	case map[interface{}]interface{}:
+		m2 := map[string]interface{}{}
+		for k, v := range x {
+			m2[k.(string)] = ConvertAllMapKeysToString(v)
+		}
+		return m2
+	case map[string]interface{}:
+		for i, v := range x {
+			x[i] = ConvertAllMapKeysToString(v)
+		}
+	case []interface{}:
+		for i, v := range x {
+			x[i] = ConvertAllMapKeysToString(v)
+		}
+	}
+	return i
+}
+
+// PrettyPrint returns an indented string representation of the passed struct for the purpose of logging/debugging.
+func PrettyPrint(i interface{}) string {
+	s, _ := json.MarshalIndent(i, "", "\t")
+	return string(s)
+}

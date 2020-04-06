@@ -1,0 +1,79 @@
+example_location: "examples"
+api_groups:
+  - "jenkins_io"
+inline_definitions:
+  - name: Spec
+    match: ${resource}Spec
+  - name: Status
+    match: ${resource}Status
+  - name: List
+    match: ${resource}List
+  - name: DeploymentStrategy
+    match: ${resource}Strategy
+  - name: DeploymentRollback
+    match: ${resource}Rollback
+  - name: RollingUpdateDeployment
+    match: RollingUpdate${resource}
+  - name: EventSource
+    match: ${resource}Source
+resource_categories:
+  - name: "Apps"
+    include: "apps"
+    resources:
+      - name: App
+        version: v1
+        group: jenkins_io
+        description_warning: ""
+      - name: BuildPack
+        version: v1
+        group: jenkins_io
+        description_warning: ""
+      - name: Plugin
+        version: v1
+        group: jenkins_io
+        description_warning: ""
+  - name: "Pipelines & Environments"
+    include: "pipelines"
+    resources:
+      - name: Environment
+        version: v1
+        group: jenkins_io
+        description_warning: ""
+      - name: PipelineActivity
+        version: v1
+        group: jenkins_io
+        description_warning: ""
+      - name: Release
+        version: v1
+        group: jenkins_io
+        description_warning: ""
+      - name: Scheduler
+        version: v1
+        group: jenkins_io
+      - name: SourceRepository
+        version: v1
+        group: jenkins_io
+        description_warning: ""
+      - name: SourceRepositoryGroup
+        version: v1
+        group: jenkins_io
+        description_warning: ""
+  - name: "Pipelines Extensions"
+    resources:
+      - name: CommitStatus
+        version: v1
+        group: jenkins_io
+      - name: Fact
+        version: v1
+        group: jenkins_io
+  - name: "User Management"
+    include: "user_management"
+    resources:
+      - name: User
+        version: v1
+        group: jenkins_io
+        description_warning: ""
+      - name: Team
+        version: v1
+        group: jenkins_io
+        description_warning: ""

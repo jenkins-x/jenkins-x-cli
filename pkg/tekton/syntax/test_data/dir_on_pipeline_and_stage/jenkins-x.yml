@@ -1,0 +1,22 @@
+pipelineConfig:
+  pipelines:
+    release:
+      pipeline:
+        dir: a-relative-dir
+        agent:
+          image: some-image
+        stages:
+          - name: A Working Stage
+            steps:
+              - command: echo
+                args:
+                  - hello
+                  - world
+          - name: Another stage
+            dir: /an/absolute/dir
+            steps:
+              - command: echo
+                args: ['again']
+              - command: echo
+                args: ['in another dir']
+                dir: another-relative-dir/with/a/subdir

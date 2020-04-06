@@ -1,3 +1,5 @@
+// +build unit
+
 package gits_test
 
 import (
@@ -16,10 +18,11 @@ import (
 )
 
 const (
-	gitlabUserName    = "testperson"
-	gitlabOrgName     = "testorg"
-	gitlabProjectName = "test-project"
-	gitlabProjectID   = "5690870"
+	gitlabUserName       = "testperson"
+	gitlabOrgName        = "testorg"
+	gitlabProjectName    = "test-project"
+	gitlabProjectID      = "5690870"
+	gitlabMergeRequestID = 12
 )
 
 type GitlabProviderSuite struct {
@@ -97,6 +100,13 @@ func configureGitlabMock(suite *GitlabProviderSuite, mux *http.ServeMux) {
 		fmt.Sprintf("/api/v4/projects/%s", gitlabProjectID): util.MethodMap{
 			"GET": "project.json",
 		},
+		fmt.Sprintf("/api/v4/projects/%s/merge_requests/%d", gitlabProjectID, gitlabMergeRequestID): util.MethodMap{
+			"GET": "merge-request.json",
+			"PUT": "update-merge-request.json",
+		},
+		fmt.Sprintf("/api/v4/projects/%s/merge_requests", gitlabProjectID): util.MethodMap{
+			"POST": "create-merge-request.json",
+		},
 	}
 	for path, methodMap := range gitlabRouter {
 		mux.HandleFunc(path, util.GetMockAPIResponseFromFile("test_data/gitlab", methodMap))
@@ -155,7 +165,7 @@ func (suite *GitlabProviderSuite) TestGetRepository() {
 }
 
 func (suite *GitlabProviderSuite) TestAddCollaborator() {
-	err := suite.provider.AddCollaborator("derek", orgName, "repo")
+	err := suite.provider.AddCollaborator("derek", gitlabOrgName, "repo")
 	suite.Require().Nil(err)
 }
 
@@ -170,6 +180,53 @@ func (suite *GitlabProviderSuite) TestAcceptInvitations() {
 	res, err := suite.provider.AcceptInvitation(1)
 	suite.Require().NotNil(res)
 	suite.Require().Nil(err)
+}
+
+func (suite *GitlabProviderSuite) TestGetPullRequest() {
+	pr, err := suite.provider.GetPullRequest(
+		gitlabUserName,
+		&gits.GitRepository{Name: gitlabProjectName},
+		gitlabMergeRequestID,
+	)
+
+	suite.Require().Nil(err)
+	suite.Require().Equal(*pr.Number, gitlabMergeRequestID)
+}
+
+func (suite *GitlabProviderSuite) TestCreatePullRequest() {
+
+	args := gits.GitPullRequestArguments{
+		GitRepository: &gits.GitRepository{Name: gitlabProjectName, Organisation: gitlabUserName},
+		Head:          "source_branch",
+		Base:          "target_branch",
+		Title:         "Update Test Pull Request",
+	}
+	pr, err := suite.provider.CreatePullRequest(&args)
+
+	//suite.Require().NotNil(pr)
+	suite.Require().Nil(err)
+	suite.Require().Equal(*pr.State, "merged")
+	suite.Require().Equal(*pr.Number, 3)
+	suite.Require().Equal(pr.Owner, gitlabUserName)
+	suite.Require().Equal(pr.Repo, gitlabProjectName)
+	suite.Require().Equal(pr.Author.Login, gitlabUserName)
+}
+
+func (suite *GitlabProviderSuite) TestUpdatePullRequest() {
+	args := gits.GitPullRequestArguments{
+		GitRepository: &gits.GitRepository{Name: gitlabProjectName, Organisation: gitlabUserName},
+		Head:          "source_branch",
+		Base:          "target_branch",
+		Title:         "Update Test Pull Request",
+	}
+	pr, err := suite.provider.UpdatePullRequest(
+		&args,
+		gitlabMergeRequestID,
+	)
+
+	suite.Require().Nil(err)
+	suite.Require().Equal(*pr.Number, gitlabMergeRequestID)
+	suite.Require().Equal(pr.Owner, gitlabUserName)
 }
 
 // In order for 'go test' to run this suite, we need to create

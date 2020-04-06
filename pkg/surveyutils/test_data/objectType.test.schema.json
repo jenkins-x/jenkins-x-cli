@@ -1,0 +1,22 @@
+
+{
+  "$id": "https:/jenkins-x.io/tests/nestedObject.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "test values.yaml",
+  "type": "object",
+  "properties": {
+    "nestedObject": {
+      "type": "object",
+      "properties": {
+        "anotherNestedObject": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,10 @@
+agent:
+  label: jenkins-maven
+pipelines:
+  release:
+    setup:
+      steps:
+      - container: maven
+        steps:
+        - sh: mvn deploy
+        - groovy: "dir(\"foo\") { \n  sh \"echo hello\"\n}"

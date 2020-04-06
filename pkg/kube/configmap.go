@@ -12,21 +12,29 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-// GetConfigmapData gets config map data
-func GetConfigmapData(client kubernetes.Interface, name, ns string) (map[string]string, error) {
-	cm, err := client.CoreV1().ConfigMaps(ns).Get(name, metav1.GetOptions{})
+// GetConfigMapData gets config map data
+func GetConfigMapData(client kubernetes.Interface, name, ns string) (map[string]string, error) {
+	answer := map[string]string{}
+	cm, err := GetConfigMap(client, ns, name)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get configmap %s in namespace %s, %v", name, ns, err)
+		return answer, fmt.Errorf("failed to get configmap %s in namespace %s, %v", name, ns, err)
 	}
-
+	if cm.Data == nil {
+		return answer, nil
+	}
 	return cm.Data, nil
+}
+
+// GetConfigMap gets a named configmap
+func GetConfigMap(client kubernetes.Interface, ns string, name string) (*v1.ConfigMap, error) {
+	return client.CoreV1().ConfigMaps(ns).Get(name, metav1.GetOptions{})
 }
 
 // GetCurrentDomain gets the current domain
 func GetCurrentDomain(client kubernetes.Interface, ns string) (string, error) {
-	data, err := GetConfigmapData(client, ConfigMapIngressConfig, ns)
+	data, err := GetConfigMapData(client, ConfigMapIngressConfig, ns)
 	if err != nil {
-		data, err = GetConfigmapData(client, ConfigMapExposecontroller, ns)
+		data, err = GetConfigMapData(client, ConfigMapExposecontroller, ns)
 		if err != nil {
 			return "", errors.Wrapf(err, "Failed to find ConfigMap in namespace %s for names %s and %s", ns, ConfigMapExposecontroller, ConfigMapIngressConfig)
 		}
@@ -55,7 +63,7 @@ func ExtractDomainValue(data map[string]string) (string, error) {
 func SaveAsConfigMap(c kubernetes.Interface, configMapName string, ns string, obj interface{}) (*v1.ConfigMap, error) {
 	config := util.ToStringMapStringFromStruct(obj)
 
-	cm, err := c.CoreV1().ConfigMaps(ns).Get(configMapName, metav1.GetOptions{})
+	cm, err := GetConfigMap(c, ns, configMapName)
 
 	if err != nil {
 		cm := &v1.ConfigMap{
@@ -103,10 +111,8 @@ func GetConfigMaps(kubeClient kubernetes.Interface, ns string) (map[string]*v1.C
 
 // DefaultModifyConfigMap default implementation of a function to modify
 func DefaultModifyConfigMap(kubeClient kubernetes.Interface, ns string, name string, fn func(env *v1.ConfigMap) error, defaultConfigMap *v1.ConfigMap) (*v1.ConfigMap, error) {
-	configMapInterface := kubeClient.CoreV1().ConfigMaps(ns)
-
 	create := false
-	configMap, err := configMapInterface.Get(name, metav1.GetOptions{})
+	configMap, err := GetConfigMap(kubeClient, ns, name)
 	if err != nil {
 		create = true
 		initialConfigMap := v1.ConfigMap{
@@ -126,6 +132,7 @@ func DefaultModifyConfigMap(kubeClient kubernetes.Interface, ns string, name str
 	if err != nil {
 		return configMap, err
 	}
+	configMapInterface := kubeClient.CoreV1().ConfigMaps(ns)
 	if create {
 		_, err = configMapInterface.Create(configMap)
 		if err != nil {

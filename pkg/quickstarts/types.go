@@ -1,15 +1,20 @@
 package quickstarts
 
-import "github.com/jenkins-x/jx/pkg/gits"
+import (
+	"github.com/jenkins-x/jx/pkg/gits"
+)
 
 type Quickstart struct {
 	ID             string
 	Owner          string
 	Name           string
+	Version        string
 	Language       string
 	Framework      string
 	Tags           []string
 	DownloadZipURL string
+	GitServer      string
+	GitKind        string
 	GitProvider    gits.GitProvider
 }
 
@@ -24,6 +29,7 @@ type QuickstartFilter struct {
 	Text        string
 	ProjectName string
 	Tags        []string
+	AllowML     bool
 }
 
 type QuickstartForm struct {

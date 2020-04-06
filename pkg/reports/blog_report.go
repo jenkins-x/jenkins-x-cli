@@ -48,7 +48,7 @@ func (r *BlogBarReport) Render() error {
 	if err != nil {
 		return err
 	}
-	log.Infof("Generated JavaScript %s\n", util.ColorInfo(r.JSFileName))
+	log.Logger().Infof("Generated JavaScript %s", util.ColorInfo(r.JSFileName))
 	return nil
 }
 

@@ -1,0 +1,95 @@
+trigger:
+  trustedOrg: roadrunner-corp
+approve:
+  lgtmActsAsApprove: true
+  ignoreReviewState: false
+externalPlugins:
+  entries:
+  - name: jx-app-cheese
+    endpoint: http://jx-app-cheese
+schedulerAgent:
+  agent: prow
+policy:
+  enforceAdmins: true
+  protect: true
+  protectTested: false
+  requiredStatusChecks:
+    strict: true
+    contexts:
+      entries:
+        - test1
+        - test2
+  restrictions:
+    users:
+      entries:
+        - user1
+        - user2
+    teams:
+      entries:
+        - team1
+        - team2
+  requiredPullRequestReviews:
+    dismissStaleReviews: true
+    requireCodeOwnerReviews: false
+    requiredApprovingReviewCount: 5
+    dismissalRestrictions:
+      users:
+        entries:
+          - user1
+          - user2
+      teams:
+        entries:
+          - team1
+          - team2
+merger:
+  policy:
+    fromBranchProtection: true
+    skipUnknownContexts: false
+postsubmits:
+  entries:
+  - name: release
+    context: ""
+    branches:
+      entries:
+      - master
+    agent: tekton
+presubmits:
+  entries:
+  - name: integration
+    agent: tekton
+    alwaysRun: true
+    context: integration
+    rerunCommand: /test this
+    trigger: (?m)^/test( all| this),?(\s+|$)
+    queries:
+      - labels:
+          entries:
+            - approved
+        missingLabels:
+          entries:
+          - do-not-merge
+          - do-not-merge/hold
+          - do-not-merge/work-in-progress
+          - needs-ok-to-test
+          - needs-rebase
+    policy:
+      protect: true
+      requiredStatusChecks:
+        contexts:
+          entries:
+          - integration
+plugins:
+  entries:
+  - config-updater
+  - approve
+  - assign
+  - blunderbuss
+  - help
+  - hold
+  - lgtm
+  - lifecycle
+  - size
+  - trigger
+  - wip
+  - heart
+  - override

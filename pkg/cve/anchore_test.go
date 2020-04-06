@@ -1,3 +1,5 @@
+// +build unit
+
 package cve_test
 
 import (

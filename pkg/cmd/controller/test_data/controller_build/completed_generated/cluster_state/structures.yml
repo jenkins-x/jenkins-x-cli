@@ -1,0 +1,64 @@
+apiVersion: jenkins.io/v1
+items:
+- apiVersion: jenkins.io/v1
+  kind: PipelineStructure
+  metadata:
+    creationTimestamp: "2019-09-10T17:07:08Z"
+    generation: 1
+    labels:
+      branch: master
+      build: "1"
+      created-by-prow: "true"
+      owner: cb-kubecd
+      jenkins.io/pipelineType: meta
+      prowJobName: 6bae4c2b-d3ed-11e9-b0c6-72256f93bb5c
+      repository: bdd-spring-1568135191
+    name: meta-cb-kubecd-bdd-spring-15681-1
+    namespace: jx
+    ownerReferences:
+    - apiVersion: tekton.dev/v1alpha1
+      kind: pipeline
+      name: meta-cb-kubecd-bdd-spring-15681-1
+      uid: 6c431e3c-d3ed-11e9-8142-42010a840094
+    resourceVersion: "3199"
+    selfLink: /apis/jenkins.io/v1/namespaces/jx/pipelinestructures/meta-cb-kubecd-bdd-spring-15681-1
+    uid: 6c58e971-d3ed-11e9-8142-42010a840094
+  pipelineRef: meta-cb-kubecd-bdd-spring-15681-1
+  pipelineRunRef: meta-cb-kubecd-bdd-spring-15681-1
+  stages:
+  - depth: 0
+    name: meta-pipeline
+    taskRef: meta-cb-kubecd-bdd-spring-15681-meta-pipeline-1
+- apiVersion: jenkins.io/v1
+  kind: PipelineStructure
+  metadata:
+    creationTimestamp: "2019-09-10T17:08:20Z"
+    generation: 1
+    labels:
+      branch: master
+      build: "1"
+      created-by-prow: "true"
+      owner: cb-kubecd
+      jenkins.io/pipelineType: build
+      prowJobName: 6bae4c2b-d3ed-11e9-b0c6-72256f93bb5c
+      repository: bdd-spring-1568135191
+    name: cb-kubecd-bdd-spring-1568135191-1
+    namespace: jx
+    ownerReferences:
+    - apiVersion: tekton.dev/v1alpha1
+      kind: pipeline
+      name: cb-kubecd-bdd-spring-1568135191-1
+      uid: 9725fd7c-d3ed-11e9-8142-42010a840094
+    resourceVersion: "3545"
+    selfLink: /apis/jenkins.io/v1/namespaces/jx/pipelinestructures/cb-kubecd-bdd-spring-1568135191-1
+    uid: 97288a33-d3ed-11e9-8142-42010a840094
+  pipelineRef: cb-kubecd-bdd-spring-1568135191-1
+  pipelineRunRef: cb-kubecd-bdd-spring-1568135191-1
+  stages:
+  - depth: 0
+    name: from-build-pack
+    taskRef: cb-kubecd-bdd-spring-1568135191-from-build-pack-1
+kind: List
+metadata:
+  resourceVersion: ""
+  selfLink: ""

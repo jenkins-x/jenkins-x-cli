@@ -1,0 +1,24 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  annotations:
+    kubernetes.io/ingress.class: nginx
+  name: {{ .Service.name }}
+spec:
+  rules:
+  - host: {{ .Service.name }}{{ .Requirements.ingress.namespaceSubDomain | default "-jx." }}{{ .Requirements.ingress.domain }}
+    http:
+      paths:
+      - backend:
+          serviceName: {{ .Service.name }}
+          servicePort: {{ .Service.port }}
+{{- if .Requirements.ingress.tls.enabled }}
+  tls:
+  - hosts:
+    - {{ .Service.name }}{{ .Requirements.ingress.namespaceSubDomain | default ".jx." }}{{ .Requirements.ingress.domain }}
+{{- if .Requirements.ingress.tls.production }}
+    secretName: "tls-{{ .Requirements.ingress.domain | replace "." "-" }}-p"
+{{- else }}
+    secretName: "tls-{{ .Requirements.ingress.domain | replace "." "-" }}-s"
+{{- end }}
+{{- end }}

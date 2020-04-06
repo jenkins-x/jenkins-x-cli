@@ -1,0 +1,8 @@
+defaultOwner: jenkins-x-quickstarts
+quickstarts:
+  - name: node-http
+    language: JavaScript
+    downloadZipURL: https://codeload.github.com/jenkins-x-quickstarts/node-http/zip/master
+  - name: golang-http
+    language: Go
+    downloadZipURL: https://codeload.github.com/jenkins-x-quickstarts/golang-http/zip/master

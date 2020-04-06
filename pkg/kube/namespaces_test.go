@@ -1,3 +1,5 @@
+// +build unit
+
 package kube_test
 
 import (
@@ -31,6 +33,7 @@ func TestEnsureDevEnvironmentSetup(t *testing.T) {
 				AskOnCreate:         false,
 				QuickstartLocations: kube.DefaultQuickstartLocations,
 				PromotionEngine:     jenkinsio_v1.PromotionEngineJenkins,
+				AppsRepository:      kube.DefaultChartMuseumURL,
 			},
 		},
 	}
@@ -45,6 +48,7 @@ func TestEnsureDevEnvironmentSetup(t *testing.T) {
 	assert.Equal(t, jenkinsio_v1.EnvironmentKindType("Development"), env.Spec.Kind)
 	assert.Equal(t, true, env.Spec.TeamSettings.UseGitOps)
 	assert.Equal(t, false, env.Spec.TeamSettings.AskOnCreate)
-	assert.Equal(t, []jenkinsio_v1.QuickStartLocation([]jenkinsio_v1.QuickStartLocation{jenkinsio_v1.QuickStartLocation{GitURL: "https://github.com", GitKind: "github", Owner: "jenkins-x-quickstarts", Includes: []string{"*"}, Excludes: []string{"WIP-*"}}}), env.Spec.TeamSettings.QuickstartLocations)
+	assert.Equal(t, []jenkinsio_v1.QuickStartLocation{{GitURL: "https://github.com", GitKind: "github", Owner: "jenkins-x-quickstarts", Includes: []string{"*"}, Excludes: []string{"WIP-*"}}}, env.Spec.TeamSettings.QuickstartLocations)
 	assert.Equal(t, jenkinsio_v1.PromotionEngineType("Jenkins"), env.Spec.TeamSettings.PromotionEngine)
+	assert.Equal(t, envFixture.Spec.TeamSettings.AppsRepository, env.Spec.TeamSettings.AppsRepository)
 }

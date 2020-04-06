@@ -1,0 +1,13 @@
+
+{
+  "$id": "https:/jenkins-x.io/tests/basicTypes.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "test values.yaml",
+  "type": "object",
+  "properties": {
+    "emailValue": {
+      "type": "string",
+      "format": "email"
+    }
+  }
+}

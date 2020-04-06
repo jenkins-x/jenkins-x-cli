@@ -1,0 +1,94 @@
+apiVersion: jenkins.io/v1
+kind: PipelineActivity
+metadata:
+  creationTimestamp: 2019-02-27T19:05:34Z
+  generation: 1
+  labels:
+    branch: master
+    owner: abayer
+    sourcerepository: abayer-jx-demo-qs
+  name: abayer-jx-demo-qs-master-1
+  namespace: jx
+  resourceVersion: "14785"
+  selfLink: /apis/jenkins.io/v1/namespaces/jx/pipelineactivities/abayer-jx-demo-qs-master-1
+  uid: a8c37189-3ac2-11e9-b04e-42010a8a0075
+spec:
+  build: "1"
+  gitBranch: master
+  gitOwner: abayer
+  gitRepository: jx-demo-qs
+  gitUrl: https://github.com/abayer/jx-demo-qs
+  pipeline: abayer/jx-demo-qs/master
+  startedTimestamp: 2019-02-27T19:05:35Z
+  status: Running
+  steps:
+  - kind: Stage
+    stage:
+      completedTimestamp: 2019-02-27T19:05:36Z
+      name: Credential Initializer 2rn7l
+      startedTimestamp: 2019-02-27T19:05:35Z
+      status: Succeeded
+  - kind: Stage
+    stage:
+      completedTimestamp: 2019-02-27T19:05:38Z
+      description: https://github.com/abayer/jx-demo-qs
+      name: Git Source Abayer Jx Demo Qs Master 7745g
+      startedTimestamp: 2019-02-27T19:05:37Z
+      status: Succeeded
+  - kind: Stage
+    stage:
+      completedTimestamp: 2019-02-27T19:05:40Z
+      name: Place Tools
+      startedTimestamp: 2019-02-27T19:05:40Z
+      status: Succeeded
+  - kind: Stage
+    stage:
+      completedTimestamp: 2019-02-27T19:05:42Z
+      name: Setup Jx Git Credentials
+      startedTimestamp: 2019-02-27T19:05:42Z
+      status: Succeeded
+  - kind: Stage
+    stage:
+      completedTimestamp: 2019-02-27T19:05:45Z
+      name: Setversion Next Version
+      startedTimestamp: 2019-02-27T19:05:43Z
+      status: Succeeded
+  - kind: Stage
+    stage:
+      completedTimestamp: 2019-02-27T19:06:11Z
+      name: Setversion Set Version
+      startedTimestamp: 2019-02-27T19:05:47Z
+      status: Failed
+  - kind: Stage
+    stage:
+      name: Setversion Tag Version
+      status: Pending
+  - kind: Stage
+    stage:
+      name: Build Mvn Deploy
+      status: Pending
+  - kind: Stage
+    stage:
+      name: Build Skaffold Version
+      status: Pending
+  - kind: Stage
+    stage:
+      name: Build Container Build
+      status: Pending
+  - kind: Stage
+    stage:
+      name: Build Post Build
+      status: Pending
+  - kind: Stage
+    stage:
+      name: Promote Changelog
+      status: Pending
+  - kind: Stage
+    stage:
+      name: Promote Helm Release
+      status: Pending
+  - kind: Stage
+    stage:
+      name: Promote Jx Promote
+      status: Pending
+status: {}

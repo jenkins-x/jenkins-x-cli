@@ -1,0 +1,43 @@
+apiVersion: tekton.dev/v1alpha1
+items:
+- metadata:
+    creationTimestamp: null
+    labels:
+      branch: fakebranch
+      context: fakecontext
+      owner: fakeowner
+      repository: fakerepo
+    name: PR1
+    namespace: jx
+  spec:
+    params:
+    - name: version
+      value: v1
+    - name: build_id
+      value: "1"
+    pipelineRef: {}
+    serviceAccount: ""
+  status:
+    taskRuns:
+      faketaskrun:
+        status:
+          podName: ""
+          steps:
+          - waiting:
+              message: Pending
+- metadata:
+    creationTimestamp: null
+    labels:
+      branch: fakebranch
+      build: "2"
+      context: tekton
+      owner: fakeowner
+      repository: fakerepo
+    name: PR2
+    namespace: jx
+  spec:
+    pipelineRef: {}
+    serviceAccount: ""
+  status: {}
+kind: PipelineRunList
+metadata: {}

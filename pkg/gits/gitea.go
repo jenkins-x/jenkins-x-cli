@@ -3,9 +3,12 @@ package gits
 import (
 	"errors"
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 	"time"
+
+	errors2 "github.com/pkg/errors"
 
 	"code.gitea.io/sdk/gitea"
 	"github.com/google/go-github/github"
@@ -94,10 +97,29 @@ func (p *GiteaProvider) ListReleases(org string, name string) ([]*GitRelease, er
 	return answer, nil
 }
 
+// GetRelease returns the release info for org, repo name and tag
+func (p *GiteaProvider) GetRelease(org string, name string, tag string) (*GitRelease, error) {
+	releases, err := p.ListReleases(org, name)
+	if err != nil {
+		return nil, errors2.WithStack(err)
+	}
+	for _, release := range releases {
+		if release.TagName == tag {
+			return release, nil
+		}
+	}
+	return nil, nil
+}
+
 func toGiteaRelease(org string, name string, release *gitea.Release) *GitRelease {
 	totalDownloadCount := 0
+	assets := make([]GitReleaseAsset, 0)
 	for _, asset := range release.Attachments {
 		totalDownloadCount = totalDownloadCount + int(asset.DownloadCount)
+		assets = append(assets, GitReleaseAsset{
+			Name:               asset.Name,
+			BrowserDownloadURL: asset.DownloadURL,
+		})
 	}
 	return &GitRelease{
 		Name:          release.Title,
@@ -106,6 +128,7 @@ func toGiteaRelease(org string, name string, release *gitea.Release) *GitRelease
 		URL:           release.URL,
 		HTMLURL:       release.URL,
 		DownloadCount: totalDownloadCount,
+		Assets:        &assets,
 	}
 }
 
@@ -167,7 +190,7 @@ func (p *GiteaProvider) ForkRepository(originalOrg string, name string, destinat
 			owner = p.Username
 		}
 		if strings.Contains(err.Error(), "try again later") {
-			log.Warnf("Waiting for the fork of %s/%s to appear...\n", owner, name)
+			log.Logger().Warnf("Waiting for the fork of %s/%s to appear...", owner, name)
 			// lets wait for the fork to occur...
 			start := time.Now()
 			deadline := start.Add(time.Minute)
@@ -209,7 +232,7 @@ func (p *GiteaProvider) CreateWebHook(data *GitWebHookArguments) error {
 	for _, hook := range hooks {
 		s := hook.Config["url"]
 		if s == webhookUrl {
-			log.Warnf("Already has a webhook registered for %s\n", webhookUrl)
+			log.Logger().Warnf("Already has a webhook registered for %s", webhookUrl)
 			return nil
 		}
 	}
@@ -226,7 +249,7 @@ func (p *GiteaProvider) CreateWebHook(data *GitWebHookArguments) error {
 		Events: []string{"create", "push", "pull_request"},
 		Active: true,
 	}
-	log.Infof("Creating Gitea webhook for %s/%s for url %s\n", util.ColorInfo(owner), util.ColorInfo(repo), util.ColorInfo(webhookUrl))
+	log.Logger().Infof("Creating Gitea webhook for %s/%s for url %s", util.ColorInfo(owner), util.ColorInfo(repo), util.ColorInfo(webhookUrl))
 	_, err = p.Client.CreateRepoHook(owner, repo, hook)
 	if err != nil {
 		return fmt.Errorf("Failed to create webhook for %s/%s with %#v due to: %s", owner, repo, hook, err)
@@ -244,8 +267,8 @@ func (p *GiteaProvider) UpdateWebHook(data *GitWebHookArguments) error {
 }
 
 func (p *GiteaProvider) CreatePullRequest(data *GitPullRequestArguments) (*GitPullRequest, error) {
-	owner := data.GitRepositoryInfo.Organisation
-	repo := data.GitRepositoryInfo.Name
+	owner := data.GitRepository.Organisation
+	repo := data.GitRepository.Name
 	title := data.Title
 	body := data.Body
 	head := data.Head
@@ -271,13 +294,18 @@ func (p *GiteaProvider) CreatePullRequest(data *GitPullRequestArguments) (*GitPu
 	answer := &GitPullRequest{
 		URL:    pr.HTMLURL,
 		Number: &id,
-		Owner:  data.GitRepositoryInfo.Organisation,
-		Repo:   data.GitRepositoryInfo.Name,
+		Owner:  data.GitRepository.Organisation,
+		Repo:   data.GitRepository.Name,
 	}
 	if pr.Head != nil {
 		answer.LastCommitSha = pr.Head.Sha
 	}
 	return answer, nil
+}
+
+// UpdatePullRequest updates pull request with number using data
+func (p *GiteaProvider) UpdatePullRequest(data *GitPullRequestArguments, number int) (*GitPullRequest, error) {
+	return nil, errors2.Errorf("Not yet implemented for gitea")
 }
 
 func (p *GiteaProvider) UpdatePullRequestStatus(pr *GitPullRequest) error {
@@ -289,19 +317,25 @@ func (p *GiteaProvider) UpdatePullRequestStatus(pr *GitPullRequest) error {
 	if err != nil {
 		return fmt.Errorf("Could not find pull request for %s/%s #%d: %s", pr.Owner, pr.Repo, n, err)
 	}
+	p.updatePullRequest(pr, result)
+	return nil
+}
+
+// updatePullRequest updates the pr with the data from Gitea
+func (p *GiteaProvider) updatePullRequest(pr *GitPullRequest, source *gitea.PullRequest) {
 	pr.Author = &GitUser{
-		Login: result.Poster.UserName,
+		Login: source.Poster.UserName,
 	}
-	merged := result.HasMerged
+	merged := source.HasMerged
 	pr.Merged = &merged
-	pr.Mergeable = &result.Mergeable
-	pr.MergedAt = result.Merged
-	pr.MergeCommitSHA = result.MergedCommitID
-	pr.Title = result.Title
-	pr.Body = result.Body
-	stateText := string(result.State)
+	pr.Mergeable = &source.Mergeable
+	pr.MergedAt = source.Merged
+	pr.MergeCommitSHA = source.MergedCommitID
+	pr.Title = source.Title
+	pr.Body = source.Body
+	stateText := string(source.State)
 	pr.State = &stateText
-	head := result.Head
+	head := source.Head
 	if head != nil {
 		pr.LastCommitSha = head.Sha
 	} else {
@@ -310,31 +344,56 @@ func (p *GiteaProvider) UpdatePullRequestStatus(pr *GitPullRequest) error {
 	/*
 		TODO
 
-		pr.ClosedAt = result.Closed
-		pr.StatusesURL = result.StatusesURL
-		pr.IssueURL = result.IssueURL
-		pr.DiffURL = result.DiffURL
+		pr.ClosedAt = source.Closed
+		pr.StatusesURL = source.StatusesURL
+		pr.IssueURL = source.IssueURL
+		pr.DiffURL = source.DiffURL
 	*/
-	return nil
 }
 
-func (p *GiteaProvider) GetPullRequest(owner string, repo *GitRepositoryInfo, number int) (*GitPullRequest, error) {
+func (p *GiteaProvider) toPullRequest(owner string, repo string, pr *gitea.PullRequest) *GitPullRequest {
+	id := int(pr.Index)
+	answer := &GitPullRequest{
+		URL:    pr.URL,
+		Owner:  owner,
+		Repo:   repo,
+		Number: &id,
+	}
+	p.updatePullRequest(answer, pr)
+	return answer
+}
+
+// ListOpenPullRequests lists the open pull requests
+func (p *GiteaProvider) ListOpenPullRequests(owner string, repo string) ([]*GitPullRequest, error) {
+	opt := gitea.ListPullRequestsOptions{}
+	answer := []*GitPullRequest{}
+	for {
+		prs, err := p.Client.ListRepoPullRequests(owner, repo, opt)
+		if err != nil {
+			return answer, err
+		}
+		for _, pr := range prs {
+			answer = append(answer, p.toPullRequest(owner, repo, pr))
+		}
+		if len(prs) < pageSize || len(prs) == 0 {
+			break
+		}
+		opt.Page += 1
+	}
+	return answer, nil
+}
+
+func (p *GiteaProvider) GetPullRequest(owner string, repo *GitRepository, number int) (*GitPullRequest, error) {
 	pr := &GitPullRequest{
 		Owner:  owner,
 		Repo:   repo.Name,
 		Number: &number,
 	}
 	err := p.UpdatePullRequestStatus(pr)
-
-	existing := p.UserInfo(pr.Author.Login)
-	if existing != nil && existing.Email != "" {
-		pr.Author = existing
-	}
-
 	return pr, err
 }
 
-func (p *GiteaProvider) GetPullRequestCommits(owner string, repository *GitRepositoryInfo, number int) ([]*GitCommit, error) {
+func (p *GiteaProvider) GetPullRequestCommits(owner string, repository *GitRepository, number int) ([]*GitCommit, error) {
 	answer := []*GitCommit{}
 
 	// TODO there does not seem to be any way to get a diff of commits
@@ -601,6 +660,40 @@ func (p *GiteaProvider) UpdateRelease(owner string, repo string, tag string, rel
 	return err
 }
 
+// UpdateReleaseStatus updates the state (release/prerelease) of a release
+func (p *GiteaProvider) UpdateReleaseStatus(owner string, repo string, tag string, releaseInfo *GitRelease) error {
+	var release *gitea.Release
+	releases, err := p.Client.ListReleases(owner, repo)
+	found := false
+	for _, rel := range releases {
+		if rel.TagName == tag {
+			release = rel
+			found = true
+			break
+		}
+	}
+	flag := false
+
+	if found {
+		editRelease := gitea.EditReleaseOption{
+			TagName:      release.TagName,
+			Title:        release.Title,
+			Note:         release.Note,
+			IsDraft:      &flag,
+			IsPrerelease: &flag,
+		}
+
+		if editRelease.IsPrerelease != &releaseInfo.PreRelease {
+			editRelease.IsPrerelease = &releaseInfo.PreRelease
+		}
+		_, err := p.Client.EditRelease(owner, repo, release.ID, editRelease)
+		if err != nil {
+			return err
+		}
+	}
+	return err
+}
+
 func (p *GiteaProvider) HasIssues() bool {
 	return true
 }
@@ -675,20 +768,69 @@ func (p *GiteaProvider) UserInfo(username string) *GitUser {
 }
 
 func (p *GiteaProvider) AddCollaborator(user string, organisation string, repo string) error {
-	log.Infof("Automatically adding the pipeline user as a collaborator is currently not implemented for Gitea. Please add user: %v as a collaborator to this project.\n", user)
+	log.Logger().Infof("Automatically adding the pipeline user as a collaborator is currently not implemented for Gitea. Please add user: %v as a collaborator to this project.", user)
 	return nil
 }
 
 func (p *GiteaProvider) ListInvitations() ([]*github.RepositoryInvitation, *github.Response, error) {
-	log.Infof("Automatically adding the pipeline user as a collaborator is currently not implemented for Gitea.\n")
+	log.Logger().Infof("Automatically adding the pipeline user as a collaborator is currently not implemented for Gitea.")
 	return []*github.RepositoryInvitation{}, &github.Response{}, nil
 }
 
 func (p *GiteaProvider) AcceptInvitation(ID int64) (*github.Response, error) {
-	log.Infof("Automatically adding the pipeline user as a collaborator is currently not implemented for Gitea.\n")
+	log.Logger().Infof("Automatically adding the pipeline user as a collaborator is currently not implemented for Gitea.")
 	return &github.Response{}, nil
 }
 
 func (p *GiteaProvider) GetContent(org string, name string, path string, ref string) (*GitFileContent, error) {
 	return nil, fmt.Errorf("Getting content not supported on gitea")
+}
+
+// ShouldForkForPullReques treturns true if we should create a personal fork of this repository
+// before creating a pull request
+func (p *GiteaProvider) ShouldForkForPullRequest(originalOwner string, repoName string, username string) bool {
+	return originalOwner != username
+}
+
+func (p *GiteaProvider) ListCommits(owner, repo string, opt *ListCommitsArguments) ([]*GitCommit, error) {
+	return nil, fmt.Errorf("Listing commits not supported on gitea")
+}
+
+// AddLabelsToIssue adds labels to issues or pullrequests
+func (p *GiteaProvider) AddLabelsToIssue(owner, repo string, number int, labels []string) error {
+	return fmt.Errorf("Getting content not supported on gitea")
+}
+
+// GetLatestRelease fetches the latest release from the git provider for org and name
+func (p *GiteaProvider) GetLatestRelease(org string, name string) (*GitRelease, error) {
+	releases, err := p.Client.ListReleases(org, name)
+	if err != nil {
+		return nil, errors2.Wrapf(err, "getting releases for %s/%s", org, name)
+	}
+	return toGiteaRelease(org, name, releases[0]), nil
+}
+
+// UploadReleaseAsset will upload an asset to org/repo to a release with id, giving it a name, it will return the release asset from the git provider
+func (p *GiteaProvider) UploadReleaseAsset(org string, repo string, id int64, name string, asset *os.File) (*GitReleaseAsset, error) {
+	return nil, nil
+}
+
+// GetBranch returns the branch information for an owner/repo, including the commit at the tip
+func (p *GiteaProvider) GetBranch(owner string, repo string, branch string) (*GitBranch, error) {
+	return nil, nil
+}
+
+// GetProjects returns all the git projects in owner/repo
+func (p *GiteaProvider) GetProjects(owner string, repo string) ([]GitProject, error) {
+	return nil, nil
+}
+
+//ConfigureFeatures sets specific features as enabled or disabled for owner/repo
+func (p *GiteaProvider) ConfigureFeatures(owner string, repo string, issues *bool, projects *bool, wikis *bool) (*GitRepository, error) {
+	return nil, nil
+}
+
+// IsWikiEnabled returns true if a wiki is enabled for owner/repo
+func (p *GiteaProvider) IsWikiEnabled(owner string, repo string) (bool, error) {
+	return false, nil
 }

@@ -1,0 +1,15 @@
+pipelineConfig:
+  env:
+    - name: FRUIT
+      value: BANANA
+    - name: GIT_AUTHOR_NAME
+      value: somebodyelse
+  pipelines:
+    overrides:
+      - pipeline: release
+        name: build
+        step:
+          command: echo not actually building here
+      - pipeline: release
+        agent:
+          image: nodejs

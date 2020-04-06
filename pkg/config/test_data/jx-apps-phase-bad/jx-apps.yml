@@ -1,0 +1,6 @@
+defaultNamespace: jx
+applications:
+- name: velero
+  repository: https://kubernetes-charts.storage.googleapis.com
+  namespace: velero
+  phase: foo

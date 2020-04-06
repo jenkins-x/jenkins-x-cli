@@ -1,0 +1,26 @@
+apiVersion: tekton.dev/v1alpha1
+kind: PipelineRun
+metadata:
+  creationTimestamp: null
+  labels:
+    branch: build-pack
+    build: "1"
+    owner: abayer
+    jenkins.io/pipelineType: build
+    repository: js-test-repo
+  name: abayer-js-test-repo-build-pack-1
+spec:
+  params:
+  - name: version
+    value: 0.0.1
+  pipelineRef:
+    apiVersion: tekton.dev/v1alpha1
+    name: abayer-js-test-repo-build-pack-1
+  resources:
+  - name: abayer-js-test-repo-build-pack
+    resourceRef:
+      apiVersion: tekton.dev/v1alpha1
+      name: abayer-js-test-repo-build-pack
+  serviceAccountName: tekton-bot
+  timeout: 240h0m0s
+status: {}

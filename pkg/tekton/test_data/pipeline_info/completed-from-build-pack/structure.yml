@@ -1,0 +1,21 @@
+apiVersion: jenkins.io/v1
+kind: PipelineStructure
+metadata:
+  creationTimestamp: 2019-02-28T14:37:39Z
+  generation: 1
+  name: abayer-jx-demo-qs-master-1
+  namespace: jx
+  ownerReferences:
+    - apiVersion: tekton.dev/v1alpha1
+      kind: Pipeline
+      name: abayer-jx-demo-qs-master
+      uid: a86bc50c-3ac2-11e9-b04e-42010a8a0075
+  resourceVersion: "224258"
+  selfLink: /apis/jenkins.io/v1/namespaces/jx/pipelinestructures/abayer-jx-demo-qs-master-1
+  uid: 8ac56b37-3625-11e9-b776-42010a8a00ac
+pipelineRef: abayer-jx-demo-qs-master
+pipelineRunRef: abayer-jx-demo-qs-master-1
+stages:
+  - depth: 0
+    name: from-build-pack
+    taskRef: abayer-jx-demo-qs-master

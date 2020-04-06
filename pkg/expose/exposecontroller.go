@@ -7,34 +7,36 @@ import (
 	"time"
 
 	"github.com/jenkins-x/jx/pkg/helm"
-
-	"github.com/jenkins-x/jx/pkg/certmanager"
+	"github.com/jenkins-x/jx/pkg/util"
+	"github.com/pkg/errors"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 
-	"github.com/Pallinder/go-randomdata"
-	"github.com/jenkins-x/jx/pkg/config"
+	randomdata "github.com/Pallinder/go-randomdata"
 	"github.com/jenkins-x/jx/pkg/kube"
+	"github.com/jenkins-x/jx/pkg/kube/pki"
 	"github.com/jenkins-x/jx/pkg/kube/services"
+	certclient "github.com/jetstack/cert-manager/pkg/client/clientset/versioned"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const (
 	exposecontroller        = "exposecontroller"
-	exposecontrollerVersion = "2.3.82"
+	exposecontrollerVersion = ""
 	exposecontrollerChart   = "jenkins-x/exposecontroller"
 )
 
 // Expose gets an existing config from the devNamespace and runs exposecontroller in the targetNamespace
-func Expose(devNamespace, targetNamespace, password string, kubeClient kubernetes.Interface, helmer helm.Helmer, installTimeout string) error {
+func Expose(kubeClient kubernetes.Interface, certclient certclient.Interface, devNamespace, targetNamespace, password string,
+	helmer helm.Helmer, installTimeout string, versionsDir string) error {
 	// todo switch to using exposecontroller as a jx plugin
 	_, err := kubeClient.CoreV1().Secrets(targetNamespace).Get(kube.SecretBasicAuth, metav1.GetOptions{})
 	if err != nil {
 		data := make(map[string][]byte)
 
 		if password != "" {
-			hash := config.HashSha(password)
+			hash := util.HashPassword(password)
 			data[kube.AUTH] = []byte(fmt.Sprintf("admin:{SHA}%s", hash))
 		} else {
 			basicAuth, err := kubeClient.CoreV1().Secrets(devNamespace).Get(kube.SecretBasicAuth, metav1.GetOptions{})
@@ -61,33 +63,44 @@ func Expose(devNamespace, targetNamespace, password string, kubeClient kubernete
 		return fmt.Errorf("cannot get existing team exposecontroller config from namespace %s: %v", devNamespace, err)
 	}
 
-	err = services.AnnotateNamespaceServicesWithCertManager(kubeClient, targetNamespace, ic.Issuer)
-	if err != nil {
-		return err
+	// annotate the service with cert-manager issuer only if the TLS is enabled and issuer is not empty
+	if ic.TLS && ic.Issuer != "" {
+		_, err = services.AnnotateServicesWithCertManagerIssuer(kubeClient, targetNamespace, ic.Issuer, ic.ClusterIssuer)
+		if err != nil {
+			return err
+		}
+		err = pki.CreateCertManagerResources(certclient, targetNamespace, ic)
+		if err != nil {
+			return errors.Wrapf(err, "creating the cert-manager resources in namespace %q", targetNamespace)
+		}
 	}
 
-	// if targetnamespace is different than dev check if there's any certmanager CRDs, if not check dev and copy any found across
-	err = certmanager.CopyCertmanagerResources(targetNamespace, ic, kubeClient)
-	if err != nil {
-		return fmt.Errorf("failed to copy certmanager resources from %s to %s namespace: %v", devNamespace, targetNamespace, err)
-	}
-
-	return RunExposecontroller(devNamespace, targetNamespace, ic, kubeClient, helmer, installTimeout)
+	return RunExposecontroller(devNamespace, targetNamespace, ic, kubeClient, helmer, installTimeout, versionsDir)
 }
 
 // RunExposecontroller executes the ExposeController as a Job in the targetNamespace for the ingressConfig in ic
 // using the kubeClient and helmer interfaces, and respecting the installTimeout.
 // Additional services to expose can be specified.
 func RunExposecontroller(devNamespace, targetNamespace string, ic kube.IngressConfig,
-	kubeClient kubernetes.Interface, helmer helm.Helmer, installTimeout string, services ...string) error {
+	kubeClient kubernetes.Interface, helmer helm.Helmer, installTimeout string, versionsDir string, services ...string) error {
 
 	CleanExposecontrollerReources(kubeClient, targetNamespace)
 
-	exValues := []string{
-		"config.exposer=" + ic.Exposer,
-		"config.domain=" + ic.Domain,
-		"config.tlsacme=" + strconv.FormatBool(ic.TLS),
+	exValues := []string{}
+
+	if ic.Exposer != "" {
+		exValues = append(exValues, fmt.Sprintf("config.exposer=%s", ic.Exposer))
 	}
+
+	if ic.Domain != "" {
+		exValues = append(exValues, fmt.Sprintf("config.domain=%s", ic.Domain))
+	}
+
+	if ic.UrlTemplate != "" {
+		exValues = append(exValues, fmt.Sprintf("config.urltemplate=%q", ic.UrlTemplate))
+	}
+
+	exValues = append(exValues, fmt.Sprintf("config.tlsacme=%s", strconv.FormatBool(ic.TLS)))
 
 	if !ic.TLS && ic.Issuer != "" {
 		exValues = append(exValues, "config.http=true")
@@ -112,8 +125,9 @@ func RunExposecontroller(devNamespace, targetNamespace string, ic kube.IngressCo
 		Version:     exposecontrollerVersion,
 		Ns:          targetNamespace,
 		HelmUpdate:  true,
+		VersionsDir: versionsDir,
 		SetValues:   exValues,
-	}, helmer, kubeClient, installTimeout)
+	}, helmer, kubeClient, installTimeout, nil)
 	if err != nil {
 		return fmt.Errorf("exposecontroller deployment failed: %v", err)
 	}

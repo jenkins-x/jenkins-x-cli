@@ -1,0 +1,46 @@
+apiVersion: tekton.dev/v1alpha1
+kind: Pipeline
+metadata:
+  creationTimestamp: "2019-09-06T05:24:17Z"
+  generation: 1
+  labels:
+    branch: PR-1
+    build: "1"
+    context: pr-build
+    owner: cb-kubecd
+    repository: bdd-spring-1567745634
+  name: cb-kubecd-bdd-spring-1567745634-s92nd-1
+  namespace: jx
+  ownerReferences:
+  - apiVersion: jenkins.io/v1
+    kind: PipelineActivity
+    name: cb-kubecd-bdd-spring-1567745634-pr-1-1
+    uid: 84f23b66-d066-11e9-8eea-42010a8400f6
+  resourceVersion: "11151"
+  selfLink: /apis/tekton.dev/v1alpha1/namespaces/jx/pipelines/cb-kubecd-bdd-spring-1567745634-s92nd-1
+  uid: 9264a416-d066-11e9-8eea-42010a8400f6
+spec:
+  params:
+  - default: 0.0.0-SNAPSHOT-PR-1-1
+    description: the version number for this pipeline which is used as a tag on docker
+      images and helm charts
+    name: version
+  - default: "1"
+    description: the PipelineRun build number
+    name: build_id
+  resources:
+  - name: cb-kubecd-bdd-spring-1567745634
+    type: git
+  tasks:
+  - name: from-build-pack
+    params:
+    - name: version
+      value: ${params.version}
+    - name: build_id
+      value: ${params.build_id}
+    resources:
+      inputs:
+      - name: workspace
+        resource: cb-kubecd-bdd-spring-1567745634
+    taskRef:
+      name: cb-kubecd-bdd-spring-1567745634-s92nd-from-build-pack-1

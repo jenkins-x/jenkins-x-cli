@@ -3,11 +3,14 @@ package gits
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
+	"net/url"
+	"os"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/pkg/errors"
 
 	"github.com/google/go-github/github"
 	"github.com/mitchellh/mapstructure"
@@ -17,6 +20,9 @@ import (
 	"github.com/jenkins-x/jx/pkg/log"
 	"github.com/jenkins-x/jx/pkg/util"
 )
+
+// pageLimit is used for the page size for API responses
+const pageLimit = 25
 
 // BitbucketServerProvider implements GitProvider interface for a bitbucket server
 type BitbucketServerProvider struct {
@@ -64,8 +70,33 @@ type reposPage struct {
 	Values        []bitbucket.Repository `json:"values"`
 }
 
-type pullrequestEndpointBranch struct {
-	Name string `json:"name,omitempty"`
+type pullRequestPage struct {
+	Size          int                     `json:"size"`
+	Limit         int                     `json:"limit"`
+	Start         int                     `json:"start"`
+	NextPageStart int                     `json:"nextPageStart"`
+	IsLastPage    bool                    `json:"isLastPage"`
+	Values        []bitbucket.PullRequest `json:"values"`
+}
+
+type webHooksPage struct {
+	Size          int       `json:"size"`
+	Limit         int       `json:"limit"`
+	Start         int       `json:"start"`
+	NextPageStart int       `json:"nextPageStart"`
+	IsLastPage    bool      `json:"isLastPage"`
+	Values        []webHook `json:"values"`
+}
+
+type webHook struct {
+	ID            int64                  `json:"id"`
+	Name          string                 `json:"name"`
+	CreatedDate   int64                  `json:"createdDate"`
+	UpdatedDate   int64                  `json:"updatedDate"`
+	Events        []string               `json:"events"`
+	Configuration map[string]interface{} `json:"configuration"`
+	URL           string                 `json:"url"`
+	Active        bool                   `json:"active"`
 }
 
 func NewBitbucketServerProvider(server *auth.AuthServer, user *auth.UserAuth, git Gitter) (GitProvider, error) {
@@ -112,12 +143,17 @@ func BitbucketServerRepositoryToGitRepository(bRepo bitbucket.Repository) *GitRe
 		httpCloneURL = sshURL
 	}
 
+	htmlURL := bRepo.Links.Self[0].Href
 	return &GitRepository{
-		Name:     bRepo.Name,
-		HTMLURL:  bRepo.Links.Self[0].Href,
-		CloneURL: httpCloneURL,
-		SSHURL:   sshURL,
-		Fork:     isFork,
+		Name:         bRepo.Name,
+		HTMLURL:      htmlURL,
+		CloneURL:     httpCloneURL,
+		SSHURL:       sshURL,
+		URL:          htmlURL,
+		Fork:         isFork,
+		Private:      !bRepo.Public,
+		Organisation: strings.ToLower(bRepo.Project.Key),
+		Project:      bRepo.Project.Key,
 	}
 }
 
@@ -143,7 +179,7 @@ func (b *BitbucketServerProvider) ListOrganisations() ([]GitOrganisation, error)
 	paginationOptions := make(map[string]interface{})
 
 	paginationOptions["start"] = 0
-	paginationOptions["limit"] = 25
+	paginationOptions["limit"] = pageLimit
 	for {
 		apiResponse, err := b.Client.DefaultApi.GetProjects(paginationOptions)
 		if err != nil {
@@ -162,7 +198,9 @@ func (b *BitbucketServerProvider) ListOrganisations() ([]GitOrganisation, error)
 		if orgsPage.IsLastPage {
 			break
 		}
-		paginationOptions["start"] = orgsPage.NextPageStart
+		if !b.moveToNextPage(paginationOptions, orgsPage.NextPageStart) {
+			break
+		}
 	}
 
 	return orgsList, nil
@@ -174,7 +212,7 @@ func (b *BitbucketServerProvider) ListRepositories(org string) ([]*GitRepository
 	paginationOptions := make(map[string]interface{})
 
 	paginationOptions["start"] = 0
-	paginationOptions["limit"] = 25
+	paginationOptions["limit"] = pageLimit
 
 	for {
 		apiResponse, err := b.Client.DefaultApi.GetRepositoriesWithOptions(org, paginationOptions)
@@ -194,7 +232,9 @@ func (b *BitbucketServerProvider) ListRepositories(org string) ([]*GitRepository
 		if reposPage.IsLastPage {
 			break
 		}
-		paginationOptions["start"] = reposPage.NextPageStart
+		if !b.moveToNextPage(paginationOptions, reposPage.NextPageStart) {
+			break
+		}
 	}
 
 	return repos, nil
@@ -328,18 +368,18 @@ func (b *BitbucketServerProvider) CreatePullRequest(data *GitPullRequestArgument
 		"fromRef": map[string]interface{}{
 			"id": data.Head,
 			"repository": map[string]interface{}{
-				"slug": data.GitRepositoryInfo.Name,
+				"slug": data.GitRepository.Name,
 				"project": map[string]interface{}{
-					"key": data.GitRepositoryInfo.Project,
+					"key": data.GitRepository.Project,
 				},
 			},
 		},
 		"toRef": map[string]interface{}{
 			"id": data.Base,
 			"repository": map[string]interface{}{
-				"slug": data.GitRepositoryInfo.Name,
+				"slug": data.GitRepository.Name,
 				"project": map[string]interface{}{
-					"key": data.GitRepositoryInfo.Project,
+					"key": data.GitRepository.Project,
 				},
 			},
 		},
@@ -350,7 +390,7 @@ func (b *BitbucketServerProvider) CreatePullRequest(data *GitPullRequestArgument
 		return nil, err
 	}
 
-	apiResponse, err := b.Client.DefaultApi.CreatePullRequestWithOptions(data.GitRepositoryInfo.Project, data.GitRepositoryInfo.Name, requestBody)
+	apiResponse, err := b.Client.DefaultApi.CreatePullRequestWithOptions(data.GitRepository.Project, data.GitRepository.Name, requestBody)
 	if err != nil {
 		return nil, err
 	}
@@ -364,7 +404,7 @@ func (b *BitbucketServerProvider) CreatePullRequest(data *GitPullRequestArgument
 	for i := 0; i < 30; i++ {
 		time.Sleep(2 * time.Second)
 
-		apiResponse, err = b.Client.DefaultApi.GetPullRequest(data.GitRepositoryInfo.Project, data.GitRepositoryInfo.Name, bPullRequest.ID)
+		apiResponse, err = b.Client.DefaultApi.GetPullRequest(data.GitRepository.Project, data.GitRepository.Name, bPullRequest.ID)
 		if err == nil {
 			break
 		}
@@ -385,6 +425,11 @@ func (b *BitbucketServerProvider) CreatePullRequest(data *GitPullRequestArgument
 		Number: &bPR.ID,
 		State:  &bPR.State,
 	}, nil
+}
+
+// UpdatePullRequest updates pull request number with data
+func (b *BitbucketServerProvider) UpdatePullRequest(data *GitPullRequestArguments, number int) (*GitPullRequest, error) {
+	return nil, errors.Errorf("Not yet implemented for bitbucket")
 }
 
 func parseBitBucketServerURL(URL string) (string, string) {
@@ -488,7 +533,7 @@ func (b *BitbucketServerProvider) UpdatePullRequestStatus(pr *GitPullRequest) er
 	return nil
 }
 
-func (b *BitbucketServerProvider) GetPullRequest(owner string, repo *GitRepositoryInfo, number int) (*GitPullRequest, error) {
+func (b *BitbucketServerProvider) GetPullRequest(owner string, repo *GitRepository, number int) (*GitPullRequest, error) {
 	var bPR bitbucket.PullRequest
 
 	apiResponse, err := b.Client.DefaultApi.GetPullRequest(repo.Project, repo.Name, number)
@@ -501,49 +546,111 @@ func (b *BitbucketServerProvider) GetPullRequest(owner string, repo *GitReposito
 		return nil, err
 	}
 
+	answer := b.toPullRequest(bPR)
+	return answer, nil
+}
+
+func (b *BitbucketServerProvider) toPullRequest(bPR bitbucket.PullRequest) *GitPullRequest {
 	author := &GitUser{
 		URL:   bPR.Author.User.Links.Self[0].Href,
 		Login: bPR.Author.User.Slug,
 		Name:  bPR.Author.User.Name,
-		Email: bPR.Author.User.Email,
+		Email: bPR.Author.User.EmailAddress,
 	}
-
-	return &GitPullRequest{
-		URL:    bPR.Links.Self[0].Href,
-		Owner:  bPR.Author.User.Name,
-		Repo:   bPR.ToRef.Repository.Name,
-		Number: &bPR.ID,
-		State:  &bPR.State,
-		Author: author,
+	answer := &GitPullRequest{
+		URL:           bPR.Links.Self[0].Href,
+		Owner:         bPR.Author.User.Name,
+		Repo:          bPR.ToRef.Repository.Name,
+		Number:        &bPR.ID,
+		State:         &bPR.State,
+		Author:        author,
 		LastCommitSha: bPR.FromRef.LatestCommit,
-	}, nil
+	}
+	return answer
 }
 
-func convertBitBucketCommitToGitCommit(bCommit *bitbucket.Commit, repo *GitRepositoryInfo) *GitCommit {
+// ListOpenPullRequests lists the open pull requests
+func (b *BitbucketServerProvider) ListOpenPullRequests(owner string, repo string) ([]*GitPullRequest, error) {
+	answer := []*GitPullRequest{}
+	var pullRequests pullRequestPage
+
+	paginationOptions := make(map[string]interface{})
+
+	paginationOptions["start"] = 0
+	paginationOptions["limit"] = pageLimit
+
+	// TODO how to pass in the owner and repo and status? these are total guesses
+	paginationOptions["owner"] = owner
+	paginationOptions["repo"] = repo
+	paginationOptions["state"] = "open"
+
+	for {
+		apiResponse, err := b.Client.DefaultApi.GetPullRequests(paginationOptions)
+		if err != nil {
+			return nil, err
+		}
+
+		err = mapstructure.Decode(apiResponse.Values, &pullRequests)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, pr := range pullRequests.Values {
+			answer = append(answer, b.toPullRequest(pr))
+		}
+
+		if pullRequests.IsLastPage {
+			break
+		}
+		if !b.moveToNextPage(paginationOptions, pullRequests.NextPageStart) {
+			break
+		}
+	}
+	return answer, nil
+}
+
+// moveToNextPage returns true if we should move to the next page
+func (b *BitbucketServerProvider) moveToNextPage(paginationOptions map[string]interface{}, nextPage int) bool {
+	lastStartValue := paginationOptions["start"]
+	lastStart, _ := lastStartValue.(int)
+	if lastStart < 0 {
+		lastStart = 0
+	}
+	if nextPage < 0 {
+		return false
+	}
+	if nextPage <= lastStart {
+		return false
+	}
+	paginationOptions["start"] = nextPage
+	return true
+}
+
+func convertBitBucketCommitToGitCommit(bCommit *bitbucket.Commit, repo *GitRepository) *GitCommit {
 	return &GitCommit{
 		SHA:     bCommit.ID,
 		Message: bCommit.Message,
 		Author: &GitUser{
 			Login: bCommit.Author.Name,
 			Name:  bCommit.Author.DisplayName,
-			Email: bCommit.Author.Email,
+			Email: bCommit.Author.EmailAddress,
 		},
 		URL: repo.URL + "/commits/" + bCommit.ID,
 		Committer: &GitUser{
 			Login: bCommit.Committer.Name,
 			Name:  bCommit.Committer.DisplayName,
-			Email: bCommit.Committer.Email,
+			Email: bCommit.Committer.EmailAddress,
 		},
 	}
 }
 
-func (b *BitbucketServerProvider) GetPullRequestCommits(owner string, repository *GitRepositoryInfo, number int) ([]*GitCommit, error) {
+func (b *BitbucketServerProvider) GetPullRequestCommits(owner string, repository *GitRepository, number int) ([]*GitCommit, error) {
 	var commitsPage commitsPage
 	commits := []*GitCommit{}
 	paginationOptions := make(map[string]interface{})
 
 	paginationOptions["start"] = 0
-	paginationOptions["limit"] = 25
+	paginationOptions["limit"] = pageLimit
 	for {
 		apiResponse, err := b.Client.DefaultApi.GetPullRequestCommitsWithOptions(repository.Project, repository.Name, number, paginationOptions)
 		if err != nil {
@@ -562,7 +669,9 @@ func (b *BitbucketServerProvider) GetPullRequestCommits(owner string, repository
 		if commitsPage.IsLastPage {
 			break
 		}
-		paginationOptions["start"] = commitsPage.NextPageStart
+		if !b.moveToNextPage(paginationOptions, commitsPage.NextPageStart) {
+			break
+		}
 	}
 
 	return commits, nil
@@ -670,8 +779,48 @@ func (b *BitbucketServerProvider) MergePullRequest(pr *GitPullRequest, message s
 	return nil
 }
 
+func (b *BitbucketServerProvider) parseWebHookURL(data *GitWebHookArguments) (string, string, error) {
+	repoURL := data.Repo.URL
+	owner := data.Repo.Organisation
+	repoName := data.Repo.Name
+	if repoURL == "" {
+		repository, err := b.GetRepository(owner, repoName)
+		if err != nil {
+			return "", "", errors.Wrapf(err, "failed to find repository %s/%s in server %s", owner, repoName, b.Server.URL)
+		}
+		repoURL = repository.URL
+		if repoURL == "" {
+			repoURL = repository.HTMLURL
+		}
+		if repoURL == "" {
+			return "", "", errors.Wrapf(err, "repository %s/%s on server %s has no URL", owner, repoName, b.Server.URL)
+		}
+	}
+	projectKey, repo := parseBitBucketServerURL(repoURL)
+	return projectKey, repo, nil
+}
+
+// CreateWebHook adds a new webhook to a git repository
 func (b *BitbucketServerProvider) CreateWebHook(data *GitWebHookArguments) error {
-	projectKey, repo := parseBitBucketServerURL(data.Repo.URL)
+	projectKey, repo, err := b.parseWebHookURL(data)
+	if err != nil {
+		return err
+	}
+
+	if data.URL == "" {
+		return errors.New("missing property URL")
+	}
+
+	hooks, err := b.ListWebHooks(projectKey, repo)
+	if err != nil {
+		return errors.Wrapf(err, "error querying webhooks on %s/%s\n", projectKey, repo)
+	}
+	for _, hook := range hooks {
+		if data.URL == hook.URL {
+			log.Logger().Warnf("Already has a webhook registered for %s", data.URL)
+			return nil
+		}
+	}
 
 	var options = map[string]interface{}{
 		"url":    data.URL,
@@ -688,28 +837,128 @@ func (b *BitbucketServerProvider) CreateWebHook(data *GitWebHookArguments) error
 
 	requestBody, err := json.Marshal(options)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "failed to JSON encode webhook request body for creation")
 	}
 
 	_, err = b.Client.DefaultApi.CreateWebhook(projectKey, repo, requestBody, []string{"application/json"})
 
-	return err
+	if err != nil {
+		return errors.Wrapf(err, "create webhook request failed on %s/%s", projectKey, repo)
+	}
+	return nil
 }
 
-func (p *BitbucketServerProvider) ListWebHooks(owner string, repo string) ([]*GitWebHookArguments, error) {
-	webHooks := []*GitWebHookArguments{}
-	return webHooks, fmt.Errorf("not implemented!")
+// ListWebHooks lists all of the webhooks on a given git repository
+func (b *BitbucketServerProvider) ListWebHooks(owner string, repo string) ([]*GitWebHookArguments, error) {
+	var webHooksPage webHooksPage
+	var webHooks []*GitWebHookArguments
+
+	paginationOptions := make(map[string]interface{})
+	paginationOptions["start"] = 0
+	paginationOptions["limit"] = pageLimit
+
+	for {
+		apiResponse, err := b.Client.DefaultApi.FindWebhooks(owner, repo, paginationOptions)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to list webhooks on repository %s/%s", owner, repo)
+		}
+
+		err = mapstructure.Decode(apiResponse.Values, &webHooksPage)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to decode response from list webhooks")
+		}
+
+		for _, wh := range webHooksPage.Values {
+			secret := ""
+			if cfg, ok := wh.Configuration["secret"].(string); ok {
+				secret = cfg
+			}
+
+			webHooks = append(webHooks, &GitWebHookArguments{
+				ID:     wh.ID,
+				Owner:  owner,
+				Repo:   nil,
+				URL:    wh.URL,
+				Secret: secret,
+			})
+		}
+
+		if webHooksPage.IsLastPage {
+			break
+		}
+		if !b.moveToNextPage(paginationOptions, webHooksPage.NextPageStart) {
+			break
+		}
+	}
+
+	return webHooks, nil
 }
 
-func (p *BitbucketServerProvider) UpdateWebHook(data *GitWebHookArguments) error {
-	return fmt.Errorf("not implemented!")
+// UpdateWebHook is used to update a webhook on a git repository.  It is best to pass in the webhook ID.
+func (b *BitbucketServerProvider) UpdateWebHook(data *GitWebHookArguments) error {
+	projectKey, repo, err := b.parseWebHookURL(data)
+	if err != nil {
+		return err
+	}
+
+	if data.URL == "" {
+		return errors.New("missing property URL")
+	}
+
+	dataID := data.ID
+	if dataID == 0 && data.ExistingURL != "" {
+		hooks, err := b.ListWebHooks(projectKey, repo)
+		if err != nil {
+			log.Logger().Errorf("Error querying webhooks on %s/%s: %s", projectKey, repo, err)
+		}
+		for _, hook := range hooks {
+			if data.ExistingURL == hook.URL {
+				log.Logger().Warnf("Found existing webhook for url %s", data.ExistingURL)
+				dataID = hook.ID
+			}
+		}
+	}
+	if dataID == 0 {
+		log.Logger().Warn("No webhooks found to update")
+		return nil
+	}
+	id := int32(dataID)
+	if int64(id) != dataID {
+		return errors.Errorf("Failed to update webhook with ID = %d due to int32 conversion failure", dataID)
+	}
+
+	var options = map[string]interface{}{
+		"url":    data.URL,
+		"name":   "Jenkins X Web Hook",
+		"active": true,
+		"events": []string{"repo:refs_changed", "repo:modified", "repo:forked", "repo:comment:added", "repo:comment:edited", "repo:comment:deleted", "pr:opened", "pr:reviewer:approved", "pr:reviewer:unapproved", "pr:reviewer:needs_work", "pr:merged", "pr:declined", "pr:deleted", "pr:comment:added", "pr:comment:edited", "pr:comment:deleted"},
+	}
+
+	if data.Secret != "" {
+		options["configuration"] = map[string]interface{}{
+			"secret": data.Secret,
+		}
+	}
+
+	requestBody, err := json.Marshal(options)
+	if err != nil {
+		return errors.Wrap(err, "failed to JSON encode webhook request body for update")
+	}
+
+	log.Logger().Infof("Updating Bitbucket server webhook for %s/%s for url %s", util.ColorInfo(projectKey), util.ColorInfo(repo), util.ColorInfo(data.URL))
+	_, err = b.Client.DefaultApi.UpdateWebhook(projectKey, repo, id, requestBody, []string{"application/json"})
+
+	if err != nil {
+		return errors.Wrapf(err, "failed to update webhook on %s/%s", projectKey, repo)
+	}
+	return nil
 }
 
 func (b *BitbucketServerProvider) SearchIssues(org string, name string, query string) ([]*GitIssue, error) {
 
 	gitIssues := []*GitIssue{}
 
-	log.Warn("Searching issues on bitbucket server is not supported at this moment")
+	log.Logger().Warn("Searching issues on bitbucket server is not supported at this moment")
 
 	return gitIssues, nil
 }
@@ -724,7 +973,7 @@ func (b *BitbucketServerProvider) SearchIssuesClosedSince(org string, name strin
 
 func (b *BitbucketServerProvider) GetIssue(org string, name string, number int) (*GitIssue, error) {
 
-	log.Warn("Finding an issue on bitbucket server is not supported at this moment")
+	log.Logger().Warn("Finding an issue on bitbucket server is not supported at this moment")
 	return &GitIssue{}, nil
 }
 
@@ -743,7 +992,7 @@ func (b *BitbucketServerProvider) IssueURL(org string, name string, number int, 
 
 func (b *BitbucketServerProvider) CreateIssue(owner string, repo string, issue *GitIssue) (*GitIssue, error) {
 
-	log.Warn("Creating an issue on bitbucket server is not suuported at this moment")
+	log.Logger().Warn("Creating an issue on bitbucket server is not suuported at this moment")
 	return &GitIssue{}, nil
 }
 
@@ -762,7 +1011,7 @@ func (b *BitbucketServerProvider) AddPRComment(pr *GitPullRequest, comment strin
 }
 
 func (b *BitbucketServerProvider) CreateIssueComment(owner string, repo string, number int, comment string) error {
-	log.Warn("Bitbucket Server doesn't support adding issue comments via the REST API")
+	log.Logger().Warn("Bitbucket Server doesn't support adding issue comments via the REST API")
 	return nil
 }
 
@@ -796,7 +1045,7 @@ func (b *BitbucketServerProvider) Kind() string {
 
 // Exposed by Jenkins plugin; this one is for https://wiki.jenkins.io/display/JENKINS/BitBucket+Plugin
 func (b *BitbucketServerProvider) JenkinsWebHookPath(gitURL string, secret string) string {
-	return "/bitbucket-scmsource-hook/notify"
+	return "/bitbucket-scmsource-hook/notify?server_url=" + url.QueryEscape(b.Server.URL)
 }
 
 func (b *BitbucketServerProvider) Label() string {
@@ -823,7 +1072,7 @@ func (b *BitbucketServerProvider) UserInfo(username string) *GitUser {
 	var user bitbucket.UserWithLinks
 	apiResponse, err := b.Client.DefaultApi.GetUser(username)
 	if err != nil {
-		log.Error("Unable to fetch user info for " + username + " due to " + err.Error() + "\n")
+		log.Logger().Error("Unable to fetch user info for " + username + " due to " + err.Error())
 		return nil
 	}
 	err = mapstructure.Decode(apiResponse.Values, &user)
@@ -831,39 +1080,59 @@ func (b *BitbucketServerProvider) UserInfo(username string) *GitUser {
 	return &GitUser{
 		Login: username,
 		Name:  user.DisplayName,
-		Email: user.Email,
+		Email: user.EmailAddress,
 		URL:   user.Links.Self[0].Href,
 	}
 }
 
 func (b *BitbucketServerProvider) UpdateRelease(owner string, repo string, tag string, releaseInfo *GitRelease) error {
-	log.Warn("Bitbucket Server doesn't support releases")
+	log.Logger().Warn("Bitbucket Server doesn't support releases")
+	return nil
+}
+
+// UpdateReleaseStatus is not supported for this git provider
+func (b *BitbucketServerProvider) UpdateReleaseStatus(owner string, repo string, tag string, releaseInfo *GitRelease) error {
+	log.Logger().Warn("Bitbucket Server doesn't support releases")
 	return nil
 }
 
 func (b *BitbucketServerProvider) ListReleases(org string, name string) ([]*GitRelease, error) {
 	answer := []*GitRelease{}
-	log.Warn("Bitbucket Server doesn't support releases")
+	log.Logger().Warn("Bitbucket Server doesn't support releases")
 	return answer, nil
 }
 
+// GetRelease is unsupported on bitbucket as releases are not supported
+func (b *BitbucketServerProvider) GetRelease(org string, name string, tag string) (*GitRelease, error) {
+	log.Logger().Warn("Bitbucket Cloud doesn't support releases")
+	return nil, nil
+}
+
 func (b *BitbucketServerProvider) AddCollaborator(user string, organisation string, repo string) error {
-	log.Infof("Automatically adding the pipeline user as a collaborator is currently not implemented for bitbucket. Please add user: %v as a collaborator to this project.\n", user)
+	log.Logger().Infof("Automatically adding the pipeline user as a collaborator is currently not implemented for bitbucket. Please add user: %v as a collaborator to this project.", user)
 	return nil
 }
 
 func (b *BitbucketServerProvider) ListInvitations() ([]*github.RepositoryInvitation, *github.Response, error) {
-	log.Infof("Automatically adding the pipeline user as a collaborator is currently not implemented for bitbucket.\n")
+	log.Logger().Infof("Automatically adding the pipeline user as a collaborator is currently not implemented for bitbucket.")
 	return []*github.RepositoryInvitation{}, &github.Response{}, nil
 }
 
 func (b *BitbucketServerProvider) AcceptInvitation(ID int64) (*github.Response, error) {
-	log.Infof("Automatically adding the pipeline user as a collaborator is currently not implemented for bitbucket.\n")
+	log.Logger().Infof("Automatically adding the pipeline user as a collaborator is currently not implemented for bitbucket.")
 	return &github.Response{}, nil
 }
 
 func (b *BitbucketServerProvider) GetContent(org string, name string, path string, ref string) (*GitFileContent, error) {
 	return nil, fmt.Errorf("Getting content not supported on bitbucket")
+}
+
+// ShouldForkForPullReques treturns true if we should create a personal fork of this repository
+// before creating a pull request
+func (b *BitbucketServerProvider) ShouldForkForPullRequest(originalOwner string, repoName string, username string) bool {
+	// return originalOwner != username
+	// TODO assuming forking doesn't work yet?
+	return false
 }
 
 func BitBucketServerAccessTokenURL(url string) string {
@@ -872,4 +1141,45 @@ func BitBucketServerAccessTokenURL(url string) string {
 	//
 	// is there a way to do that for bitbucket?
 	return util.UrlJoin(url, "/plugins/servlet/access-tokens/manage")
+}
+
+// ListCommits lists the commits for the specified repo and owner
+func (b *BitbucketServerProvider) ListCommits(owner, repo string, opt *ListCommitsArguments) ([]*GitCommit, error) {
+	return nil, fmt.Errorf("Listing commits not supported on bitbucket")
+}
+
+// AddLabelsToIssue adds labels to issues or pullrequests
+func (b *BitbucketServerProvider) AddLabelsToIssue(owner, repo string, number int, labels []string) error {
+	log.Logger().Warnf("Adding labels not supported on bitbucket server yet for repo %s/%s issue %d labels %v", owner, repo, number, labels)
+	return nil
+}
+
+// GetLatestRelease fetches the latest release from the git provider for org and name
+func (b *BitbucketServerProvider) GetLatestRelease(org string, name string) (*GitRelease, error) {
+	return nil, nil
+}
+
+// UploadReleaseAsset will upload an asset to org/repo to a release with id, giving it a name, it will return the release asset from the git provider
+func (b *BitbucketServerProvider) UploadReleaseAsset(org string, repo string, id int64, name string, asset *os.File) (*GitReleaseAsset, error) {
+	return nil, nil
+}
+
+// GetBranch returns the branch information for an owner/repo, including the commit at the tip
+func (b *BitbucketServerProvider) GetBranch(owner string, repo string, branch string) (*GitBranch, error) {
+	return nil, nil
+}
+
+// GetProjects returns all the git projects in owner/repo
+func (b *BitbucketServerProvider) GetProjects(owner string, repo string) ([]GitProject, error) {
+	return nil, nil
+}
+
+//ConfigureFeatures sets specific features as enabled or disabled for owner/repo
+func (b *BitbucketServerProvider) ConfigureFeatures(owner string, repo string, issues *bool, projects *bool, wikis *bool) (*GitRepository, error) {
+	return nil, nil
+}
+
+// IsWikiEnabled returns true if a wiki is enabled for owner/repo
+func (b *BitbucketServerProvider) IsWikiEnabled(owner string, repo string) (bool, error) {
+	return false, nil
 }

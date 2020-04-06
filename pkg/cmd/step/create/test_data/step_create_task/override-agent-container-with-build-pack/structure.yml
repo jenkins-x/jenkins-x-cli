@@ -1,0 +1,15 @@
+metadata:
+  creationTimestamp: null
+  labels:
+    branch: override-default-agent
+    build: "1"
+    jenkins.io/pipelineType: build
+    owner: abayer
+    repository: js-test-repo
+  name: abayer-js-test-repo-override-de-vr6ds-1
+pipelineRef: null
+pipelineRunRef: null
+stages:
+- depth: 0
+  name: from-build-pack
+  taskRef: abayer-js-test-repo-override-de-vr6ds-from-build-pack-1

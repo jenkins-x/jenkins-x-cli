@@ -1,0 +1,80 @@
+trigger:
+  trustedOrg: roadrunner-corp
+approve:
+  lgtmActsAsApprove: true
+  ignoreReviewState: false
+externalPlugins:
+  entries:
+  - name: jx-app-cheese
+    endpoint: http://jx-app-cheese
+schedulerAgent:
+  agent: prow
+policy:
+  protectTested: true
+merger:
+  blockerLabel: hold
+  prStatusBaseUrl: http://fakeurl
+  maxGoroutines: 5
+  policy:
+    fromBranchProtection: true
+    requiredContexts:
+      entries:
+        - context1
+        - context2
+    requiredIfPresentContexts:
+      entries:
+        - context55
+        - context66
+        - context77
+    optionalContexts:
+      entries:
+        - opt1
+postsubmits:
+  entries:
+  - name: release
+    context: ""
+    branches:
+      entries:
+      - master
+    agent: tekton
+
+presubmits:
+  entries:
+  - name: integration
+    agent: tekton
+    alwaysRun: true
+    context: integration
+    rerunCommand: /test this
+    trigger: (?m)^/test( all| this),?(\s+|$)
+    queries:
+      - labels:
+          entries:
+            - approved
+        missingLabels:
+          entries:
+          - do-not-merge
+          - do-not-merge/hold
+          - do-not-merge/work-in-progress
+          - needs-ok-to-test
+          - needs-rebase
+    policy:
+      protect: true
+      requiredStatusChecks:
+        contexts:
+          entries:
+          - integration
+plugins:
+  entries:
+  - config-updater
+  - approve
+  - assign
+  - blunderbuss
+  - help
+  - hold
+  - lgtm
+  - lifecycle
+  - size
+  - trigger
+  - wip
+  - heart
+  - override

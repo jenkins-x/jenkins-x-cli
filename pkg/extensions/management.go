@@ -20,7 +20,7 @@ func GetAndDeduplicateChildrenRecursively(ext jenkinsv1.Extension, lookupByUUID 
 				return err
 			}
 		} else {
-			log.Warnf("Unable to find child %s of %s\n", childUUID, ext.Spec.FullyQualifiedName())
+			log.Logger().Warnf("Unable to find child %s of %s", childUUID, ext.Spec.FullyQualifiedName())
 		}
 	}
 	return nil

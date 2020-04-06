@@ -1,0 +1,81 @@
+schedulerAgent:
+  agent: prow
+policy:
+  protectTested: true
+postsubmits:
+  entries:
+    - name: release
+      context: ""
+      branches:
+        entries:
+          - master
+      agent: tekton
+presubmits:
+  entries:
+    - agent: tekton
+      alwaysRun: true
+      context: integration
+      name: integration
+      rerunCommand: /test this
+      trigger: (?m)^/test( all| this),?(\s+|$)
+      queries:
+        - labels:
+            entries:
+            - approved
+          missingLabels:
+            entries:
+            - do-not-merge
+            - do-not-merge/hold
+            - do-not-merge/work-in-progress
+            - needs-ok-to-test
+            - needs-rebase
+      policy:
+        protect: true
+        requiredStatusChecks:
+          contexts:
+            entries:
+            - integration
+    - agent: tekton
+      alwaysRun: true
+      context: context2
+      name: context2
+      rerunCommand: /test context2
+      trigger: (?m)^/test( all| context2),?(\s+|$)
+      queries:
+        - labels:
+            entries:
+              - approved
+          missingLabels:
+            entries:
+              - do-not-merge
+              - do-not-merge/hold
+              - do-not-merge/work-in-progress
+              - needs-ok-to-test
+              - needs-rebase
+      policy:
+        protect: true
+        requiredStatusChecks:
+          contexts:
+            entries:
+              - context2
+    - agent: tekton
+      alwaysRun: false
+      context: context3
+      name: context3
+      rerunCommand: /test context3
+      trigger: (?m)^/test( all| context3),?(\s+|$)
+      queries:
+        - labels:
+            entries:
+              - approved
+          missingLabels:
+            entries:
+              - do-not-merge
+              - do-not-merge/hold
+              - do-not-merge/work-in-progress
+              - needs-ok-to-test
+              - needs-rebase
+merger:
+  policy:
+    fromBranchProtection: true
+    skipUnknownContexts: false

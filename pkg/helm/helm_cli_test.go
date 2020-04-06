@@ -1,3 +1,5 @@
+// +build unit
+
 package helm_test
 
 import (
@@ -7,6 +9,8 @@ import (
 	"path/filepath"
 	"testing"
 
+	kube_test "github.com/jenkins-x/jx/pkg/kube/mocks"
+
 	"github.com/jenkins-x/jx/pkg/helm"
 	"github.com/stretchr/testify/assert"
 
@@ -15,6 +19,7 @@ import (
 )
 
 const binary = "helm"
+const binaryV3 = "helm3"
 const cwd = "test"
 const repo = "test-repo"
 const repoURL = "http://test-repo"
@@ -26,7 +31,7 @@ const listRepoOutput = `
 NAME            URL
 stable          https://kubernetes-charts.storage.googleapis.com
 local           http://127.0.0.1:8879/charts
-jenkins-x       http://chartmuseum.jenkins-x.io
+jenkins-x       https://storage.googleapis.com/chartmuseum.jenkins-x.io
 	`
 const searchVersionOutput = `
 NAME                            		CHART VERSION	APP VERSION		DESCRIPTION
@@ -43,15 +48,28 @@ jxing                           1               Wed Jun  6 14:24:42 2018        
 vault-operator                  1               Mon Jun 25 16:09:28 2018        DEPLOYED        vault-operator-0.1.0            jx
 `
 
+const listReleasesOutputHelm3 = `
+NAME 	NAMESPACE	REVISION	UPDATED                             	STATUS  	CHART
+jxing	jx       	2       	2019-05-17 15:30:07.629472 +0100 BST	deployed	nginx-ingress-1.3.1`
+
 func createHelm(t *testing.T, expectedError error, expectedOutput string) (*helm.HelmCLI, *mocks.MockCommander) {
-	return createHelmWithCwd(t, cwd, expectedError, expectedOutput)
+	return createHelmWithCwdAndHelmVersion(t, helm.V2, cwd, expectedError, expectedOutput)
 }
 
-func createHelmWithCwd(t *testing.T, dir string, expectedError error, expectedOutput string) (*helm.HelmCLI, *mocks.MockCommander) {
+func createHelmWithVersion(t *testing.T, version helm.Version, expectedError error, expectedOutput string) (*helm.HelmCLI, *mocks.MockCommander) {
+	return createHelmWithCwdAndHelmVersion(t, version, cwd, expectedError, expectedOutput)
+}
+
+func createHelmWithCwdAndHelmVersion(t *testing.T, version helm.Version, dir string, expectedError error, expectedOutput string) (*helm.HelmCLI, *mocks.MockCommander) {
 	RegisterMockTestingT(t)
 	runner := mocks.NewMockCommander()
 	When(runner.RunWithoutRetry()).ThenReturn(expectedOutput, expectedError)
-	cli := helm.NewHelmCLIWithRunner(runner, binary, helm.V2, dir, true)
+	helmBinary := binary
+	if version == helm.V3 {
+		helmBinary = binaryV3
+	}
+	mockKuber := kube_test.NewMockKuber()
+	cli := helm.NewHelmCLIWithRunner(runner, helmBinary, version, dir, true, mockKuber)
 	return cli, runner
 }
 
@@ -86,7 +104,7 @@ func TestAddRepo(t *testing.T) {
 	expectedArgs := []string{"repo", "add", repo, repoURL}
 	helm, runner := createHelm(t, nil, "")
 
-	err := helm.AddRepo(repo, repoURL)
+	err := helm.AddRepo(repo, repoURL, "", "")
 
 	assert.NoError(t, err, "should add helm repo without any error")
 	verifyArgs(t, helm, runner, expectedArgs...)
@@ -112,7 +130,7 @@ func TestListRepos(t *testing.T) {
 	expectedRepos := map[string]string{
 		"stable":    "https://kubernetes-charts.storage.googleapis.com",
 		"local":     "http://127.0.0.1:8879/charts",
-		"jenkins-x": "http://chartmuseum.jenkins-x.io",
+		"jenkins-x": "https://storage.googleapis.com/chartmuseum.jenkins-x.io",
 	}
 	assert.Equal(t, len(expectedRepos), len(repos), "should list the same number of repos")
 	for k, v := range repos {
@@ -124,15 +142,21 @@ func TestIsRepoMissing(t *testing.T) {
 	expectedArgs := []string{"repo", "list"}
 	helm, runner := createHelm(t, nil, listRepoOutput)
 
-	url := "http://chartmuseum.jenkins-x.io"
-	missing, err := helm.IsRepoMissing(url)
+	url := "https://storage.googleapis.com/chartmuseum.jenkins-x.io"
+	missing, _, err := helm.IsRepoMissing(url)
 
 	assert.NoError(t, err, "should search missing repos without any error")
 	verifyArgs(t, helm, runner, expectedArgs...)
 	assert.False(t, missing, "should find url '%s'", url)
 
 	url = "https://test"
-	missing, err = helm.IsRepoMissing(url)
+	missing, _, err = helm.IsRepoMissing(url)
+
+	assert.NoError(t, err, "search missing repos should not return an error")
+	assert.True(t, missing, "should not find url '%s'", url)
+
+	url = "http://127.0.0.1:8879/chartsv2"
+	missing, _, err = helm.IsRepoMissing(url)
 
 	assert.NoError(t, err, "search missing repos should not return an error")
 	assert.True(t, missing, "should not find url '%s'", url)
@@ -149,13 +173,13 @@ func TestUpdateRepo(t *testing.T) {
 }
 
 func TestRemoveRequirementsLock(t *testing.T) {
-	dir, err := ioutil.TempDir("/tmp", "reqtest")
+	dir, err := ioutil.TempDir("", "reqtest")
 	assert.NoError(t, err, "should be able to create a temporary dir")
 	defer os.RemoveAll(dir)
 	path := filepath.Join(dir, "requirements.lock")
 	ioutil.WriteFile(path, []byte("test"), 0644)
 
-	helm, _ := createHelmWithCwd(t, dir, nil, "")
+	helm, _ := createHelmWithCwdAndHelmVersion(t, helm.V2, dir, nil, "")
 
 	err = helm.RemoveRequirementsLock()
 	assert.NoError(t, err, "should remove requirements.lock file")
@@ -171,27 +195,29 @@ func TestBuildDependency(t *testing.T) {
 }
 
 func TestInstallChart(t *testing.T) {
-	value := []string{"test"}
+	value := []string{"test=true"}
+	valueString := []string{"context=test"}
 	valueFile := []string{"./myvalues.yaml"}
 	expectedArgs := []string{"install", "--wait", "--name", releaseName, "--namespace", namespace,
-		chart, "--set", value[0], "--values", valueFile[0]}
+		chart, "--set", value[0], "--set-string", valueString[0], "--values", valueFile[0]}
 	helm, runner := createHelm(t, nil, "")
 
-	err := helm.InstallChart(chart, releaseName, namespace, nil, nil, value, valueFile, "")
+	err := helm.InstallChart(chart, releaseName, namespace, "", -1, value, valueString, valueFile, "", "", "")
 	assert.NoError(t, err, "should install the chart without any error")
 	verifyArgs(t, helm, runner, expectedArgs...)
 }
 
 func TestUpgradeChart(t *testing.T) {
-	value := []string{"test"}
+	value := []string{"test=true"}
+	valueString := []string{"context=test"}
 	valueFile := []string{"./myvalues.yaml"}
 	version := "0.0.1"
 	timeout := 600
 	expectedArgs := []string{"upgrade", "--namespace", namespace, "--install", "--wait", "--force",
-		"--timeout", fmt.Sprintf("%d", timeout), "--version", version, "--set", value[0], "--values", valueFile[0], releaseName, chart}
+		"--timeout", fmt.Sprintf("%d", timeout), "--version", version, "--set", value[0], "--set-string", valueString[0], "--values", valueFile[0], releaseName, chart}
 	helm, runner := createHelm(t, nil, "")
 
-	err := helm.UpgradeChart(chart, releaseName, namespace, &version, true, &timeout, true, true, value, valueFile, "")
+	err := helm.UpgradeChart(chart, releaseName, namespace, version, true, timeout, true, true, value, valueString, valueFile, "", "", "")
 
 	assert.NoError(t, err, "should upgrade the chart without any error")
 	verifyArgs(t, helm, runner, expectedArgs...)
@@ -219,9 +245,31 @@ func TestStatusRelease(t *testing.T) {
 	verifyArgs(t, helm, runner, expectedArgs...)
 }
 
+func TestStatusReleaseWithOutputNoFormat(t *testing.T) {
+	expectedArgs := []string{"status", releaseName}
+	helm, runner := createHelm(t, nil, "")
+	ns := "default"
+
+	_, err := helm.StatusReleaseWithOutput(ns, releaseName, "")
+
+	assert.NoErrorf(t, err, "should return the status of the helm chart without format")
+	verifyArgs(t, helm, runner, expectedArgs...)
+}
+
+func TestStatusReleaseWithOutputWithFormat(t *testing.T) {
+	expectedArgs := []string{"status", releaseName, "--output", "json"}
+	helm, runner := createHelm(t, nil, "")
+	ns := "default"
+
+	_, err := helm.StatusReleaseWithOutput(ns, releaseName, "json")
+
+	assert.NoErrorf(t, err, "should return the status of the helm chart without in Json format")
+	verifyArgs(t, helm, runner, expectedArgs...)
+}
+
 func TestStatusReleases(t *testing.T) {
-	expectedArgs := []string{"list"}
-	expectedSatusMap := map[string]string{
+	expectedArgs := []string{"list", "--all", "--namespace", "default"}
+	expectedStatusMap := map[string]string{
 		"jenkins-x":      "DEPLOYED",
 		"jx-production":  "DEPLOYED",
 		"jx-staging":     "DEPLOYED",
@@ -231,21 +279,44 @@ func TestStatusReleases(t *testing.T) {
 	helm, runner := createHelm(t, nil, listReleasesOutput)
 	ns := "default"
 
-	statusMap, err := helm.StatusReleases(ns)
+	releaseMap, _, err := helm.ListReleases(ns)
 
 	assert.NoError(t, err, "should list the release statuses without any error")
 	verifyArgs(t, helm, runner, expectedArgs...)
-	for release, status := range statusMap {
-		assert.Equal(t, expectedSatusMap[release], status, "expected status '%s', got '%s'", expectedSatusMap[release], status)
+	for release, details := range releaseMap {
+		assert.Equal(t, expectedStatusMap[release], details.Status, "expected details '%s', got '%s'",
+			expectedStatusMap[release], details)
+	}
+}
+
+func TestStatusReleasesForHelm3(t *testing.T) {
+	expectedArgs := []string{"list", "--all", "--namespace", "default"}
+	expectedStatusMap := map[string]string{
+		"jxing": "DEPLOYED",
+	}
+	helm, runner := createHelmWithVersion(t, helm.V3, nil, listReleasesOutputHelm3)
+	ns := "default"
+
+	releaseMap, _, err := helm.ListReleases(ns)
+
+	assert.NoError(t, err, "should list the release statuses without any error")
+	verifyArgs(t, helm, runner, expectedArgs...)
+	for release, details := range releaseMap {
+		assert.Equal(t, expectedStatusMap[release], details.Status, "expected details '%s', got '%s'",
+			expectedStatusMap[release], details)
 	}
 }
 
 func TestLint(t *testing.T) {
-	expectedArgs := []string{"lint"}
+	expectedArgs := []string{"lint",
+		"--set", "tags.jx-lint=true",
+		"--set", "global.jxLint=true",
+		"--set-string", "global.jxTypeEnv=lint",
+	}
 	expectedOutput := "test"
 	helm, runner := createHelm(t, nil, expectedOutput)
 
-	output, err := helm.Lint()
+	output, err := helm.Lint(nil)
 
 	assert.NoError(t, err, "should lint the chart without any error")
 	verifyArgs(t, helm, runner, expectedArgs...)
@@ -253,15 +324,33 @@ func TestLint(t *testing.T) {
 }
 
 func TestVersion(t *testing.T) {
-	expectedArgs := []string{"version", "--short"}
-	expectedOutput := "1.0.0"
-	helm, runner := createHelm(t, nil, expectedOutput)
+	var versionTests = []struct {
+		versionString           string
+		expectedSemanticVersion string
+		shouldError             bool
+	}{
+		{"Client: v2.16.3+g1ee0254", "2.16.3", false},
+		{"v3.0.3+gac925eb", "3.0.3", false},
+		{"3.0.3+gac925eb", "3.0.3", false},
+		{"", "", true},
+		{"foo", "", true},
+	}
 
-	output, err := helm.Version(false)
+	for _, versionTest := range versionTests {
+		t.Run(versionTest.versionString, func(t *testing.T) {
+			helm, runner := createHelm(t, nil, versionTest.versionString)
+			actualVersion, err := helm.Version(false)
 
-	assert.NoError(t, err, "should get the version without any error")
-	verifyArgs(t, helm, runner, expectedArgs...)
-	assert.Equal(t, expectedOutput, output)
+			if versionTest.shouldError {
+				assert.Error(t, err, "should not be able to get semantic version from version output")
+				assert.Equal(t, versionTest.expectedSemanticVersion, actualVersion)
+			} else {
+				assert.NoError(t, err, "should get the version without any error")
+				verifyArgs(t, helm, runner, "version", "--short", "--client")
+				assert.Equal(t, versionTest.expectedSemanticVersion, actualVersion)
+			}
+		})
+	}
 }
 
 func TestSearchChartVersions(t *testing.T) {
@@ -269,23 +358,23 @@ func TestSearchChartVersions(t *testing.T) {
 	expectedArgs := []string{"search", chart, "--versions"}
 	helm, runner := createHelm(t, nil, expectedOutput)
 
-	versions, err := helm.SearchChartVersions(chart)
+	versions, err := helm.SearchCharts(chart, true)
 
 	assert.NoError(t, err, "should search chart versions without any error")
 	verifyArgs(t, helm, runner, expectedArgs...)
 	expectedVersions := []string{"0.0.1481", "0.0.1480", "0.0.1479"}
 	for i, version := range versions {
-		assert.Equal(t, expectedVersions[i], version, "should parse the version '%s'", version)
+		assert.Equal(t, expectedVersions[i], version.ChartVersion, "should parse the version '%s'", version)
 	}
 }
 
 func TestFindChart(t *testing.T) {
-	dir, err := ioutil.TempDir("/tmp", "charttest")
+	dir, err := ioutil.TempDir("", "charttest")
 	assert.NoError(t, err, "should be able to create a temporary dir")
 	defer os.RemoveAll(dir)
 	path := filepath.Join(dir, helm.ChartFileName)
 	ioutil.WriteFile(path, []byte("test"), 0644)
-	helm, _ := createHelmWithCwd(t, dir, nil, "")
+	helm, _ := createHelmWithCwdAndHelmVersion(t, helm.V2, dir, nil, "")
 
 	chartFile, err := helm.FindChart()
 

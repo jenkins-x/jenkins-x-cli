@@ -1,3 +1,0 @@
-dependencies:
-- name: controller-workflow
-  repository: file://../jx

@@ -1,0 +1,12 @@
+pipelineConfig:
+  env:
+    - name: FRUIT
+      value: BANANA
+    - name: GIT_AUTHOR_NAME
+      value: somebodyelse
+  pipelines:
+    overrides:
+      # Remove the build lifecycle/stage
+      - pipeline: release
+        stage: build
+

@@ -2,14 +2,12 @@ package auth
 
 import (
 	"fmt"
-	"io"
 	"net/url"
 	"sort"
 	"strings"
 
 	"github.com/jenkins-x/jx/pkg/util"
-	"gopkg.in/AlecAivazis/survey.v1"
-	"gopkg.in/AlecAivazis/survey.v1/terminal"
+	survey "gopkg.in/AlecAivazis/survey.v1"
 )
 
 func (c *AuthConfig) FindUserAuths(serverURL string) []*UserAuth {
@@ -78,11 +76,15 @@ func (c *AuthConfig) SetUserAuth(url string, auth *UserAuth) {
 				if a.Username == auth.Username {
 					c.Servers[i].Users[j] = auth
 					c.Servers[i].CurrentUser = username
+					c.DefaultUsername = username
+					c.CurrentServer = url
 					return
 				}
 			}
 			c.Servers[i].Users = append(c.Servers[i].Users, auth)
 			c.Servers[i].CurrentUser = username
+			c.DefaultUsername = username
+			c.CurrentServer = url
 			return
 		}
 	}
@@ -91,6 +93,9 @@ func (c *AuthConfig) SetUserAuth(url string, auth *UserAuth) {
 		Users:       []*UserAuth{auth},
 		CurrentUser: username,
 	})
+	c.DefaultUsername = username
+	c.CurrentServer = url
+
 }
 
 func urlsEqual(url1, url2 string) bool {
@@ -143,10 +148,18 @@ func (c *AuthConfig) DeleteServer(url string) {
 }
 
 func (c *AuthConfig) CurrentUser(server *AuthServer, inCluster bool) *UserAuth {
+	if server == nil {
+		return nil
+	}
 	if urlsEqual(c.PipeLineServer, server.URL) && inCluster {
 		return server.GetUserAuth(c.PipeLineUsername)
 	}
 	return server.CurrentAuth()
+}
+
+// CurrentAuthServer returns the current AuthServer configured in the configuration
+func (c *AuthConfig) CurrentAuthServer() *AuthServer {
+	return c.GetServer(c.CurrentServer)
 }
 
 func (c *AuthConfig) GetOrCreateServer(url string) *AuthServer {
@@ -203,7 +216,7 @@ func urlHostName(rawUrl string) string {
 	return strings.TrimSuffix(rawUrl, "/")
 }
 
-func (c *AuthConfig) PickServer(message string, batchMode bool, in terminal.FileReader, out terminal.FileWriter, outErr io.Writer) (*AuthServer, error) {
+func (c *AuthConfig) PickServer(message string, batchMode bool, handles util.IOFileHandles) (*AuthServer, error) {
 	if c.Servers == nil || len(c.Servers) == 0 {
 		return nil, fmt.Errorf("No servers available!")
 	}
@@ -223,7 +236,7 @@ func (c *AuthConfig) PickServer(message string, batchMode bool, in terminal.File
 				Message: message,
 				Options: urls,
 			}
-			surveyOpts := survey.WithStdio(in, out, outErr)
+			surveyOpts := survey.WithStdio(handles.In, handles.Out, handles.Err)
 			err := survey.AskOne(prompt, &url, survey.Required, surveyOpts)
 			if err != nil {
 				return nil, err
@@ -239,10 +252,10 @@ func (c *AuthConfig) PickServer(message string, batchMode bool, in terminal.File
 }
 
 // PickServerAuth Pick the servers auth
-func (c *AuthConfig) PickServerUserAuth(server *AuthServer, message string, batchMode bool, org string, in terminal.FileReader, out terminal.FileWriter, errOut io.Writer) (*UserAuth, error) {
+func (c *AuthConfig) PickServerUserAuth(server *AuthServer, message string, batchMode bool, org string, handles util.IOFileHandles) (*UserAuth, error) {
 	url := server.URL
 	userAuths := c.FindUserAuths(url)
-	surveyOpts := survey.WithStdio(in, out, errOut)
+	surveyOpts := survey.WithStdio(handles.In, handles.Out, handles.Err)
 	if len(userAuths) == 1 {
 
 		auth := userAuths[0]
@@ -303,7 +316,7 @@ func (c *AuthConfig) PickServerUserAuth(server *AuthServer, message string, batc
 		}
 		answer := m[username]
 		if answer == nil {
-			return nil, fmt.Errorf("no username chosen")
+			return &UserAuth{}, fmt.Errorf("no username chosen")
 		}
 		return answer, nil
 	}
@@ -314,7 +327,7 @@ func (c *AuthConfig) PickServerUserAuth(server *AuthServer, message string, batc
 type PrintUserFn func(username string) error
 
 // EditUserAuth Lets the user input/edit the user auth
-func (c *AuthConfig) EditUserAuth(serverLabel string, auth *UserAuth, defaultUserName string, editUser, batchMode bool, fn PrintUserFn, in terminal.FileReader, out terminal.FileWriter, outErr io.Writer) error {
+func (c *AuthConfig) EditUserAuth(serverLabel string, auth *UserAuth, defaultUserName string, editUser, batchMode bool, fn PrintUserFn, handles util.IOFileHandles) error {
 	// default the user name if its empty
 	defaultUsername := c.DefaultUsername
 	if defaultUsername == "" {
@@ -326,28 +339,30 @@ func (c *AuthConfig) EditUserAuth(serverLabel string, auth *UserAuth, defaultUse
 
 	if batchMode {
 		if auth.Username == "" {
-			return fmt.Errorf("Running in batch mode and no default Git username found")
+			return fmt.Errorf("running in batch mode and no default Git username found")
 		}
 		if auth.ApiToken == "" {
-			return fmt.Errorf("Running in batch mode and no default API token found")
+			return fmt.Errorf("running in batch mode and no default API token found")
 		}
 		return nil
 	}
 	var err error
 
 	if editUser || auth.Username == "" {
-		auth.Username, err = util.PickValue(serverLabel+" user name:", auth.Username, true, "", in, out, outErr)
+		auth.Username, err = util.PickValue(serverLabel+" username:", auth.Username, true, "", handles)
 		if err != nil {
 			return err
 		}
 	}
-	if fn != nil {
-		err := fn(auth.Username)
-		if err != nil {
-			return err
+	if auth.ApiToken == "" {
+		if fn != nil {
+			err := fn(auth.Username)
+			if err != nil {
+				return err
+			}
 		}
+		auth.ApiToken, err = util.PickPassword("API Token:", "", handles)
 	}
-	auth.ApiToken, err = util.PickPassword("API Token:", "", in, out, outErr)
 	return err
 }
 
@@ -378,7 +393,7 @@ func (c *AuthConfig) GetServerURLs() []string {
 }
 
 // PickOrCreateServer picks the server to use defaulting to the current server
-func (c *AuthConfig) PickOrCreateServer(fallbackServerURL string, serverURL string, message string, batchMode bool, in terminal.FileReader, out terminal.FileWriter, outErr io.Writer) (*AuthServer, error) {
+func (c *AuthConfig) PickOrCreateServer(fallbackServerURL string, serverURL string, message string, batchMode bool, handles util.IOFileHandles) (*AuthServer, error) {
 	servers := c.Servers
 	if len(servers) == 0 {
 		if serverURL != "" {
@@ -414,7 +429,7 @@ func (c *AuthConfig) PickOrCreateServer(fallbackServerURL string, serverURL stri
 	if batchMode {
 		return c.GetOrCreateServer(defaultValue), nil
 	}
-	name, err := util.PickRequiredNameWithDefault(names, message, defaultValue, "", in, out, outErr)
+	name, err := util.PickRequiredNameWithDefault(names, message, defaultValue, "", handles)
 	if err != nil {
 		return nil, err
 	}
@@ -428,4 +443,34 @@ func (c *AuthConfig) PickOrCreateServer(fallbackServerURL string, serverURL stri
 func (c *AuthConfig) UpdatePipelineServer(server *AuthServer, user *UserAuth) {
 	c.PipeLineServer = server.URL
 	c.PipeLineUsername = user.Username
+}
+
+// GetPipelineAuth returns the current pipline server and user authentication
+func (c *AuthConfig) GetPipelineAuth() (*AuthServer, *UserAuth) {
+	server := c.GetServer(c.PipeLineServer)
+	user := server.GetUserAuth(c.PipeLineUsername)
+	return server, user
+}
+
+// Merge merges another auth config such as if loading git/credentials
+func (c *AuthConfig) Merge(o *AuthConfig) {
+	if o == nil {
+		return
+	}
+	for _, s := range o.Servers {
+		cs := c.GetOrCreateServer(s.URL)
+		for _, u := range s.Users {
+			cu := cs.GetUserAuth(u.Username)
+			if cu == nil {
+				cs.Users = append(cs.Users, u)
+			} else {
+				if u.Password != "" {
+					cu.Password = u.Password
+				}
+				if u.ApiToken != "" {
+					cu.ApiToken = u.ApiToken
+				}
+			}
+		}
+	}
 }

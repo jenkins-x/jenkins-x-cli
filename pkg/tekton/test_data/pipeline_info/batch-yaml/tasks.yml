@@ -1,0 +1,770 @@
+apiVersion: v1
+kind: List
+metadata:
+  resourceVersion: ""
+  selfLink: ""
+items:
+- apiVersion: tekton.dev/v1alpha1
+  kind: Task
+  metadata:
+    creationTimestamp: "2019-09-06T05:24:17Z"
+    generation: 1
+    labels:
+      branch: PR-1
+      build: "1"
+      context: pr-build
+      jenkins.io/task-stage-name: from-build-pack
+      owner: cb-kubecd
+      repository: bdd-spring-1567745634
+    name: cb-kubecd-bdd-spring-1567745634-s92nd-from-build-pack-1
+    namespace: jx
+    ownerReferences:
+    - apiVersion: jenkins.io/v1
+      kind: PipelineActivity
+      name: cb-kubecd-bdd-spring-1567745634-pr-1-1
+      uid: 84f23b66-d066-11e9-8eea-42010a8400f6
+    resourceVersion: "11150"
+    selfLink: /apis/tekton.dev/v1alpha1/namespaces/jx/tasks/cb-kubecd-bdd-spring-1567745634-s92nd-from-build-pack-1
+    uid: 9261a084-d066-11e9-8eea-42010a8400f6
+  spec:
+    inputs:
+      params:
+      - default: 0.0.0-SNAPSHOT-PR-1-1
+        description: the version number for this pipeline which is used as a tag on
+          docker images and helm charts
+        name: version
+      - default: "1"
+        description: the PipelineRun build number
+        name: build_id
+      resources:
+      - name: workspace
+        outputImageDir: ""
+        targetPath: source
+        type: git
+    steps:
+    - args:
+      - step
+      - git
+      - merge
+      - --verbose
+      command:
+      - jx
+      env:
+      - name: APP_NAME
+        value: bdd-spring-1567745634
+      - name: BRANCH_NAME
+        value: PR-1
+      - name: BUILD_NUMBER
+        value: "1"
+      - name: JOB_NAME
+        value: cb-kubecd/bdd-spring-1567745634/PR-1
+      - name: JX_LOG_FORMAT
+        value: json
+      - name: PIPELINE_CONTEXT
+        value: pr-build
+      - name: PIPELINE_KIND
+        value: pullrequest
+      - name: PULL_BASE_REF
+        value: master
+      - name: PULL_BASE_SHA
+        value: 441de50841eb31130c8a59ae0edc00d97f6b7b97
+      - name: PULL_REFS
+        value: master:441de50841eb31130c8a59ae0edc00d97f6b7b97,1:c6bd3e0221a122dca3a00e87cb9188daed2e1d44,2:6cf1b84eefb280171676f26dd43adf95a4a0b679
+      - name: REPO_NAME
+        value: bdd-spring-1567745634
+      - name: REPO_OWNER
+        value: cb-kubecd
+      - name: SOURCE_URL
+        value: https://github.com/cb-kubecd/bdd-spring-1567745634.git
+      - name: DOCKER_REGISTRY
+        valueFrom:
+          configMapKeyRef:
+            key: docker.registry
+            name: jenkins-x-docker-registry
+      - name: DOCKER_CONFIG
+        value: /home/jenkins/.docker/
+      - name: GIT_AUTHOR_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_AUTHOR_NAME
+        value: jenkins-x-bot
+      - name: GIT_COMMITTER_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_COMMITTER_NAME
+        value: jenkins-x-bot
+      - name: MAVEN_OPTS
+        value: -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
+      - name: XDG_CONFIG_HOME
+        value: /workspace/xdg_config
+      - name: _JAVA_OPTIONS
+        value: -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -Dsun.zip.disableMemoryMapping=true
+          -XX:+UseParallelGC -XX:MinHeapFreeRatio=5 -XX:MaxHeapFreeRatio=10 -XX:GCTimeRatio=4
+          -XX:AdaptiveSizePolicyWeight=90 -Xms10m -Xmx192m
+      - name: JX_BATCH_MODE
+        value: "true"
+      - name: VERSION
+        value: ${inputs.params.version}
+      - name: BUILD_ID
+        value: ${inputs.params.build_id}
+      - name: PREVIEW_VERSION
+        value: ${inputs.params.version}
+      image: gcr.io/jenkinsxio/builder-jx:0.1.723
+      name: git-merge
+      resources:
+        requests:
+          cpu: 400m
+          memory: 512Mi
+      securityContext:
+        privileged: true
+      volumeMounts:
+      - mountPath: /home/jenkins
+        name: workspace-volume
+      - mountPath: /var/run/docker.sock
+        name: docker-daemon
+      - mountPath: /root/.m2/
+        name: volume-0
+      - mountPath: /home/jenkins/.docker
+        name: volume-1
+      - mountPath: /home/jenkins/.gnupg
+        name: volume-2
+      - mountPath: /etc/podinfo
+        name: podinfo
+        readOnly: true
+      workingDir: /workspace/source
+    - args:
+      - mvn versions:set -DnewVersion=$PREVIEW_VERSION
+      command:
+      - /bin/sh
+      - -c
+      env:
+      - name: APP_NAME
+        value: bdd-spring-1567745634
+      - name: BRANCH_NAME
+        value: PR-1
+      - name: BUILD_NUMBER
+        value: "1"
+      - name: DOCKER_CONFIG
+        value: /home/jenkins/.docker/
+      - name: DOCKER_REGISTRY
+        valueFrom:
+          configMapKeyRef:
+            key: docker.registry
+            name: jenkins-x-docker-registry
+      - name: GIT_AUTHOR_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_AUTHOR_NAME
+        value: jenkins-x-bot
+      - name: GIT_COMMITTER_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_COMMITTER_NAME
+        value: jenkins-x-bot
+      - name: JOB_NAME
+        value: cb-kubecd/bdd-spring-1567745634/PR-1
+      - name: JX_LOG_FORMAT
+        value: json
+      - name: MAVEN_OPTS
+        value: -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
+      - name: PIPELINE_CONTEXT
+        value: pr-build
+      - name: PIPELINE_KIND
+        value: pullrequest
+      - name: PULL_BASE_REF
+        value: master
+      - name: PULL_BASE_SHA
+        value: 441de50841eb31130c8a59ae0edc00d97f6b7b97
+      - name: PULL_REFS
+        value: master:441de50841eb31130c8a59ae0edc00d97f6b7b97,1:c6bd3e0221a122dca3a00e87cb9188daed2e1d44,2:6cf1b84eefb280171676f26dd43adf95a4a0b679
+      - name: REPO_NAME
+        value: bdd-spring-1567745634
+      - name: REPO_OWNER
+        value: cb-kubecd
+      - name: SOURCE_URL
+        value: https://github.com/cb-kubecd/bdd-spring-1567745634.git
+      - name: XDG_CONFIG_HOME
+        value: /workspace/xdg_config
+      - name: _JAVA_OPTIONS
+        value: -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -Dsun.zip.disableMemoryMapping=true
+          -XX:+UseParallelGC -XX:MinHeapFreeRatio=5 -XX:MaxHeapFreeRatio=10 -XX:GCTimeRatio=4
+          -XX:AdaptiveSizePolicyWeight=90 -Xms10m -Xmx192m
+      - name: JX_BATCH_MODE
+        value: "true"
+      - name: VERSION
+        value: ${inputs.params.version}
+      - name: BUILD_ID
+        value: ${inputs.params.build_id}
+      - name: PREVIEW_VERSION
+        value: ${inputs.params.version}
+      image: gcr.io/jenkinsxio/builder-maven:0.1.723
+      name: build-set-version
+      resources:
+        requests:
+          cpu: 400m
+          memory: 512Mi
+      securityContext:
+        privileged: true
+      volumeMounts:
+      - mountPath: /home/jenkins
+        name: workspace-volume
+      - mountPath: /var/run/docker.sock
+        name: docker-daemon
+      - mountPath: /root/.m2/
+        name: volume-0
+      - mountPath: /home/jenkins/.docker
+        name: volume-1
+      - mountPath: /home/jenkins/.gnupg
+        name: volume-2
+      - mountPath: /etc/podinfo
+        name: podinfo
+        readOnly: true
+      workingDir: /workspace/source
+    - args:
+      - mvn install
+      command:
+      - /bin/sh
+      - -c
+      env:
+      - name: APP_NAME
+        value: bdd-spring-1567745634
+      - name: BRANCH_NAME
+        value: PR-1
+      - name: BUILD_NUMBER
+        value: "1"
+      - name: DOCKER_CONFIG
+        value: /home/jenkins/.docker/
+      - name: DOCKER_REGISTRY
+        valueFrom:
+          configMapKeyRef:
+            key: docker.registry
+            name: jenkins-x-docker-registry
+      - name: GIT_AUTHOR_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_AUTHOR_NAME
+        value: jenkins-x-bot
+      - name: GIT_COMMITTER_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_COMMITTER_NAME
+        value: jenkins-x-bot
+      - name: JOB_NAME
+        value: cb-kubecd/bdd-spring-1567745634/PR-1
+      - name: JX_LOG_FORMAT
+        value: json
+      - name: MAVEN_OPTS
+        value: -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
+      - name: PIPELINE_CONTEXT
+        value: pr-build
+      - name: PIPELINE_KIND
+        value: pullrequest
+      - name: PULL_BASE_REF
+        value: master
+      - name: PULL_BASE_SHA
+        value: 441de50841eb31130c8a59ae0edc00d97f6b7b97
+      - name: PULL_REFS
+        value: master:441de50841eb31130c8a59ae0edc00d97f6b7b97,1:c6bd3e0221a122dca3a00e87cb9188daed2e1d44,2:6cf1b84eefb280171676f26dd43adf95a4a0b679
+      - name: REPO_NAME
+        value: bdd-spring-1567745634
+      - name: REPO_OWNER
+        value: cb-kubecd
+      - name: SOURCE_URL
+        value: https://github.com/cb-kubecd/bdd-spring-1567745634.git
+      - name: XDG_CONFIG_HOME
+        value: /workspace/xdg_config
+      - name: _JAVA_OPTIONS
+        value: -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -Dsun.zip.disableMemoryMapping=true
+          -XX:+UseParallelGC -XX:MinHeapFreeRatio=5 -XX:MaxHeapFreeRatio=10 -XX:GCTimeRatio=4
+          -XX:AdaptiveSizePolicyWeight=90 -Xms10m -Xmx192m
+      - name: JX_BATCH_MODE
+        value: "true"
+      - name: VERSION
+        value: ${inputs.params.version}
+      - name: BUILD_ID
+        value: ${inputs.params.build_id}
+      - name: PREVIEW_VERSION
+        value: ${inputs.params.version}
+      image: gcr.io/jenkinsxio/builder-maven:0.1.723
+      name: build-mvn-install
+      resources:
+        requests:
+          cpu: 400m
+          memory: 512Mi
+      securityContext:
+        privileged: true
+      volumeMounts:
+      - mountPath: /home/jenkins
+        name: workspace-volume
+      - mountPath: /var/run/docker.sock
+        name: docker-daemon
+      - mountPath: /root/.m2/
+        name: volume-0
+      - mountPath: /home/jenkins/.docker
+        name: volume-1
+      - mountPath: /home/jenkins/.gnupg
+        name: volume-2
+      - mountPath: /etc/podinfo
+        name: podinfo
+        readOnly: true
+      workingDir: /workspace/source
+    - args:
+      - skaffold version
+      command:
+      - /bin/sh
+      - -c
+      env:
+      - name: APP_NAME
+        value: bdd-spring-1567745634
+      - name: BRANCH_NAME
+        value: PR-1
+      - name: BUILD_NUMBER
+        value: "1"
+      - name: DOCKER_CONFIG
+        value: /home/jenkins/.docker/
+      - name: DOCKER_REGISTRY
+        valueFrom:
+          configMapKeyRef:
+            key: docker.registry
+            name: jenkins-x-docker-registry
+      - name: GIT_AUTHOR_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_AUTHOR_NAME
+        value: jenkins-x-bot
+      - name: GIT_COMMITTER_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_COMMITTER_NAME
+        value: jenkins-x-bot
+      - name: JOB_NAME
+        value: cb-kubecd/bdd-spring-1567745634/PR-1
+      - name: JX_LOG_FORMAT
+        value: json
+      - name: MAVEN_OPTS
+        value: -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
+      - name: PIPELINE_CONTEXT
+        value: pr-build
+      - name: PIPELINE_KIND
+        value: pullrequest
+      - name: PULL_BASE_REF
+        value: master
+      - name: PULL_BASE_SHA
+        value: 441de50841eb31130c8a59ae0edc00d97f6b7b97
+      - name: PULL_REFS
+        value: master:441de50841eb31130c8a59ae0edc00d97f6b7b97,1:c6bd3e0221a122dca3a00e87cb9188daed2e1d44,2:6cf1b84eefb280171676f26dd43adf95a4a0b679
+      - name: REPO_NAME
+        value: bdd-spring-1567745634
+      - name: REPO_OWNER
+        value: cb-kubecd
+      - name: SOURCE_URL
+        value: https://github.com/cb-kubecd/bdd-spring-1567745634.git
+      - name: XDG_CONFIG_HOME
+        value: /workspace/xdg_config
+      - name: _JAVA_OPTIONS
+        value: -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -Dsun.zip.disableMemoryMapping=true
+          -XX:+UseParallelGC -XX:MinHeapFreeRatio=5 -XX:MaxHeapFreeRatio=10 -XX:GCTimeRatio=4
+          -XX:AdaptiveSizePolicyWeight=90 -Xms10m -Xmx192m
+      - name: JX_BATCH_MODE
+        value: "true"
+      - name: VERSION
+        value: ${inputs.params.version}
+      - name: BUILD_ID
+        value: ${inputs.params.build_id}
+      - name: PREVIEW_VERSION
+        value: ${inputs.params.version}
+      image: gcr.io/jenkinsxio/builder-maven:0.1.723
+      name: build-skaffold-version
+      resources:
+        requests:
+          cpu: 400m
+          memory: 512Mi
+      securityContext:
+        privileged: true
+      volumeMounts:
+      - mountPath: /home/jenkins
+        name: workspace-volume
+      - mountPath: /var/run/docker.sock
+        name: docker-daemon
+      - mountPath: /root/.m2/
+        name: volume-0
+      - mountPath: /home/jenkins/.docker
+        name: volume-1
+      - mountPath: /home/jenkins/.gnupg
+        name: volume-2
+      - mountPath: /etc/podinfo
+        name: podinfo
+        readOnly: true
+      workingDir: /workspace/source
+    - args:
+      - --cache=true
+      - --cache-dir=/workspace
+      - --context=/workspace/source
+      - --dockerfile=/workspace/source/Dockerfile
+      - --destination=gcr.io/jenkins-x-bdd2/bdd-spring-1567745634:${inputs.params.version}
+      - --cache-repo=gcr.io/jenkins-x-bdd2/cache
+      command:
+      - /kaniko/executor
+      env:
+      - name: APP_NAME
+        value: bdd-spring-1567745634
+      - name: BRANCH_NAME
+        value: PR-1
+      - name: BUILD_NUMBER
+        value: "1"
+      - name: DOCKER_CONFIG
+        value: /home/jenkins/.docker/
+      - name: DOCKER_REGISTRY
+        valueFrom:
+          configMapKeyRef:
+            key: docker.registry
+            name: jenkins-x-docker-registry
+      - name: GIT_AUTHOR_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_AUTHOR_NAME
+        value: jenkins-x-bot
+      - name: GIT_COMMITTER_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_COMMITTER_NAME
+        value: jenkins-x-bot
+      - name: JOB_NAME
+        value: cb-kubecd/bdd-spring-1567745634/PR-1
+      - name: JX_LOG_FORMAT
+        value: json
+      - name: MAVEN_OPTS
+        value: -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
+      - name: PIPELINE_CONTEXT
+        value: pr-build
+      - name: PIPELINE_KIND
+        value: pullrequest
+      - name: PULL_BASE_REF
+        value: master
+      - name: PULL_BASE_SHA
+        value: 441de50841eb31130c8a59ae0edc00d97f6b7b97
+      - name: PULL_REFS
+        value: master:441de50841eb31130c8a59ae0edc00d97f6b7b97,1:c6bd3e0221a122dca3a00e87cb9188daed2e1d44,2:6cf1b84eefb280171676f26dd43adf95a4a0b679
+      - name: REPO_NAME
+        value: bdd-spring-1567745634
+      - name: REPO_OWNER
+        value: cb-kubecd
+      - name: SOURCE_URL
+        value: https://github.com/cb-kubecd/bdd-spring-1567745634.git
+      - name: XDG_CONFIG_HOME
+        value: /workspace/xdg_config
+      - name: _JAVA_OPTIONS
+        value: -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -Dsun.zip.disableMemoryMapping=true
+          -XX:+UseParallelGC -XX:MinHeapFreeRatio=5 -XX:MaxHeapFreeRatio=10 -XX:GCTimeRatio=4
+          -XX:AdaptiveSizePolicyWeight=90 -Xms10m -Xmx192m
+      - name: JX_BATCH_MODE
+        value: "true"
+      - name: VERSION
+        value: ${inputs.params.version}
+      - name: BUILD_ID
+        value: ${inputs.params.build_id}
+      - name: GOOGLE_APPLICATION_CREDENTIALS
+        value: /kaniko-secret/secret.json
+      - name: PREVIEW_VERSION
+        value: ${inputs.params.version}
+      image: gcr.io/kaniko-project/executor:v0.19.0
+      name: build-container-build
+      resources:
+        requests:
+          cpu: 400m
+          memory: 512Mi
+      securityContext:
+        privileged: true
+      volumeMounts:
+      - mountPath: /home/jenkins
+        name: workspace-volume
+      - mountPath: /var/run/docker.sock
+        name: docker-daemon
+      - mountPath: /root/.m2/
+        name: volume-0
+      - mountPath: /home/jenkins/.docker
+        name: volume-1
+      - mountPath: /home/jenkins/.gnupg
+        name: volume-2
+      - mountPath: /kaniko-secret
+        name: kaniko-secret
+        readOnly: true
+      - mountPath: /etc/podinfo
+        name: podinfo
+        readOnly: true
+      workingDir: /workspace/source
+    - args:
+      - jx step post build --image $DOCKER_REGISTRY/$ORG/$APP_NAME:$PREVIEW_VERSION
+      command:
+      - /bin/sh
+      - -c
+      env:
+      - name: APP_NAME
+        value: bdd-spring-1567745634
+      - name: BRANCH_NAME
+        value: PR-1
+      - name: BUILD_NUMBER
+        value: "1"
+      - name: DOCKER_CONFIG
+        value: /home/jenkins/.docker/
+      - name: DOCKER_REGISTRY
+        valueFrom:
+          configMapKeyRef:
+            key: docker.registry
+            name: jenkins-x-docker-registry
+      - name: GIT_AUTHOR_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_AUTHOR_NAME
+        value: jenkins-x-bot
+      - name: GIT_COMMITTER_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_COMMITTER_NAME
+        value: jenkins-x-bot
+      - name: JOB_NAME
+        value: cb-kubecd/bdd-spring-1567745634/PR-1
+      - name: JX_LOG_FORMAT
+        value: json
+      - name: MAVEN_OPTS
+        value: -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
+      - name: PIPELINE_CONTEXT
+        value: pr-build
+      - name: PIPELINE_KIND
+        value: pullrequest
+      - name: PULL_BASE_REF
+        value: master
+      - name: PULL_BASE_SHA
+        value: 441de50841eb31130c8a59ae0edc00d97f6b7b97
+      - name: PULL_REFS
+        value: master:441de50841eb31130c8a59ae0edc00d97f6b7b97,1:c6bd3e0221a122dca3a00e87cb9188daed2e1d44,2:6cf1b84eefb280171676f26dd43adf95a4a0b679
+      - name: REPO_NAME
+        value: bdd-spring-1567745634
+      - name: REPO_OWNER
+        value: cb-kubecd
+      - name: SOURCE_URL
+        value: https://github.com/cb-kubecd/bdd-spring-1567745634.git
+      - name: XDG_CONFIG_HOME
+        value: /workspace/xdg_config
+      - name: _JAVA_OPTIONS
+        value: -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -Dsun.zip.disableMemoryMapping=true
+          -XX:+UseParallelGC -XX:MinHeapFreeRatio=5 -XX:MaxHeapFreeRatio=10 -XX:GCTimeRatio=4
+          -XX:AdaptiveSizePolicyWeight=90 -Xms10m -Xmx192m
+      - name: JX_BATCH_MODE
+        value: "true"
+      - name: VERSION
+        value: ${inputs.params.version}
+      - name: BUILD_ID
+        value: ${inputs.params.build_id}
+      - name: PREVIEW_VERSION
+        value: ${inputs.params.version}
+      image: gcr.io/jenkinsxio/builder-maven:0.1.723
+      name: postbuild-post-build
+      resources:
+        requests:
+          cpu: 400m
+          memory: 512Mi
+      securityContext:
+        privileged: true
+      volumeMounts:
+      - mountPath: /home/jenkins
+        name: workspace-volume
+      - mountPath: /var/run/docker.sock
+        name: docker-daemon
+      - mountPath: /root/.m2/
+        name: volume-0
+      - mountPath: /home/jenkins/.docker
+        name: volume-1
+      - mountPath: /home/jenkins/.gnupg
+        name: volume-2
+      - mountPath: /etc/podinfo
+        name: podinfo
+        readOnly: true
+      workingDir: /workspace/source
+    - args:
+      - make preview
+      command:
+      - /bin/sh
+      - -c
+      env:
+      - name: APP_NAME
+        value: bdd-spring-1567745634
+      - name: BRANCH_NAME
+        value: PR-1
+      - name: BUILD_NUMBER
+        value: "1"
+      - name: DOCKER_CONFIG
+        value: /home/jenkins/.docker/
+      - name: DOCKER_REGISTRY
+        valueFrom:
+          configMapKeyRef:
+            key: docker.registry
+            name: jenkins-x-docker-registry
+      - name: GIT_AUTHOR_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_AUTHOR_NAME
+        value: jenkins-x-bot
+      - name: GIT_COMMITTER_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_COMMITTER_NAME
+        value: jenkins-x-bot
+      - name: JOB_NAME
+        value: cb-kubecd/bdd-spring-1567745634/PR-1
+      - name: JX_LOG_FORMAT
+        value: json
+      - name: MAVEN_OPTS
+        value: -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
+      - name: PIPELINE_CONTEXT
+        value: pr-build
+      - name: PIPELINE_KIND
+        value: pullrequest
+      - name: PULL_BASE_REF
+        value: master
+      - name: PULL_BASE_SHA
+        value: 441de50841eb31130c8a59ae0edc00d97f6b7b97
+      - name: PULL_REFS
+        value: master:441de50841eb31130c8a59ae0edc00d97f6b7b97,1:c6bd3e0221a122dca3a00e87cb9188daed2e1d44,2:6cf1b84eefb280171676f26dd43adf95a4a0b679
+      - name: REPO_NAME
+        value: bdd-spring-1567745634
+      - name: REPO_OWNER
+        value: cb-kubecd
+      - name: SOURCE_URL
+        value: https://github.com/cb-kubecd/bdd-spring-1567745634.git
+      - name: XDG_CONFIG_HOME
+        value: /workspace/xdg_config
+      - name: _JAVA_OPTIONS
+        value: -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -Dsun.zip.disableMemoryMapping=true
+          -XX:+UseParallelGC -XX:MinHeapFreeRatio=5 -XX:MaxHeapFreeRatio=10 -XX:GCTimeRatio=4
+          -XX:AdaptiveSizePolicyWeight=90 -Xms10m -Xmx192m
+      - name: JX_BATCH_MODE
+        value: "true"
+      - name: VERSION
+        value: ${inputs.params.version}
+      - name: BUILD_ID
+        value: ${inputs.params.build_id}
+      - name: PREVIEW_VERSION
+        value: ${inputs.params.version}
+      image: gcr.io/jenkinsxio/builder-maven:0.1.723
+      name: promote-make-preview
+      resources:
+        requests:
+          cpu: 400m
+          memory: 512Mi
+      securityContext:
+        privileged: true
+      volumeMounts:
+      - mountPath: /home/jenkins
+        name: workspace-volume
+      - mountPath: /var/run/docker.sock
+        name: docker-daemon
+      - mountPath: /root/.m2/
+        name: volume-0
+      - mountPath: /home/jenkins/.docker
+        name: volume-1
+      - mountPath: /home/jenkins/.gnupg
+        name: volume-2
+      - mountPath: /etc/podinfo
+        name: podinfo
+        readOnly: true
+      workingDir: /workspace/source/charts/preview
+    - args:
+      - jx preview --app $APP_NAME --dir ../..
+      command:
+      - /bin/sh
+      - -c
+      env:
+      - name: APP_NAME
+        value: bdd-spring-1567745634
+      - name: BRANCH_NAME
+        value: PR-1
+      - name: BUILD_NUMBER
+        value: "1"
+      - name: DOCKER_CONFIG
+        value: /home/jenkins/.docker/
+      - name: DOCKER_REGISTRY
+        valueFrom:
+          configMapKeyRef:
+            key: docker.registry
+            name: jenkins-x-docker-registry
+      - name: GIT_AUTHOR_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_AUTHOR_NAME
+        value: jenkins-x-bot
+      - name: GIT_COMMITTER_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_COMMITTER_NAME
+        value: jenkins-x-bot
+      - name: JOB_NAME
+        value: cb-kubecd/bdd-spring-1567745634/PR-1
+      - name: JX_LOG_FORMAT
+        value: json
+      - name: MAVEN_OPTS
+        value: -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
+      - name: PIPELINE_CONTEXT
+        value: pr-build
+      - name: PIPELINE_KIND
+        value: pullrequest
+      - name: PULL_BASE_REF
+        value: master
+      - name: PULL_BASE_SHA
+        value: 441de50841eb31130c8a59ae0edc00d97f6b7b97
+      - name: PULL_REFS
+        value: master:441de50841eb31130c8a59ae0edc00d97f6b7b97,1:c6bd3e0221a122dca3a00e87cb9188daed2e1d44,2:6cf1b84eefb280171676f26dd43adf95a4a0b679
+      - name: REPO_NAME
+        value: bdd-spring-1567745634
+      - name: REPO_OWNER
+        value: cb-kubecd
+      - name: SOURCE_URL
+        value: https://github.com/cb-kubecd/bdd-spring-1567745634.git
+      - name: XDG_CONFIG_HOME
+        value: /workspace/xdg_config
+      - name: _JAVA_OPTIONS
+        value: -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -Dsun.zip.disableMemoryMapping=true
+          -XX:+UseParallelGC -XX:MinHeapFreeRatio=5 -XX:MaxHeapFreeRatio=10 -XX:GCTimeRatio=4
+          -XX:AdaptiveSizePolicyWeight=90 -Xms10m -Xmx192m
+      - name: JX_BATCH_MODE
+        value: "true"
+      - name: VERSION
+        value: ${inputs.params.version}
+      - name: BUILD_ID
+        value: ${inputs.params.build_id}
+      - name: PREVIEW_VERSION
+        value: ${inputs.params.version}
+      image: gcr.io/jenkinsxio/builder-maven:0.1.723
+      name: promote-jx-preview
+      resources:
+        requests:
+          cpu: 400m
+          memory: 512Mi
+      securityContext:
+        privileged: true
+      volumeMounts:
+      - mountPath: /home/jenkins
+        name: workspace-volume
+      - mountPath: /var/run/docker.sock
+        name: docker-daemon
+      - mountPath: /root/.m2/
+        name: volume-0
+      - mountPath: /home/jenkins/.docker
+        name: volume-1
+      - mountPath: /home/jenkins/.gnupg
+        name: volume-2
+      - mountPath: /etc/podinfo
+        name: podinfo
+        readOnly: true
+      workingDir: /workspace/source/charts/preview
+    volumes:
+    - hostPath:
+        path: /var/run/docker.sock
+      name: docker-daemon
+    - name: volume-0
+      secret:
+        secretName: jenkins-maven-settings
+    - name: volume-1
+      secret:
+        secretName: jenkins-docker-cfg
+    - name: volume-2
+      secret:
+        secretName: jenkins-release-gpg
+    - emptyDir: {}
+      name: workspace-volume
+    - downwardAPI:
+        items:
+        - fieldRef:
+            fieldPath: metadata.labels
+          path: labels
+      name: podinfo
+    - name: kaniko-secret
+      secret:
+        items:
+        - key: kaniko-secret
+          path: secret.json
+        secretName: kaniko-secret

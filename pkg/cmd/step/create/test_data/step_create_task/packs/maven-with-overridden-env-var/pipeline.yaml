@@ -1,0 +1,5 @@
+extends:
+  file: ../maven/pipeline.yaml
+env:
+  - name: _JAVA_OPTIONS
+    value: something else

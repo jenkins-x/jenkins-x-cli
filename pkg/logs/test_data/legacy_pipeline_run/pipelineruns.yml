@@ -1,0 +1,74 @@
+apiVersion: tekton.dev/v1alpha1
+items:
+  - apiVersion: tekton.dev/v1alpha1
+    kind: PipelineRun
+    metadata:
+      generation: 1
+      labels:
+        branch: fakebranch
+        build: "1"
+        created-by-prow: "true"
+        owner: fakeowner
+        prowJobName: 3930a5ce-9da8-11e9-9b3d-acde48001122
+        repo: fakerepo
+        tekton.dev/pipeline: meta-fakeowner-fakerepo-build-1
+      name: meta-fakeowner-fakerepo-build-1
+      namespace: jx
+      ownerReferences:
+        - apiVersion: tekton.dev/v1alpha1
+          kind: pipeline
+          name: meta-fakeowner-fakerepo-build-1
+          uid: 3fe9c5ff-9da8-11e9-8283-42010a840060
+      selfLink: /apis/tekton.dev/v1alpha1/namespaces/jx/pipelineruns/meta-fakeowner-fakerepo-build-1
+    spec:
+      params:
+        - name: version
+          value: 0.0.1
+        - name: build_id
+          value: "1"
+      pipelineRef:
+        apiVersion: tekton.dev/v1alpha1
+        name: meta-fakeowner-fakerepo-build-1
+      resources:
+        - name: fakeowner-fakerepo-fakebranch
+          resourceRef:
+            apiVersion: tekton.dev/v1alpha1
+            name: fakeowner-fakerepo-fakebranch
+      serviceAccount: tekton-bot
+      timeout: 240h0m0s
+  - apiVersion: tekton.dev/v1alpha1
+    kind: PipelineRun
+    metadata:
+      generation: 1
+      labels:
+        branch: fakebranch
+        build: "1"
+        created-by-prow: "true"
+        owner: fakeowner
+        prowJobName: 3930a5ce-9da8-11e9-9b3d-acde48001122
+        repo: fakerepo
+        tekton.dev/pipeline: fakeowner-fakerepo-fakebranch-1
+      name: fakeowner-fakerepo-fakebranch-1
+      namespace: jx
+      ownerReferences:
+        - apiVersion: tekton.dev/v1alpha1
+          kind: pipeline
+          name: fakeowner-fakerepo-fakebranch-1
+          uid: 3fe9c5ff-9da8-11e9-8283-42010a840060
+      selfLink: /apis/tekton.dev/v1alpha1/namespaces/jx/pipelineruns/fakeowner-fakerepo-fakebranch-1
+    spec:
+      params:
+        - name: version
+          value: 0.0.1
+        - name: build_id
+          value: "1"
+      pipelineRef:
+        apiVersion: tekton.dev/v1alpha1
+        name: fakeowner-fakerepo-fakebranch-1
+      resources:
+        - name: fakeowner-fakerepo-fakebranch
+          resourceRef:
+            apiVersion: tekton.dev/v1alpha1
+            name: fakeowner-fakerepo-fakebranch
+      serviceAccount: tekton-bot
+      timeout: 240h0m0s

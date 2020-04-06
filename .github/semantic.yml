@@ -1,0 +1,2 @@
+# Always validate all commits and the PR title
+titleAndCommits: true

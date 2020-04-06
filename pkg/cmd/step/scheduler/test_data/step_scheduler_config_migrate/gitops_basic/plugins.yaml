@@ -1,0 +1,19 @@
+blunderbuss: {}
+cat: {}
+cherry_pick_unapproved: {}
+config_updater:
+  maps:
+    env/prow/config.yaml:
+      name: config
+    env/prow/plugins.yaml:
+      name: plugins
+external_plugins: {}
+heart: {}
+owners: {}
+plugins:
+  dev-env-org/environment-dev-env-org-dev-env-repo-dev:
+  - config-updater
+requiresig: {}
+sigmention: {}
+slack: {}
+

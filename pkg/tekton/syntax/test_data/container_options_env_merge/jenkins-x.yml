@@ -1,0 +1,37 @@
+pipelineConfig:
+  pipelines:
+    release:
+      pipeline:
+        options:
+          containerOptions:
+            env:
+              - name: SOME_VAR
+                value: A value for the env var
+              - name: OVERRIDE_ENV
+                value: Original value
+              - name: OVERRIDE_STAGE_ENV
+                value: Original value
+        env:
+          - name: SOME_OTHER_VAR
+            value: A value for the other env var
+          - name: OVERRIDE_ENV
+            value: New value
+        agent:
+          image: some-image
+        stages:
+          - name: A Working Stage
+            options:
+              containerOptions:
+                env:
+                  - name: ANOTHER_OVERRIDE_STAGE_ENV
+                    value: Original value
+            env:
+              - name: OVERRIDE_STAGE_ENV
+                value: New value
+              - name: ANOTHER_OVERRIDE_STAGE_ENV
+                value: New value
+            steps:
+              - command: echo
+                args:
+                  - hello
+                  - world

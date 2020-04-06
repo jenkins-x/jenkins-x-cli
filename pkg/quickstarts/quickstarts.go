@@ -2,6 +2,8 @@ package quickstarts
 
 import (
 	"strings"
+
+	"github.com/jenkins-x/jx/pkg/util"
 )
 
 func (q *Quickstart) SurveyName() string {
@@ -32,5 +34,24 @@ func (f *QuickstartFilter) Matches(q *Quickstart) bool {
 	if framework != "" && strings.ToLower(q.Framework) != framework {
 		return false
 	}
+	if !f.AllowML && util.StartsWith(q.Name, "ML-") {
+		return false
+	}
 	return true
+}
+
+// GetGitServer returns the git server to use
+func (q *Quickstart) GetGitServer() string {
+	if q.GitServer == "" {
+		q.GitServer = "https://github.com"
+	}
+	return q.GitServer
+}
+
+// GetGitKind returns the kind of git provider to use
+func (q *Quickstart) GetGitKind() string {
+	if q.GitKind == "" {
+		q.GitKind = "github"
+	}
+	return q.GitKind
 }

@@ -59,3 +59,14 @@ func CreateAuthUserFromEnvironment(prefix string) UserAuth {
 func (a *UserAuth) IsInvalid() bool {
 	return a.BearerToken == "" && (a.ApiToken == "" || a.Username == "")
 }
+
+// Valid returns true when the user authentication is valid, otherwise false
+func (a *UserAuth) IsValid() bool {
+	if a.Username == "" {
+		return false
+	}
+	if a.ApiToken == "" {
+		return false
+	}
+	return true
+}

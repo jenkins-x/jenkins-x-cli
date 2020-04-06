@@ -16,6 +16,8 @@ package version
 import (
 	"strings"
 
+	"github.com/pkg/errors"
+
 	"github.com/blang/semver"
 	"github.com/jenkins-x/jx/pkg/log"
 )
@@ -51,7 +53,7 @@ const (
 	// TestVersion used in test cases for the current version if no
 	// version can be found - such as if the version property is not properly
 	// included in the go test flags
-	TestVersion = "1.0.1"
+	TestVersion = "2.0.404"
 )
 
 // GetVersion gets the current version string
@@ -65,7 +67,12 @@ func GetVersion() string {
 
 // GetSemverVersion returns a semver.Version struct representing the current version
 func GetSemverVersion() (semver.Version, error) {
-	return semver.Make(strings.TrimPrefix(GetVersion(), VersionPrefix))
+	text := strings.TrimPrefix(GetVersion(), VersionPrefix)
+	v, err := semver.Make(text)
+	if err != nil {
+		return v, errors.Wrapf(err, "failed to parse version %s", text)
+	}
+	return v, nil
 }
 
 // VersionStringDefault returns the current version string or returns a dummy
@@ -75,6 +82,6 @@ func VersionStringDefault(defaultValue string) string {
 	if err == nil {
 		return v.String()
 	}
-	log.Warnf("Warning failed to load version: %s\n", err)
+	log.Logger().Warnf("Warning failed to load version: %s", err)
 	return defaultValue
 }

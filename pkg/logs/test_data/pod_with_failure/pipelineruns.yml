@@ -1,0 +1,179 @@
+apiVersion: tekton.dev/v1alpha1
+items:
+  - apiVersion: tekton.dev/v1alpha1
+    kind: PipelineRun
+    metadata:
+      generation: 1
+      labels:
+        branch: fakebranch
+        build: "1"
+        created-by-prow: "true"
+        owner: fakeowner
+        jenkins.io/pipelineType: meta
+        prowJobName: 3930a5ce-9da8-11e9-9b3d-acde48001122
+        repository: fakerepo
+        tekton.dev/pipeline: meta-fakeowner-fakerepo-build-1
+      name: meta-fakeowner-fakerepo-build-1
+      namespace: jx
+      ownerReferences:
+        - apiVersion: tekton.dev/v1alpha1
+          kind: pipeline
+          name: meta-fakeowner-fakerepo-build-1
+          uid: 3fe9c5ff-9da8-11e9-8283-42010a840060
+      selfLink: /apis/tekton.dev/v1alpha1/namespaces/jx/pipelineruns/meta-fakeowner-fakerepo-build-1
+    spec:
+      params:
+        - name: version
+          value: 0.0.1
+        - name: build_id
+          value: "1"
+      pipelineRef:
+        apiVersion: tekton.dev/v1alpha1
+        name: meta-fakeowner-fakerepo-build-1
+      resources:
+        - name: fakeowner-fakerepo-fakebranch
+          resourceRef:
+            apiVersion: tekton.dev/v1alpha1
+            name: fakeowner-fakerepo-fakebranch
+      serviceAccount: tekton-bot
+      timeout: 240h0m0s
+    status:
+      completionTime: "2019-09-10T17:08:23Z"
+      conditions:
+        - lastTransitionTime: "2019-09-10T17:08:23Z"
+          message: All Tasks have completed executing
+          reason: Succeeded
+          status: "True"
+          type: Succeeded
+      startTime: "2019-09-10T17:07:08Z"
+  - apiVersion: tekton.dev/v1alpha1
+    kind: PipelineRun
+    metadata:
+      generation: 1
+      labels:
+        branch: fakebranch
+        build: "1"
+        created-by-prow: "true"
+        owner: fakeowner
+        jenkins.io/pipelineType: build
+        prowJobName: 3930a5ce-9da8-11e9-9b3d-acde48001122
+        repository: fakerepo
+        tekton.dev/pipeline: fakeowner-fakerepo-fakebranch-1
+      name: fakeowner-fakerepo-fakebranch-1
+      namespace: jx
+      ownerReferences:
+        - apiVersion: tekton.dev/v1alpha1
+          kind: pipeline
+          name: fakeowner-fakerepo-fakebranch-1
+          uid: 3fe9c5ff-9da8-11e9-8283-42010a840060
+      selfLink: /apis/tekton.dev/v1alpha1/namespaces/jx/pipelineruns/fakeowner-fakerepo-fakebranch-1
+    spec:
+      params:
+        - name: version
+          value: 0.0.1
+        - name: build_id
+          value: "1"
+      pipelineRef:
+        apiVersion: tekton.dev/v1alpha1
+        name: fakeowner-fakerepo-fakebranch-1
+      resources:
+        - name: fakeowner-fakerepo-fakebranch
+          resourceRef:
+            apiVersion: tekton.dev/v1alpha1
+            name: fakeowner-fakerepo-fakebranch
+      serviceAccount: tekton-bot
+      timeout: 240h0m0s
+    status:
+      completionTime: "2019-09-10T17:11:31Z"
+      conditions:
+        - lastTransitionTime: "2019-09-10T17:11:31Z"
+          message: TaskRun fakeowner-fakerepo-fakebranch-1-from-fakebranch-rbw8t has failed
+          reason: Failed
+          status: "False"
+          type: Succeeded
+      startTime: "2019-09-10T17:08:20Z"
+      taskRuns:
+        fakeowner-fakerepo-fakebranch-1-from-fakebranch-rbw8t:
+          pipelineTaskName: from-fakebranch
+          status:
+            completionTime: "2019-09-10T17:11:31Z"
+            conditions:
+              - lastTransitionTime: "2019-09-10T17:11:31Z"
+                message: All Steps have completed executing
+                reason: Succeeded
+                status: "True"
+                type: Succeeded
+            podName: fakeowner-fakerepo-fakebranch-1-from-fakebranch-rbw8t-pod-1682b0
+            startTime: "2019-09-10T17:08:20Z"
+            steps:
+              - name: git-merge
+                terminated:
+                  containerID: docker://053dbc7462bb411ade35bd2e3edb06f6304a5090b81a7200e581666257de605b
+                  exitCode: 0
+                  finishedAt: "2019-09-10T17:09:00Z"
+                  reason: Completed
+                  startedAt: "2019-09-10T17:08:32Z"
+              - name: setup-jx-git-credentials
+                terminated:
+                  containerID: docker://831134be7a23adbef100d8e1f1eefc8a588a2e8ed1cee349090d2122c7c2c5be
+                  exitCode: 0
+                  finishedAt: "2019-09-10T17:09:01Z"
+                  reason: Completed
+                  startedAt: "2019-09-10T17:08:52Z"
+              - name: build-mvn-deploy
+                terminated:
+                  containerID: docker://bc879af1e79aa4d9028408c3da08433c51213e1839c4faf83a33de131b2383c8
+                  exitCode: 0
+                  finishedAt: "2019-09-10T17:09:51Z"
+                  reason: Completed
+                  startedAt: "2019-09-10T17:08:52Z"
+              - name: build-skaffold-version
+                terminated:
+                  containerID: docker://4de444fdd205efd0d9dc2b24bb0913e185556d53447fc5b3ca08c0b81e654531
+                  exitCode: 0
+                  finishedAt: "2019-09-10T17:09:51Z"
+                  reason: Completed
+                  startedAt: "2019-09-10T17:08:52Z"
+              - name: build-container-build
+                terminated:
+                  containerID: docker://9417b1519ea1307ff112050edf7642894994ec6ba3f78d99a8d6aad3d8ef6c55
+                  exitCode: 0
+                  finishedAt: "2019-09-10T17:10:01Z"
+                  reason: Completed
+                  startedAt: "2019-09-10T17:08:55Z"
+              - name: build-post-build
+                terminated:
+                  containerID: docker://19c6882478feb28259f26a9e0d1d85a3ba15f8e161b591535cfc9f410de52a9d
+                  exitCode: 0
+                  finishedAt: "2019-09-10T17:10:02Z"
+                  reason: Completed
+                  startedAt: "2019-09-10T17:08:55Z"
+              - name: promote-changelog
+                terminated:
+                  containerID: docker://97cb4d3d588d4decff0bcc2b279312d33044d7bb7a5f63bb27b5ba8182c47232
+                  exitCode: 0
+                  finishedAt: "2019-09-10T17:10:04Z"
+                  reason: Completed
+                  startedAt: "2019-09-10T17:08:56Z"
+              - name: promote-helm-release
+                terminated:
+                  containerID: docker://0185c5e21ef22da68133c07c48fbee57396c6bc06d981359550b7e578e8c4e5a
+                  exitCode: 0
+                  finishedAt: "2019-09-10T17:10:09Z"
+                  reason: Completed
+                  startedAt: "2019-09-10T17:08:56Z"
+              - name: promote-jx-promote
+                terminated:
+                  containerID: docker://863aaccefc672eb10284e165ded50ff2d3755219627956307c3d4db29fa0a076
+                  exitCode: 1
+                  finishedAt: "2019-09-10T17:11:30Z"
+                  reason: Error
+                  startedAt: "2019-09-10T17:08:56Z"
+              - name: git-source-cb-kubecd-bdd-spring-1568135191-7zl6b
+                terminated:
+                  containerID: docker://7c08c3035e166ceb9fa3ac7692235ae8c023e7651776b84709c96353353475fe
+                  exitCode: 0
+                  finishedAt: "2019-09-10T17:09:00Z"
+                  reason: Completed
+                  startedAt: "2019-09-10T17:08:32Z"
+

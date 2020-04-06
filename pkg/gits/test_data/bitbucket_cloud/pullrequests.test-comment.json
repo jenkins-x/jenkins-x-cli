@@ -1,0 +1,53 @@
+{
+  "links": {
+      "self": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/pullrequests/1/comments/89566515"
+      },
+      "html": {
+          "href": "https://bitbucket.org/test-user/test-repo/pull-requests/1/_/diff#comment-89566515"
+      }
+  },
+  "deleted": false,
+  "pullrequest": {
+      "type": "pullrequest",
+      "id": 1,
+      "links": {
+          "self": {
+              "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/pullrequests/1"
+          },
+          "html": {
+              "href": "https://bitbucket.org/test-user/test-repo/pull-requests/1"
+          }
+      },
+      "title": "A minor update"
+  },
+  "content": {
+      "raw": "I created this comment using the REST API.",
+      "markup": "markdown",
+      "html": "<p>I created this comment using the REST API.</p>",
+      "type": "rendered"
+  },
+  "created_on": "2019-01-28T21:33:22.563396+00:00",
+  "user": {
+      "username": "test-user",
+      "display_name": "Test User",
+      "account_id": "5a9ffb3f26f28c2a7f1c437b",
+      "links": {
+          "self": {
+              "href": "https://api.bitbucket.org/2.0/users/test-user"
+          },
+          "html": {
+              "href": "https://bitbucket.org/test-user/"
+          },
+          "avatar": {
+              "href": "https://bitbucket.org/account/test-user/avatar/"
+          }
+      },
+      "nickname": "test-user",
+      "type": "user",
+      "uuid": "{0a3c1273-f935-421f-848c-c21435948831}"
+  },
+  "updated_on": "2019-01-28T21:33:22.569766+00:00",
+  "type": "pullrequest_comment",
+  "id": 89566515
+}

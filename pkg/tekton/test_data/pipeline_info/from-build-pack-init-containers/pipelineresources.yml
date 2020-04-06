@@ -1,0 +1,23 @@
+apiVersion: v1
+items:
+- apiVersion: tekton.dev/v1alpha1
+  kind: PipelineResource
+  metadata:
+    creationTimestamp: 2019-02-21T22:10:47Z
+    generation: 1
+    name: abayer-jx-demo-qs-master
+    namespace: jx
+    resourceVersion: "7694"
+    selfLink: /apis/tekton.dev/v1alpha1/namespaces/jx/pipelineresources/abayer-jx-demo-qs-master
+    uid: 8a95e23e-3625-11e9-b776-42010a8a00ac
+  spec:
+    params:
+    - name: revision
+      value: ""
+    - name: url
+      value: https://github.com/abayer/jx-demo-qs
+    type: git
+kind: List
+metadata:
+  resourceVersion: ""
+  selfLink: ""

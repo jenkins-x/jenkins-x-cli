@@ -3,6 +3,7 @@ package kube
 import (
 	"strings"
 
+	"github.com/jenkins-x/jx/pkg/kserving"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -24,6 +25,16 @@ func GetVersion(r *metav1.ObjectMeta) string {
 					return last
 				}
 				return v
+			}
+
+			// find the kserve revision
+			kversion := labels[kserving.RevisionLabel]
+			if kversion != "" {
+				idx := strings.LastIndex(kversion, "-")
+				if idx > 0 {
+					kversion = kversion[idx+1:]
+				}
+				return kversion
 			}
 		}
 	}
@@ -111,16 +122,23 @@ func GetAppName(name string, namespaces ...string) string {
 			prefix := ns + "-"
 			if strings.HasPrefix(name, prefix) {
 				name = strings.TrimPrefix(name, prefix)
-
-				// we often have the app name repeated twice!
-				l := len(name) / 2
-				if name[l] == '-' {
-					first := name[0:l]
-					if name[l+1:] == first {
-						return first
-					}
-				}
 			}
+		}
+
+		// we often have the app name repeated twice - particularly when using helm 3
+		l := len(name) / 2
+		if name[l] == '-' {
+			first := name[0:l]
+			if name[l+1:] == first {
+				return first
+			}
+		}
+
+		// The applications seems to be prefixed with jx regardless of the namespace
+		// where they are deployed. Let's remove this prefix.
+		prefix := "jx-"
+		if strings.HasPrefix(name, prefix) {
+			name = strings.TrimPrefix(name, prefix)
 		}
 	}
 	return name

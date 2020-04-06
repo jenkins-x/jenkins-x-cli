@@ -1,0 +1,8 @@
+adminUser:
+  username: admin
+enableDocker: false
+gpg: {}
+pipelineUser:
+  username: dev1
+  email: jenkins-x@googlegroups.com
+

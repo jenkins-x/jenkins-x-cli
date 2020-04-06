@@ -1,0 +1,100 @@
+branch-protection:
+  orgs:
+    cb-kubecd:
+      repos:
+        environment-raptorcotton-dev:
+          required_status_checks:
+            contexts:
+              - promotion-build
+    jenkins-x:
+      repos:
+        dummy:
+          required_status_checks:
+            contexts:
+              - serverless-jenkins
+    jenkins-x-bot-test:
+      repos:
+        environment-jx-my-test:
+          required_status_checks:
+            contexts:
+              - promotion-build
+  protect-tested-repos: true
+deck:
+  spyglass: {}
+gerrit: {}
+owners_dir_blacklist:
+  default: null
+  repos: null
+plank: {}
+pod_namespace: jx
+postsubmits:
+  cb-kubecd/environment-raptorcotton-dev:
+    - agent: tekton
+      branches:
+        - master
+      context: ""
+      name: promotion
+  jenkins-x-bot-test/environment-jx-my-test:
+    - agent: tekton
+      branches:
+        - master
+      context: ""
+      name: promotion
+  jenkins-x/dummy:
+    - agent: tekton
+      branches:
+        - master
+      context: ""
+      name: release
+presubmits:
+  cb-kubecd/environment-raptorcotton-dev:
+    - agent: tekton
+      always_run: true
+      context: promotion-build
+      name: promotion-build
+      rerun_command: /test this
+      trigger: (?m)^/test( all| this),?(\s+|$)
+  jenkins-x-bot-test/environment-jx-my-test:
+    - agent: tekton
+      always_run: true
+      context: promotion-build
+      name: promotion-build
+      rerun_command: /test this
+      trigger: (?m)^/test( all| this),?(\s+|$)
+  jenkins-x/dummy:
+    - agent: tekton
+      always_run: true
+      context: serverless-jenkins
+      name: serverless-jenkins
+      rerun_command: /test this
+      trigger: (?m)^/test( all| this),?(\s+|$)
+prowjob_namespace: jx
+push_gateway: {}
+sinker: {}
+tide:
+  context_options:
+    from-branch-protection: true
+    required-if-present-contexts: null
+    skip-unknown-contexts: false
+  queries:
+    - labels:
+        - approved
+      missingLabels:
+        - do-not-merge
+        - do-not-merge/hold
+        - do-not-merge/work-in-progress
+        - needs-ok-to-test
+        - needs-rebase
+      repos:
+        - jenkins-x/dummy
+    - missingLabels:
+        - do-not-merge
+        - do-not-merge/hold
+        - do-not-merge/work-in-progress
+        - needs-ok-to-test
+        - needs-rebase
+      repos:
+        - jenkins-x/dummy-environment
+        - cb-kubecd/environment-raptorcotton-dev
+        - jenkins-x-bot-test/environment-jx-my-test
+  target_url: http://deck.jx.35.195.48.235.nip.io

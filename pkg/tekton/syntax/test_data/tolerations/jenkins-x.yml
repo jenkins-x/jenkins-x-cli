@@ -1,0 +1,22 @@
+pipelineConfig:
+  pipelines:
+    release:
+      pipeline:
+        agent:
+          image: some-image
+        options:
+          tolerations:
+            - key: "some-key"
+              operator: "Exists"
+              effect: "NoSchedule"
+          podLabels:
+            foo: bar
+            fruit: apple
+        stages:
+          - name: A Working Stage
+            steps:
+              - command: echo
+                args:
+                  - hello
+                  - world
+                name: A Step With Spaces And Such

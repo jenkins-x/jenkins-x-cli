@@ -1,0 +1,33 @@
+pipelineConfig:
+  pipelines:
+    release:
+      pipeline:
+        agent:
+          image: some-image
+        stages:
+          - name: First Stage
+            steps:
+              - command: echo
+                args: ['first']
+          - name: Parent Stage
+            parallel:
+              - name: A Working Stage
+                steps:
+                  - command: echo
+                    args:
+                      - hello
+                      - world
+              - name: Nested In Parallel
+                stages:
+                  - name: Another stage
+                    steps:
+                      - command: echo
+                        args: ['again']
+                  - name: Some other stage
+                    steps:
+                      - command: echo
+                        args: ['otherwise']
+          - name: Last Stage
+            steps:
+              - command: echo
+                args: ['last']

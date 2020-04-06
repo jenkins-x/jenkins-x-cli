@@ -1,0 +1,23 @@
+pipelineConfig:
+  pipelines:
+    release:
+      pipeline:
+        options:
+          containerOptions:
+            volumeMounts:
+              - name: does-not-exist
+                mountPath: /somewhere
+          volumes:
+            - name: does-not-exist
+              persistentVolumeClaim:
+                claimName: does-not-exist
+                readOnly: true
+        agent:
+          image: some-image
+        stages:
+          - name: A Working Stage
+            steps:
+              - command: echo
+                args:
+                  - hello
+                  - world

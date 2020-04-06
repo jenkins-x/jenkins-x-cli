@@ -1,0 +1,207 @@
+
+{
+  "$id": "https:/jenkins-x.io/tests/descriptionAndTitle.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "install values.yaml",
+  "type": "object",
+  "properties": {
+    "adminUser": {
+      "type": "object",
+      "required": [
+        "username",
+        "password"
+      ],
+      "properties": {
+        "username": {
+          "type": "string",
+          "title": "Jenkins X Admin Username",
+          "description": "The Admin Username will be used by all services installed by Jenkins X",
+          "default": "admin"
+        },
+        "password": {
+          "type": "string",
+          "format": "password",
+          "title": "Jenkins X Admin Password",
+          "description": "The Admin Password will be used by all services installed by Jenkins X"
+        }
+      }
+    },
+    "prow": {
+      "type": "object",
+      "properties": {
+        "hmacToken": {
+          "type": "string",
+          "format": "token",
+          "title": "HMAC token",
+          "description": "The HMAC token is used to validate incoming webhooks, TODO"
+        }
+      }
+    },
+{{- if eq .GitKind "github" }}
+    "pipelineUser": {
+      "type": "object",
+      "required": [
+        "username",
+        "token"
+      ],
+      "properties": {
+        "username": {
+          "type": "string",
+          "title": "Pipeline bot Git username",
+          "description": "The Git user that will perform git operations inside a pipeline. It should be a user within the Git organisation/owner where environment repositories will live. This is normally a bot."
+        },
+        "token": {
+          "type": "string",
+          "format": "token",
+          "title": "Pipeline bot Git token",
+          "description": "A token for the Git user that will perform git operations inside a pipeline. This includes environment repository creation, and so this token should have full repository permissions. To create a token go to {{ .GitServer }}/settings/tokens/new?scopes=repo,read:user,read:org,user:email,write:repo_hook,delete_repo then enter a name, click Generate token, and copy and paste the token into this prompt.",
+          "minLength": 40,
+          "maxLength": 40,
+          "pattern": "^[0-9a-f]{40}$"
+        }
+      }
+    },
+{{- else if eq .GitKind "bitbucketserver" }}
+    "pipelineUser": {
+      "type": "object",
+      "required": [
+        "username",
+        "token"
+      ],
+      "properties": {
+        "username": {
+          "type": "string",
+          "title": "Pipeline bot Git username",
+          "description": "The Git user that will perform git operations inside a pipeline. It should be a user within the Git organisation/owner where environment repositories will live. This is normally a bot."
+        },
+        "token": {
+          "type": "string",
+          "format": "token",
+          "title": "Pipeline bot Git token",
+          "description": "A token for the Git user that will perform git operations inside a pipeline. This includes environment repository creation, and so this token should have full repository permissions. To create a token go to {{ .GitServer }}/plugins/servlet/access-tokens/manage then enter a name, click Generate token, and copy and paste the token into this prompt.",
+          "minLength": 8,
+          "maxLength": 50
+        }
+      }
+    },
+{{- else if eq .GitKind "gitlab" }}
+    "pipelineUser": {
+      "type": "object",
+      "required": [
+        "username",
+        "token"
+      ],
+      "properties": {
+        "username": {
+          "type": "string",
+          "title": "Pipeline bot Git username",
+          "description": "The Git user that will perform git operations inside a pipeline. It should be a user within the Git organisation/owner where environment repositories will live. This is normally a bot."
+        },
+        "token": {
+          "type": "string",
+          "format": "token",
+          "title": "Pipeline bot Git token",
+          "description": "A token for the Git user that will perform git operations inside a pipeline. This includes environment repository creation, and so this token should have full repository permissions. To create a token go to {{ .GitServer }}/profile/personal_access_tokens then enter a name, click Generate token, and copy and paste the token into this prompt.",
+          "minLength": 8,
+          "maxLength": 50
+        }
+      }
+    },
+{{- else }}
+    "pipelineUser": {
+      "type": "object",
+      "required": [
+        "username",
+        "token"
+      ],
+      "properties": {
+        "username": {
+          "type": "string",
+          "title": "Pipeline bot Git username",
+          "description": "The Git user that will perform git operations inside a pipeline. It should be a user within the Git organisation/owner where environment repositories will live. This is normally a bot."
+        },
+        "token": {
+          "type": "string",
+          "format": "token",
+          "title": "Pipeline bot Git token",
+          "description": "A token for the Git user that will perform git operations inside a pipeline. This includes environment repository creation, and so this token should have full repository permissions. To create a token go to {{ .GitServer }}/settings/tokens/new?scopes=repo,read:user,read:org,user:email,write:repo_hook,delete_repo then enter a name, click Generate token, and copy and paste the token into this prompt.",
+          "minLength": 8,
+          "maxLength": 50
+        }
+      }
+    },
+{{- end }}
+    "enableDocker": {
+      "type": "boolean",
+      "title": "Do you want to configure a Docker Registry?",
+      "description": "TODO"
+    },
+    "enableGpg": {
+      "type": "boolean",
+      "title": "Do you want to configure a GPG Key?",
+      "description": "TODO"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "enableDocker": {
+            "const": "true",
+            "type": "boolean"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "docker": {
+            "type": "object",
+            "properties": {
+              "url": {
+                "type": "string",
+                "title": "Docker Registry URL",
+                "default": "https://index.docker.io/v1/"
+              },
+              "username": {
+                "type": "string",
+                "title": "Docker Registry username",
+                "description": "TODO"
+              },
+              "password": {
+                "type": "string",
+                "format": "password",
+                "title": "Docker Registry password",
+                "description": "TODO"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "enableGpg": {
+            "const": "true",
+            "type": "boolean"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "gpg": {
+            "type": "object",
+            "properties": {
+              "passphrase": {
+                "type": "string",
+                "format": "password",
+                "title": "GPG Passphrase",
+                "description": "TODO"
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

@@ -11,7 +11,7 @@ import (
 
 	"strings"
 
-	"github.com/jenkins-x/jx/pkg/apis/jenkins.io/v1"
+	v1 "github.com/jenkins-x/jx/pkg/apis/jenkins.io/v1"
 	"github.com/jenkins-x/jx/pkg/auth"
 	"github.com/jenkins-x/jx/pkg/log"
 	"github.com/jenkins-x/jx/pkg/util"
@@ -104,7 +104,7 @@ func (e ElasticsearchProvider) SendIssue(i *ESIssue) error {
 	}
 	var index *Index
 
-	log.Infof("sending issue %s\n", id)
+	log.Logger().Infof("sending issue %s", id)
 	err = e.post("issues", id, data, &index)
 	if err != nil {
 		return err

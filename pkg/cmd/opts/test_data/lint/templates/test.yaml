@@ -1,0 +1,12 @@
+{{- /* Check that reading .Values.global.xxx won't fail */ -}}
+{{- if .Values.global.jxPreview -}}
+preview
+{{- else -}}
+no_preview
+{{- end -}}
+: true
+
+{{- /* Check that .Values.global.jxLint is true */ -}}
+{{- if not .Values.global.jxLint -}}
+{{- fail "global.jxLint expected" -}}
+{{- end -}}

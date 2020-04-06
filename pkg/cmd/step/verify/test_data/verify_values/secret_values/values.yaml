@@ -1,0 +1,10 @@
+adminUser:
+  password: vault:cluster/adminUser:password
+  username: test
+enableDocker: false
+pipelineUser:
+  token: vault:cluster/pipelineUser:token
+  username: test
+  email: test@test.org
+prow:
+  hmacToken: hmacToken

@@ -1,0 +1,52 @@
+branch-protection:
+  orgs:
+    @@DEV_ENV_ORG@@:
+      repos:
+        environment-@@DEV_ENV_ORG@@-@@DEV_ENV_REPO@@-dev:
+          protect: true
+          required_status_checks:
+            contexts:
+            - integration
+  protect-tested-repos: true
+deck:
+  spyglass: {}
+gerrit: {}
+owners_dir_blacklist:
+  default: null
+  repos: null
+plank: {}
+pod_namespace: jx
+postsubmits:
+  @@DEV_ENV_ORG@@/environment-@@DEV_ENV_ORG@@-@@DEV_ENV_REPO@@-dev:
+  - agent: tekton
+    branches:
+    - master
+    context: ""
+    name: release
+presubmits:
+  @@DEV_ENV_ORG@@/environment-@@DEV_ENV_ORG@@-@@DEV_ENV_REPO@@-dev:
+  - agent: tekton
+    always_run: true
+    context: integration
+    name: integration
+    rerun_command: /test this
+    trigger: (?m)^/test( all| this),?(\s+|$)
+prowjob_namespace: jx
+push_gateway: {}
+sinker: {}
+tide:
+  context_options:
+    from-branch-protection: true
+    required-if-present-contexts: null
+    skip-unknown-contexts: false
+  queries:
+  - labels:
+    - approved
+    missingLabels:
+    - do-not-merge
+    - do-not-merge/hold
+    - do-not-merge/work-in-progress
+    - needs-ok-to-test
+    - needs-rebase
+    repos:
+    - @@DEV_ENV_ORG@@/environment-@@DEV_ENV_ORG@@-@@DEV_ENV_REPO@@-dev

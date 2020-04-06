@@ -1,0 +1,12 @@
+agent:
+  label: builder-go
+  container: go
+pipelines:
+  default:
+    stages:
+      - name: from-build-pack
+        steps:
+          - command: make build
+            name: build
+          - command: jx step helm build
+            name: helm-build

@@ -1,0 +1,279 @@
+items:
+- apiVersion: jenkins.io/v1
+  kind: Scheduler
+  metadata:
+    creationTimestamp: null
+    name: cb-kubecd-jx-scheduler-test-group-repo-scheduler
+    namespace: jx
+  spec:
+    merger:
+      blockerLabel: ""
+      maxGoroutines: 0
+      mergeMethod: merge
+      policy:
+        fromBranchProtection: true
+        optionalContexts: {}
+        requiredContexts: {}
+        requiredIfPresentContexts: {}
+        skipUnknownContexts: false
+      prStatusBaseUrl: ""
+      squashLabel: ""
+      targetUrl: ""
+    policy:
+      protectTested: true
+    postsubmits:
+      entries:
+      - agent: tekton
+        branches:
+          entries:
+          - master
+        cluster: ""
+        context: ""
+        labels: {}
+        maxConcurrency: 0
+        name: magic
+        report: false
+        runIfChanged: ""
+        skipBranches: {}
+      - agent: tekton
+        branches:
+          entries:
+          - master
+        cluster: ""
+        context: ""
+        labels: {}
+        maxConcurrency: 0
+        name: release
+        report: false
+        runIfChanged: ""
+        skipBranches: {}
+    presubmits:
+      entries:
+      - agent: tekton
+        alwaysRun: true
+        branches: {}
+        cluster: ""
+        context: integration
+        labels: {}
+        maxConcurrency: 0
+        mergeMethod: merge
+        name: integration
+        optional: false
+        policy:
+          Replace: false
+          protect: true
+          requiredStatusChecks:
+            contexts:
+              entries:
+              - integration
+        queries:
+        - excludedBranches: {}
+          includedBranches: {}
+          labels:
+            entries:
+            - approved
+          milestone: ""
+          missingLabels:
+            entries:
+            - do-not-merge
+            - do-not-merge/hold
+            - do-not-merge/work-in-progress
+            - needs-ok-to-test
+            - needs-rebase
+          reviewApprovedRequired: false
+        report: true
+        rerunCommand: /test this
+        runIfChanged: ""
+        skipBranches: {}
+        trigger: (?m)^/test( all| this),?(\s+|$)
+    schedulerAgent:
+      agent: tekton
+- apiVersion: jenkins.io/v1
+  kind: Scheduler
+  metadata:
+    creationTimestamp: null
+    name: cb-kubecd-jx-scheduler-test-repo-scheduler
+    namespace: jx
+  spec:
+    merger:
+      blockerLabel: ""
+      maxGoroutines: 0
+      mergeMethod: merge
+      policy:
+        fromBranchProtection: true
+        optionalContexts: {}
+        requiredContexts: {}
+        requiredIfPresentContexts: {}
+        skipUnknownContexts: false
+      prStatusBaseUrl: ""
+      squashLabel: ""
+      targetUrl: ""
+    policy:
+      protectTested: true
+    postsubmits:
+      entries:
+      - agent: tekton
+        branches:
+          entries:
+          - master
+        cluster: ""
+        context: ""
+        labels: {}
+        maxConcurrency: 0
+        name: bdd
+        report: false
+        runIfChanged: ""
+        skipBranches: {}
+      - agent: tekton
+        branches:
+          entries:
+          - master
+        cluster: ""
+        context: ""
+        labels: {}
+        maxConcurrency: 0
+        name: magic
+        report: false
+        runIfChanged: ""
+        skipBranches: {}
+      - agent: tekton
+        branches:
+          entries:
+          - master
+        cluster: ""
+        context: ""
+        labels: {}
+        maxConcurrency: 0
+        name: release
+        report: false
+        runIfChanged: ""
+        skipBranches: {}
+    presubmits:
+      entries:
+      - agent: tekton
+        alwaysRun: true
+        branches: {}
+        cluster: ""
+        context: integration
+        labels: {}
+        maxConcurrency: 0
+        mergeMethod: merge
+        name: integration
+        optional: false
+        policy:
+          Replace: false
+          protect: true
+          requiredStatusChecks:
+            contexts:
+              entries:
+              - integration
+        queries:
+        - excludedBranches: {}
+          includedBranches: {}
+          labels:
+            entries:
+            - approved
+          milestone: ""
+          missingLabels:
+            entries:
+            - do-not-merge
+            - do-not-merge/hold
+            - do-not-merge/work-in-progress
+            - needs-ok-to-test
+            - needs-rebase
+          reviewApprovedRequired: false
+        report: true
+        rerunCommand: /test this
+        runIfChanged: ""
+        skipBranches: {}
+        trigger: (?m)^/test( all| this),?(\s+|$)
+    schedulerAgent:
+      agent: tekton
+- apiVersion: jenkins.io/v1
+  kind: Scheduler
+  metadata:
+    creationTimestamp: null
+    name: default-scheduler
+    namespace: jx
+  spec: {}
+- apiVersion: jenkins.io/v1
+  kind: Scheduler
+  metadata:
+    creationTimestamp: null
+    name: dev-env-org-environment-dev-env-org-dev-env-repo-dev-scheduler
+    namespace: jx
+  spec:
+    merger:
+      blockerLabel: ""
+      maxGoroutines: 0
+      mergeMethod: merge
+      policy:
+        fromBranchProtection: true
+        optionalContexts: {}
+        requiredContexts: {}
+        requiredIfPresentContexts: {}
+        skipUnknownContexts: false
+      prStatusBaseUrl: ""
+      squashLabel: ""
+      targetUrl: ""
+    plugins:
+      entries:
+      - config-updater
+    policy:
+      protectTested: true
+    postsubmits:
+      entries:
+      - agent: tekton
+        branches:
+          entries:
+          - master
+        cluster: ""
+        context: ""
+        labels: {}
+        maxConcurrency: 0
+        name: release
+        report: false
+        runIfChanged: ""
+        skipBranches: {}
+    presubmits:
+      entries:
+      - agent: tekton
+        alwaysRun: true
+        branches: {}
+        cluster: ""
+        context: integration
+        labels: {}
+        maxConcurrency: 0
+        mergeMethod: merge
+        name: integration
+        optional: false
+        policy:
+          Replace: false
+          protect: true
+          requiredStatusChecks:
+            contexts:
+              entries:
+              - integration
+        queries:
+        - excludedBranches: {}
+          includedBranches: {}
+          labels:
+            entries:
+            - approved
+          milestone: ""
+          missingLabels:
+            entries:
+            - do-not-merge
+            - do-not-merge/hold
+            - do-not-merge/work-in-progress
+            - needs-ok-to-test
+            - needs-rebase
+          reviewApprovedRequired: false
+        report: true
+        rerunCommand: /test this
+        runIfChanged: ""
+        skipBranches: {}
+        trigger: (?m)^/test( all| this),?(\s+|$)
+    schedulerAgent:
+      agent: tekton
+metadata: {}

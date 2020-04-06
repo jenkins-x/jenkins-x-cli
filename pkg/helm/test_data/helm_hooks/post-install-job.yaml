@@ -1,0 +1,12 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: expose
+  labels:
+    chart: expose-2.3.71
+    component: jenkins-x-expose
+    heritage: Tiller
+    release: jenkins-x
+  annotations:
+    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook-delete-policy: hook-succeeded

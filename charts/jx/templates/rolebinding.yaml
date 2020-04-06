@@ -11,7 +11,11 @@ roleRef:
   name: {{ template "jx.name" . }}
 subjects:
 - kind: ServiceAccount
+{{- if .Values.serviceaccount.customName }}
+  name: {{ .Values.serviceaccount.customName }}
+{{- else }}
   name: {{ template "jx.fullname" . }}
+{{- end }}
   namespace: {{ .Release.Namespace }}
 {{- end }}
 {{- end }}

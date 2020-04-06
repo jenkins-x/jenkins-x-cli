@@ -2,10 +2,12 @@ package gits
 
 import (
 	"bytes"
-	"github.com/jenkins-x/jx/pkg/apis/jenkins.io/v1"
-	"github.com/jenkins-x/jx/pkg/util"
+	"fmt"
 	"strconv"
 	"strings"
+
+	v1 "github.com/jenkins-x/jx/pkg/apis/jenkins.io/v1"
+	"github.com/jenkins-x/jx/pkg/util"
 )
 
 type CommitInfo struct {
@@ -68,16 +70,17 @@ func ParseCommit(message string) *CommitInfo {
 
 	idx := strings.Index(message, ":")
 	if idx > 0 {
-		answer.Kind = message[0:idx]
-
-		rest := strings.TrimSpace(message[idx+1:])
-		if strings.HasPrefix(rest, "(") {
-			idx = strings.Index(rest, ")")
+		kind := message[0:idx]
+		if strings.HasSuffix(kind, ")") {
+			idx := strings.Index(kind, "(")
 			if idx > 0 {
-				answer.Feature = strings.TrimSpace(rest[1:idx])
-				rest = strings.TrimSpace(rest[idx+1:])
+				answer.Feature = strings.TrimSpace(kind[idx+1 : len(kind)-1])
+				kind = strings.TrimSpace(kind[0:idx])
 			}
 		}
+		answer.Kind = kind
+		rest := strings.TrimSpace(message[idx+1:])
+
 		answer.Message = rest
 	}
 	return answer
@@ -104,7 +107,7 @@ type GroupAndCommitInfos struct {
 }
 
 // GenerateMarkdown generates the markdown document for the commits
-func GenerateMarkdown(releaseSpec *v1.ReleaseSpec, gitInfo *GitRepositoryInfo) (string, error) {
+func GenerateMarkdown(releaseSpec *v1.ReleaseSpec, gitInfo *GitRepository) (string, error) {
 	commitInfos := []*CommitInfo{}
 
 	groupAndCommits := map[int]*GroupAndCommitInfos{}
@@ -198,14 +201,36 @@ func GenerateMarkdown(releaseSpec *v1.ReleaseSpec, gitInfo *GitRepositoryInfo) (
 			}
 		}
 	}
+
+	if len(releaseSpec.DependencyUpdates) > 0 {
+		buffer.WriteString("\n### Dependency Updates\n\n")
+		var previous v1.DependencyUpdate
+		sequence := make([]v1.DependencyUpdate, 0)
+		buffer.WriteString("| Dependency | Component | New Version | Old Version |\n")
+		buffer.WriteString("| ---------- | --------- | ----------- | ----------- |\n")
+		for i, du := range releaseSpec.DependencyUpdates {
+			sequence = append(sequence, du)
+			// If it's the last element, or if the owner/repo:component changes, then print - this logic relies of the sort
+			// being owner, repo, component, fromVersion, ToVersion, which is done above
+			if i == len(releaseSpec.DependencyUpdates)-1 || du.Owner != previous.Owner || du.Repo != previous.Repo || du.Component != previous.Component {
+				// find the earliest from version
+				fromDu := sequence[0]
+				toDu := sequence[len(sequence)-1]
+				msg := fmt.Sprintf("| [%s/%s](%s) | %s | [%s](%s) | [%s](%s)|\n", toDu.Owner, toDu.Repo, toDu.URL, toDu.Component, toDu.ToVersion, toDu.ToReleaseHTMLURL, fromDu.FromVersion, fromDu.FromReleaseHTMLURL)
+				buffer.WriteString(msg)
+				sequence = make([]v1.DependencyUpdate, 0)
+			}
+			previous = du
+		}
+	}
 	return buffer.String(), nil
 }
 
-func describeIssue(info *GitRepositoryInfo, issue *v1.IssueSummary) string {
+func describeIssue(info *GitRepository, issue *v1.IssueSummary) string {
 	return describeIssueShort(info, issue) + issue.Title + describeUser(info, issue.User)
 }
 
-func describeIssueShort(info *GitRepositoryInfo, issue *v1.IssueSummary) string {
+func describeIssueShort(info *GitRepository, issue *v1.IssueSummary) string {
 	prefix := ""
 	id := issue.ID
 	if len(id) > 0 {
@@ -218,7 +243,7 @@ func describeIssueShort(info *GitRepositoryInfo, issue *v1.IssueSummary) string 
 	return "[" + prefix + issue.ID + "](" + issue.URL + ") "
 }
 
-func describeUser(info *GitRepositoryInfo, user *v1.UserDetails) string {
+func describeUser(info *GitRepository, user *v1.UserDetails) string {
 	answer := ""
 	if user != nil {
 		userText := ""
@@ -245,7 +270,7 @@ func describeUser(info *GitRepositoryInfo, user *v1.UserDetails) string {
 	return answer
 }
 
-func describeCommit(info *GitRepositoryInfo, cs *v1.CommitSummary, ci *CommitInfo, issueMap map[string]*v1.IssueSummary) string {
+func describeCommit(info *GitRepository, cs *v1.CommitSummary, ci *CommitInfo, issueMap map[string]*v1.IssueSummary) string {
 	prefix := ""
 	if ci.Feature != "" {
 		prefix = ci.Feature + ": "

@@ -1,0 +1,111 @@
+branch-protection:
+  orgs:
+    dev-env-org:
+      repos:
+        environment-dev-env-org-dev-env-repo-dev:
+          protect: true
+          required_status_checks:
+            contexts:
+            - integration
+    cb-kubecd:
+      repos:
+        jx-scheduler-test-group-repo:
+          protect: true
+          required_status_checks:
+            contexts:
+            - integration
+        jx-scheduler-test-repo:
+          protect: true
+          required_status_checks:
+            contexts:
+            - integration
+  protect-tested-repos: true
+deck:
+  spyglass: {}
+gerrit: {}
+owners_dir_blacklist:
+  default: null
+  repos: null
+plank: {}
+pod_namespace: jx
+postsubmits:
+  dev-env-org/environment-dev-env-org-dev-env-repo-dev:
+  - agent: tekton
+    branches:
+    - master
+    context: ""
+    name: release
+  cb-kubecd/jx-scheduler-test-group-repo:
+  - agent: tekton
+    branches:
+    - master
+    context: ""
+    name: magic
+  - agent: tekton
+    branches:
+    - master
+    context: ""
+    name: release
+  cb-kubecd/jx-scheduler-test-repo:
+  - agent: tekton
+    branches:
+    - master
+    context: ""
+    name: bdd
+  - agent: tekton
+    branches:
+    - master
+    context: ""
+    name: magic
+  - agent: tekton
+    branches:
+    - master
+    context: ""
+    name: release
+presubmits:
+  dev-env-org/environment-dev-env-org-dev-env-repo-dev:
+  - agent: tekton
+    always_run: true
+    context: integration
+    name: integration
+    rerun_command: /test this
+    trigger: (?m)^/test( all| this),?(\s+|$)
+  cb-kubecd/jx-scheduler-test-group-repo:
+  - agent: tekton
+    always_run: true
+    context: integration
+    name: integration
+    rerun_command: /test this
+    trigger: (?m)^/test( all| this),?(\s+|$)
+  cb-kubecd/jx-scheduler-test-repo:
+  - agent: tekton
+    always_run: true
+    context: integration
+    name: integration
+    rerun_command: /test this
+    trigger: (?m)^/test( all| this),?(\s+|$)
+prowjob_namespace: jx
+push_gateway: {}
+sinker: {}
+tide:
+  context_options:
+    from-branch-protection: true
+    required-if-present-contexts: null
+    skip-unknown-contexts: false
+  merge_method:
+    cb-kubecd/jx-scheduler-test-repo: merge
+    cb-kubecd/jx-scheduler-test-group-repo: merge
+    dev-env-org/environment-dev-env-org-dev-env-repo-dev: merge
+  queries:
+  - labels:
+    - approved
+    missingLabels:
+    - do-not-merge
+    - do-not-merge/hold
+    - do-not-merge/work-in-progress
+    - needs-ok-to-test
+    - needs-rebase
+    repos:
+    - cb-kubecd/jx-scheduler-test-repo
+    - cb-kubecd/jx-scheduler-test-group-repo
+    - dev-env-org/environment-dev-env-org-dev-env-repo-dev

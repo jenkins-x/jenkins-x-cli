@@ -1,0 +1,32 @@
+trigger:
+  trustedOrg: roadrunner-corp
+  joinOrgUrl: http://org-url
+  ignoreOkToTest: true
+  onlyOrgMembers: true
+
+approve:
+  lgtmActsAsApprove: true
+  ignoreReviewState: false
+
+externalPlugins:
+  entries:
+    - name: jx-app-cheese
+      endpoint: http://jx-app-cheese
+
+lgtm:
+  reviewActsAsLgtm: false
+  storeTreeHash: false
+  trustedTeamForStickyLgtm: team1
+
+plugins:
+  entries:
+    - cat
+    - help
+    - hold
+    - lgtm
+    - lifecycle
+    - size
+    - trigger
+    - wip
+    - heart
+    - override

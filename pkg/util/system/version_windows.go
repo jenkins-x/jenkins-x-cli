@@ -10,7 +10,7 @@ import (
 
 // GetOsVersion returns a human friendly string of the current OS
 // in the case of an error this still returns a valid string for the details that can be found.
-func GetOsVersion() (string,  error) {
+func GetOsVersion() (string, error) {
 	// we can not use GetVersion as that returns a version that the app sees (from its manifest) and not the current version
 	// and is missing some info.  So use the registry e.g.
 	// HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\CurrentVersion  -> 6.3 (used on older platforms)
@@ -26,7 +26,7 @@ func GetOsVersion() (string,  error) {
 	}
 	defer regkey.Close()
 
-	pn , _, err := regkey.GetStringValue("ProductName")
+	pn, _, err := regkey.GetStringValue("ProductName")
 	if err != nil {
 		pn, err = getMajorMinorVersion(&regkey)
 		if err != nil {
@@ -51,7 +51,6 @@ func GetOsVersion() (string,  error) {
 	return retVal, nil
 }
 
-
 func getMajorMinorVersion(regkey *registry.Key) (string, error) {
 	major, _, err := regkey.GetIntegerValue("CurrentMajorVersionNumber")
 	if err != nil {
@@ -61,7 +60,7 @@ func getMajorMinorVersion(regkey *registry.Key) (string, error) {
 	}
 	minor, _, err := regkey.GetIntegerValue("CurrentMinorVersionNumber")
 	if err != nil {
-		return fmt.Sprintf("unknwown windows (%d.unknown)",major), nil
+		return fmt.Sprintf("unknwown windows (%d.unknown)", major), nil
 	}
 	return fmt.Sprintf("unknwown windows (%d.%d)", major, minor), nil
 }

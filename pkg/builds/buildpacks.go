@@ -1,21 +1,11 @@
 package builds
 
 import (
-	"github.com/jenkins-x/jx/pkg/apis/jenkins.io/v1"
+	"sort"
+
+	v1 "github.com/jenkins-x/jx/pkg/apis/jenkins.io/v1"
 	"github.com/jenkins-x/jx/pkg/client/clientset/versioned"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sort"
-)
-
-const (
-	// ClassicWorkloadBuildPackURL the git URL for classic workload build packs
-	ClassicWorkloadBuildPackURL    = "https://github.com/jenkins-x-buildpacks/jenkins-x-classic.git"
-	// ClassicWorkloadBuildPackRef the git reference/version for the classic workloads build packs
-	ClassicWorkloadBuildPackRef    = "master"
-	// KubernetesWorkloadBuildPackURL the git URL for kubernetes workloads build packs
-	KubernetesWorkloadBuildPackURL = "https://github.com/jenkins-x-buildpacks/jenkins-x-kubernetes.git"
-	// KubernetesWorkloadBuildPackRef the git reference/version for the kubernetes workloads build packs
-	KubernetesWorkloadBuildPackRef = "master"
 )
 
 // GetBuildPacks returns a map of the BuildPacks along with the correctly ordered names
@@ -51,8 +41,8 @@ func createDefaultBuildBacks() []v1.BuildPack {
 			},
 			Spec: v1.BuildPackSpec{
 				Label:  "Kubernetes Workloads: Automated CI+CD with GitOps Promotion",
-				GitURL: KubernetesWorkloadBuildPackURL,
-				GitRef: KubernetesWorkloadBuildPackRef,
+				GitURL: v1.KubernetesWorkloadBuildPackURL,
+				GitRef: v1.KubernetesWorkloadBuildPackRef,
 			},
 		},
 		{
@@ -61,8 +51,8 @@ func createDefaultBuildBacks() []v1.BuildPack {
 			},
 			Spec: v1.BuildPackSpec{
 				Label:  "Library Workloads: CI+Release but no CD",
-				GitURL: ClassicWorkloadBuildPackURL,
-				GitRef: ClassicWorkloadBuildPackRef,
+				GitURL: v1.ClassicWorkloadBuildPackURL,
+				GitRef: v1.ClassicWorkloadBuildPackRef,
 			},
 		},
 	}

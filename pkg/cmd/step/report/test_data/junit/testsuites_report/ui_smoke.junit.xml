@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="Jenkins X E2E tests: ui_smoke_can_list_projects" tests="1" failures="0" errors="0" time="1.309"></testsuite>
+  <testsuite name="Jenkins X E2E tests: ui_smoke_can_list_builds" tests="1" failures="0" errors="0" time="1.309"></testsuite>
+</testsuites>

@@ -1,0 +1,16 @@
+pipelineConfig:
+  pipelines:
+    release:
+      pipeline:
+        agent:
+          image: some-image
+        stages:
+          - name: A Broken Stage
+            steps:
+              - command: echo
+                args: ["hello","world"]
+            parallel:
+              - name: Nested
+                steps:
+                  - command: echo
+                    args: ['oops']

@@ -1,0 +1,25 @@
+
+{
+  "$id": "https:/jenkins-x.io/tests/defaultValue.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "test values.yaml",
+  "type": "object",
+  "properties": {
+    "stringValue": {
+      "type": "string",
+      "const": "UK"
+    },
+    "booleanValue": {
+      "type": "boolean",
+      "const": "false"
+    },
+    "numberValue": {
+      "type": "number",
+      "const": "123.4"
+    },
+    "integerValue": {
+      "type": "integer",
+      "const": "123"
+    }
+  }
+}

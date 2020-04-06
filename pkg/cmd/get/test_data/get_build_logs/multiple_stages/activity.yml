@@ -1,0 +1,91 @@
+apiVersion: jenkins.io/v1
+kind: PipelineActivity
+metadata:
+  creationTimestamp: 2019-03-05T20:06:14Z
+  generation: 1
+  labels:
+    branch: master
+    build: "1"
+    owner: abayer
+    provider: github
+    repository: js-test-repo
+    sourcerepository: abayer-js-test-repo
+  name: abayer-js-test-repo-master-1
+  namespace: jx
+  resourceVersion: "1421405"
+  selfLink: /apis/jenkins.io/v1/namespaces/jx/pipelineactivities/abayer-js-test-repo-master-1
+  uid: 211c2ca9-3f82-11e9-bd41-42010a8a00a2
+spec:
+  build: "1"
+  gitBranch: master
+  gitOwner: abayer
+  gitRepository: js-test-repo
+  gitUrl: https://github.com/abayer/js-test-repo
+  pipeline: abayer/js-test-repo/master
+  startedTimestamp: 2019-03-05T20:06:37Z
+  status: Running
+  steps:
+  - kind: Stage
+    stage:
+      completedTimestamp: 2019-03-05T20:06:39Z
+      name: Build
+      startedTimestamp: 2019-03-05T20:06:37Z
+      status: Succeeded
+      steps:
+      - completedTimestamp: 2019-03-05T20:06:38Z
+        description: https://github.com/abayer/js-test-repo
+        name: Git Source Abayer Js Test Repo Master Xhn7s
+        startedTimestamp: 2019-03-05T20:06:37Z
+        status: Succeeded
+      - completedTimestamp: 2019-03-05T20:06:39Z
+        name: Source Copy Abayer Js Test Repo Master Ndlp6
+        startedTimestamp: 2019-03-05T20:06:38Z
+        status: Succeeded
+      - completedTimestamp: 2019-03-05T20:06:38Z
+        name: Source Mkdir Abayer Js Test Repo Master 4khd9
+        startedTimestamp: 2019-03-05T20:06:37Z
+        status: Succeeded
+      - completedTimestamp: 2019-03-05T20:06:38Z
+        name: Step2
+        startedTimestamp: 2019-03-05T20:06:37Z
+        status: Succeeded
+      - completedTimestamp: 2019-03-05T20:06:38Z
+        name: Step3
+        startedTimestamp: 2019-03-05T20:06:37Z
+        status: Succeeded
+      - completedTimestamp: 2019-03-05T20:06:38Z
+        name: Nop
+        startedTimestamp: 2019-03-05T20:06:38Z
+        status: Succeeded
+  - kind: Stage
+    stage:
+      name: Second
+      startedTimestamp: 2019-03-05T20:07:17Z
+      status: Running
+      steps:
+      - completedTimestamp: 2019-03-05T20:07:17Z
+        name: Create Dir Workspace X8nzk
+        startedTimestamp: 2019-03-05T20:07:17Z
+        status: Succeeded
+      - name: Source Copy Abayer Js Test Repo Master Kzrf5
+        startedTimestamp: 2019-03-05T20:07:18Z
+        status: Running
+      - completedTimestamp: 2019-03-05T20:07:17Z
+        name: Source Copy Workspace T56lp
+        startedTimestamp: 2019-03-05T20:07:17Z
+        status: Succeeded
+      - name: Source Mkdir Abayer Js Test Repo Master Ffwwq
+        startedTimestamp: 2019-03-05T20:07:17Z
+        status: Running
+      - completedTimestamp: 2019-03-05T20:07:18Z
+        name: Step2
+        startedTimestamp: 2019-03-05T20:07:17Z
+        status: Succeeded
+      - name: Step3
+        startedTimestamp: 2019-03-05T20:07:17Z
+        status: Running
+      - completedTimestamp: 2019-03-05T20:07:18Z
+        name: Nop
+        startedTimestamp: 2019-03-05T20:07:18Z
+        status: Succeeded
+status: {}

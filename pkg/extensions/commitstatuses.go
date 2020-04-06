@@ -10,7 +10,7 @@ import (
 	"github.com/jenkins-x/jx/pkg/log"
 )
 
-func NotifyCommitStatus(commitRef jenkinsv1.CommitStatusCommitReference, state string, targetUrl string, description string, comment string, context string, gitProvider gits.GitProvider, gitRepoInfo *gits.GitRepositoryInfo) (status *gits.GitRepoStatus, err error) {
+func NotifyCommitStatus(commitRef jenkinsv1.CommitStatusCommitReference, state string, targetUrl string, description string, comment string, context string, gitProvider gits.GitProvider, gitRepoInfo *gits.GitRepository) (status *gits.GitRepoStatus, err error) {
 
 	if commitRef.SHA == "" {
 		return &gits.GitRepoStatus{}, fmt.Errorf("SHA cannot be empty on %v", commitRef)
@@ -44,12 +44,12 @@ func NotifyCommitStatus(commitRef jenkinsv1.CommitStatusCommitReference, state s
 	// check for for forbidden status transitions
 	if strings.HasPrefix(strings.ToLower(oldStatus.Description), strings.ToLower("Overridden")) {
 		// If the status has been overridden, then we should not automatically update it again
-		log.Infof("commit status is overridden for pull request %s (%s) on %s so not updating\n", commitRef.PullRequest, commitRef.SHA, commitRef.GitURL)
+		log.Logger().Infof("commit status is overridden for pull request %s (%s) on %s so not updating", commitRef.PullRequest, commitRef.SHA, commitRef.GitURL)
 		return oldStatus, nil
 	}
 	if oldStatus.Description != status.Description && oldStatus.State != status.State {
 
-		log.Infof("Status %s for commit status for pull request %s (%s) on %s\n", state, commitRef.PullRequest, commitRef.SHA, commitRef.GitURL)
+		log.Logger().Infof("Status %s for commit status for pull request %s (%s) on %s", state, commitRef.PullRequest, commitRef.SHA, commitRef.GitURL)
 		_, err = gitProvider.UpdateCommitStatus(gitRepoInfo.Organisation, gitRepoInfo.Name, commitRef.SHA, status)
 		if err != nil {
 			return &gits.GitRepoStatus{}, err

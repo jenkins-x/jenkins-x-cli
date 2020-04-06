@@ -1,0 +1,1252 @@
+apiVersion: v1
+items:
+- apiVersion: v1
+  kind: Pod
+  metadata:
+    annotations:
+      sidecar.istio.io/inject: "false"
+    creationTimestamp: 2019-02-21T22:10:48Z
+    labels:
+      branch: master
+      build-number: "1"
+      jenkins.io/task-stage-name: from-build-pack
+      owner: abayer
+      repo: jx-demo-qs
+      tekton.dev/pipeline: abayer-jx-demo-qs-master
+      tekton.dev/pipelineRun: abayer-jx-demo-qs-master-1
+      tekton.dev/task: abayer-jx-demo-qs-master
+      tekton.dev/taskRun: abayer-jx-demo-qs-master-1-build-vhz8d
+    name: abayer-jx-demo-qs-master-1-build-vhz8d-pod-cd8cba
+    namespace: jx
+    ownerReferences:
+    - apiVersion: tekton.dev/v1alpha1
+      blockOwnerDeletion: true
+      controller: true
+      kind: TaskRun
+      name: abayer-jx-demo-qs-master-1-build-vhz8d
+      uid: 8ada449b-3625-11e9-b776-42010a8a00ac
+    resourceVersion: "8274"
+    selfLink: /api/v1/namespaces/jx/pods/abayer-jx-demo-qs-master-1-build-vhz8d-pod-cd8cba
+    uid: 8ae278bf-3625-11e9-b776-42010a8a00ac
+  spec:
+    containers:
+    - image: gcr.io/knative-nightly/github.com/knative/build-pipeline/cmd/nop:v20190221-c649b42c
+      imagePullPolicy: IfNotPresent
+      name: nop
+      resources: {}
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: tekton-bot-token-b99pf
+        readOnly: true
+    dnsPolicy: ClusterFirst
+    initContainers:
+    - env:
+      - name: HOME
+        value: /builder/home
+      image: gcr.io/knative-nightly/github.com/knative/build-pipeline/cmd/creds-init:v20190221-c649b42c
+      imagePullPolicy: IfNotPresent
+      name: build-step-credential-initializer-9wblv
+      resources: {}
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /workspace
+        name: workspace
+      - mountPath: /builder/home
+        name: home
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: tekton-bot-token-b99pf
+        readOnly: true
+      workingDir: /workspace
+    - args:
+      - -url
+      - https://github.com/abayer/jx-demo-qs
+      - -revision
+      - master
+      - -path
+      - /workspace/source
+      env:
+      - name: HOME
+        value: /builder/home
+      image: gcr.io/knative-nightly/github.com/knative/build-pipeline/cmd/git-init:v20190221-c649b42c
+      imagePullPolicy: IfNotPresent
+      name: build-step-git-source-abayer-jx-demo-qs-master-t95vf
+      resources: {}
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /workspace
+        name: workspace
+      - mountPath: /builder/home
+        name: home
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: tekton-bot-token-b99pf
+        readOnly: true
+      workingDir: /workspace
+    - args:
+      - /entrypoint
+      - /tools/entrypoint
+      command:
+      - /bin/cp
+      env:
+      - name: HOME
+        value: /builder/home
+      image: gcr.io/k8s-prow/entrypoint@sha256:7c7cd8906ce4982ffee326218e9fc75da2d4896d53cabc9833b9cc8d2d6b2b8f
+      imagePullPolicy: IfNotPresent
+      name: build-step-place-tools
+      resources: {}
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /tools
+        name: tools
+      - mountPath: /workspace
+        name: workspace
+      - mountPath: /builder/home
+        name: home
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: tekton-bot-token-b99pf
+        readOnly: true
+      workingDir: /workspace
+    - command:
+      - /tools/entrypoint
+      env:
+      - name: HOME
+        value: /builder/home
+      - name: DOCKER_REGISTRY
+        valueFrom:
+          configMapKeyRef:
+            key: docker.registry
+            name: jenkins-x-docker-registry
+      - name: TILLER_NAMESPACE
+        value: kube-system
+      - name: DOCKER_CONFIG
+        value: /home/jenkins/.docker/
+      - name: GIT_AUTHOR_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_AUTHOR_NAME
+        value: jenkins-x-bot
+      - name: GIT_COMMITTER_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_COMMITTER_NAME
+        value: jenkins-x-bot
+      - name: XDG_CONFIG_HOME
+        value: /home/jenkins
+      - name: _JAVA_OPTIONS
+        value: -XX:+UnlockExperimentalVMOptions -Dsun.zip.disableMemoryMapping=true
+          -XX:+UseParallelGC -XX:MinHeapFreeRatio=5 -XX:MaxHeapFreeRatio=10 -XX:GCTimeRatio=4
+          -XX:AdaptiveSizePolicyWeight=90 -Xms10m -Xmx192m
+      - name: PIPELINE_KIND
+        value: release
+      - name: REPO_OWNER
+        value: abayer
+      - name: REPO_NAME
+        value: jx-demo-qs
+      - name: JOB_NAME
+        value: abayer/jx-demo-qs/master
+      - name: BRANCH_NAME
+        value: master
+      - name: JX_BATCH_MODE
+        value: "true"
+      - name: ENTRYPOINT_OPTIONS
+        value: '{"args":["/bin/sh","-c","jx step git credentials"],"process_log":"/tools/process-log.txt","marker_file":"/tools/marker-file.txt"}'
+      image: jenkinsxio/builder-maven-java11:0.1.235
+      imagePullPolicy: IfNotPresent
+      name: build-step-setup-jx-git-credentials
+      resources:
+        requests:
+          cpu: 400m
+          memory: 512Mi
+      securityContext:
+        privileged: true
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /home/jenkins
+        name: workspace-volume
+      - mountPath: /var/run/docker.sock
+        name: docker-daemon
+      - mountPath: /root/.m2/
+        name: volume-0
+      - mountPath: /home/jenkins/.docker
+        name: volume-1
+      - mountPath: /home/jenkins/.gnupg
+        name: volume-2
+      - mountPath: /etc/podinfo
+        name: podinfo
+        readOnly: true
+      - mountPath: /tools
+        name: tools
+      - mountPath: /workspace
+        name: workspace
+      - mountPath: /builder/home
+        name: home
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: tekton-bot-token-b99pf
+        readOnly: true
+      workingDir: /workspace/source
+    - command:
+      - /tools/entrypoint
+      env:
+      - name: HOME
+        value: /builder/home
+      - name: DOCKER_REGISTRY
+        valueFrom:
+          configMapKeyRef:
+            key: docker.registry
+            name: jenkins-x-docker-registry
+      - name: TILLER_NAMESPACE
+        value: kube-system
+      - name: DOCKER_CONFIG
+        value: /home/jenkins/.docker/
+      - name: GIT_AUTHOR_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_AUTHOR_NAME
+        value: jenkins-x-bot
+      - name: GIT_COMMITTER_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_COMMITTER_NAME
+        value: jenkins-x-bot
+      - name: XDG_CONFIG_HOME
+        value: /home/jenkins
+      - name: _JAVA_OPTIONS
+        value: -XX:+UnlockExperimentalVMOptions -Dsun.zip.disableMemoryMapping=true
+          -XX:+UseParallelGC -XX:MinHeapFreeRatio=5 -XX:MaxHeapFreeRatio=10 -XX:GCTimeRatio=4
+          -XX:AdaptiveSizePolicyWeight=90 -Xms10m -Xmx192m
+      - name: PIPELINE_KIND
+        value: release
+      - name: REPO_OWNER
+        value: abayer
+      - name: REPO_NAME
+        value: jx-demo-qs
+      - name: JOB_NAME
+        value: abayer/jx-demo-qs/master
+      - name: BRANCH_NAME
+        value: master
+      - name: JX_BATCH_MODE
+        value: "true"
+      - name: ENTRYPOINT_OPTIONS
+        value: '{"args":["/bin/sh","-c","echo $(jx-release-version) \u003e VERSION"],"process_log":"/tools/process-log.txt","marker_file":"/tools/marker-file.txt"}'
+      image: jenkinsxio/builder-maven-java11:0.1.235
+      imagePullPolicy: IfNotPresent
+      name: build-step-setversion-next-version
+      resources:
+        requests:
+          cpu: 400m
+          memory: 512Mi
+      securityContext:
+        privileged: true
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /home/jenkins
+        name: workspace-volume
+      - mountPath: /var/run/docker.sock
+        name: docker-daemon
+      - mountPath: /root/.m2/
+        name: volume-0
+      - mountPath: /home/jenkins/.docker
+        name: volume-1
+      - mountPath: /home/jenkins/.gnupg
+        name: volume-2
+      - mountPath: /etc/podinfo
+        name: podinfo
+        readOnly: true
+      - mountPath: /tools
+        name: tools
+      - mountPath: /workspace
+        name: workspace
+      - mountPath: /builder/home
+        name: home
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: tekton-bot-token-b99pf
+        readOnly: true
+      workingDir: /workspace/source
+    - command:
+      - /tools/entrypoint
+      env:
+      - name: HOME
+        value: /builder/home
+      - name: DOCKER_REGISTRY
+        valueFrom:
+          configMapKeyRef:
+            key: docker.registry
+            name: jenkins-x-docker-registry
+      - name: TILLER_NAMESPACE
+        value: kube-system
+      - name: DOCKER_CONFIG
+        value: /home/jenkins/.docker/
+      - name: GIT_AUTHOR_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_AUTHOR_NAME
+        value: jenkins-x-bot
+      - name: GIT_COMMITTER_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_COMMITTER_NAME
+        value: jenkins-x-bot
+      - name: XDG_CONFIG_HOME
+        value: /home/jenkins
+      - name: _JAVA_OPTIONS
+        value: -XX:+UnlockExperimentalVMOptions -Dsun.zip.disableMemoryMapping=true
+          -XX:+UseParallelGC -XX:MinHeapFreeRatio=5 -XX:MaxHeapFreeRatio=10 -XX:GCTimeRatio=4
+          -XX:AdaptiveSizePolicyWeight=90 -Xms10m -Xmx192m
+      - name: PIPELINE_KIND
+        value: release
+      - name: REPO_OWNER
+        value: abayer
+      - name: REPO_NAME
+        value: jx-demo-qs
+      - name: JOB_NAME
+        value: abayer/jx-demo-qs/master
+      - name: BRANCH_NAME
+        value: master
+      - name: JX_BATCH_MODE
+        value: "true"
+      - name: ENTRYPOINT_OPTIONS
+        value: '{"args":["/bin/sh","-c","mvn versions:set -DnewVersion=$(cat VERSION)"],"process_log":"/tools/process-log.txt","marker_file":"/tools/marker-file.txt"}'
+      image: jenkinsxio/builder-maven-java11:0.1.235
+      imagePullPolicy: IfNotPresent
+      name: build-step-setversion-set-version
+      resources:
+        requests:
+          cpu: 400m
+          memory: 512Mi
+      securityContext:
+        privileged: true
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /home/jenkins
+        name: workspace-volume
+      - mountPath: /var/run/docker.sock
+        name: docker-daemon
+      - mountPath: /root/.m2/
+        name: volume-0
+      - mountPath: /home/jenkins/.docker
+        name: volume-1
+      - mountPath: /home/jenkins/.gnupg
+        name: volume-2
+      - mountPath: /etc/podinfo
+        name: podinfo
+        readOnly: true
+      - mountPath: /tools
+        name: tools
+      - mountPath: /workspace
+        name: workspace
+      - mountPath: /builder/home
+        name: home
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: tekton-bot-token-b99pf
+        readOnly: true
+      workingDir: /workspace/source
+    - command:
+      - /tools/entrypoint
+      env:
+      - name: HOME
+        value: /builder/home
+      - name: DOCKER_REGISTRY
+        valueFrom:
+          configMapKeyRef:
+            key: docker.registry
+            name: jenkins-x-docker-registry
+      - name: TILLER_NAMESPACE
+        value: kube-system
+      - name: DOCKER_CONFIG
+        value: /home/jenkins/.docker/
+      - name: GIT_AUTHOR_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_AUTHOR_NAME
+        value: jenkins-x-bot
+      - name: GIT_COMMITTER_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_COMMITTER_NAME
+        value: jenkins-x-bot
+      - name: XDG_CONFIG_HOME
+        value: /home/jenkins
+      - name: _JAVA_OPTIONS
+        value: -XX:+UnlockExperimentalVMOptions -Dsun.zip.disableMemoryMapping=true
+          -XX:+UseParallelGC -XX:MinHeapFreeRatio=5 -XX:MaxHeapFreeRatio=10 -XX:GCTimeRatio=4
+          -XX:AdaptiveSizePolicyWeight=90 -Xms10m -Xmx192m
+      - name: PIPELINE_KIND
+        value: release
+      - name: REPO_OWNER
+        value: abayer
+      - name: REPO_NAME
+        value: jx-demo-qs
+      - name: JOB_NAME
+        value: abayer/jx-demo-qs/master
+      - name: BRANCH_NAME
+        value: master
+      - name: JX_BATCH_MODE
+        value: "true"
+      - name: ENTRYPOINT_OPTIONS
+        value: '{"args":["/bin/sh","-c","jx step tag --version $(cat VERSION)"],"process_log":"/tools/process-log.txt","marker_file":"/tools/marker-file.txt"}'
+      image: jenkinsxio/builder-maven-java11:0.1.235
+      imagePullPolicy: IfNotPresent
+      name: build-step-setversion-tag-version
+      resources:
+        requests:
+          cpu: 400m
+          memory: 512Mi
+      securityContext:
+        privileged: true
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /home/jenkins
+        name: workspace-volume
+      - mountPath: /var/run/docker.sock
+        name: docker-daemon
+      - mountPath: /root/.m2/
+        name: volume-0
+      - mountPath: /home/jenkins/.docker
+        name: volume-1
+      - mountPath: /home/jenkins/.gnupg
+        name: volume-2
+      - mountPath: /etc/podinfo
+        name: podinfo
+        readOnly: true
+      - mountPath: /tools
+        name: tools
+      - mountPath: /workspace
+        name: workspace
+      - mountPath: /builder/home
+        name: home
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: tekton-bot-token-b99pf
+        readOnly: true
+      workingDir: /workspace/source
+    - command:
+      - /tools/entrypoint
+      env:
+      - name: HOME
+        value: /builder/home
+      - name: DOCKER_REGISTRY
+        valueFrom:
+          configMapKeyRef:
+            key: docker.registry
+            name: jenkins-x-docker-registry
+      - name: TILLER_NAMESPACE
+        value: kube-system
+      - name: DOCKER_CONFIG
+        value: /home/jenkins/.docker/
+      - name: GIT_AUTHOR_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_AUTHOR_NAME
+        value: jenkins-x-bot
+      - name: GIT_COMMITTER_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_COMMITTER_NAME
+        value: jenkins-x-bot
+      - name: XDG_CONFIG_HOME
+        value: /home/jenkins
+      - name: _JAVA_OPTIONS
+        value: -XX:+UnlockExperimentalVMOptions -Dsun.zip.disableMemoryMapping=true
+          -XX:+UseParallelGC -XX:MinHeapFreeRatio=5 -XX:MaxHeapFreeRatio=10 -XX:GCTimeRatio=4
+          -XX:AdaptiveSizePolicyWeight=90 -Xms10m -Xmx192m
+      - name: PIPELINE_KIND
+        value: release
+      - name: REPO_OWNER
+        value: abayer
+      - name: REPO_NAME
+        value: jx-demo-qs
+      - name: JOB_NAME
+        value: abayer/jx-demo-qs/master
+      - name: BRANCH_NAME
+        value: master
+      - name: JX_BATCH_MODE
+        value: "true"
+      - name: ENTRYPOINT_OPTIONS
+        value: '{"args":["/bin/sh","-c","mvn clean deploy"],"process_log":"/tools/process-log.txt","marker_file":"/tools/marker-file.txt"}'
+      image: jenkinsxio/builder-maven-java11:0.1.235
+      imagePullPolicy: IfNotPresent
+      name: build-step-build-mvn-deploy
+      resources:
+        requests:
+          cpu: 400m
+          memory: 512Mi
+      securityContext:
+        privileged: true
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /home/jenkins
+        name: workspace-volume
+      - mountPath: /var/run/docker.sock
+        name: docker-daemon
+      - mountPath: /root/.m2/
+        name: volume-0
+      - mountPath: /home/jenkins/.docker
+        name: volume-1
+      - mountPath: /home/jenkins/.gnupg
+        name: volume-2
+      - mountPath: /etc/podinfo
+        name: podinfo
+        readOnly: true
+      - mountPath: /tools
+        name: tools
+      - mountPath: /workspace
+        name: workspace
+      - mountPath: /builder/home
+        name: home
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: tekton-bot-token-b99pf
+        readOnly: true
+      workingDir: /workspace/source
+    - command:
+      - /tools/entrypoint
+      env:
+      - name: HOME
+        value: /builder/home
+      - name: DOCKER_REGISTRY
+        valueFrom:
+          configMapKeyRef:
+            key: docker.registry
+            name: jenkins-x-docker-registry
+      - name: TILLER_NAMESPACE
+        value: kube-system
+      - name: DOCKER_CONFIG
+        value: /home/jenkins/.docker/
+      - name: GIT_AUTHOR_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_AUTHOR_NAME
+        value: jenkins-x-bot
+      - name: GIT_COMMITTER_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_COMMITTER_NAME
+        value: jenkins-x-bot
+      - name: XDG_CONFIG_HOME
+        value: /home/jenkins
+      - name: _JAVA_OPTIONS
+        value: -XX:+UnlockExperimentalVMOptions -Dsun.zip.disableMemoryMapping=true
+          -XX:+UseParallelGC -XX:MinHeapFreeRatio=5 -XX:MaxHeapFreeRatio=10 -XX:GCTimeRatio=4
+          -XX:AdaptiveSizePolicyWeight=90 -Xms10m -Xmx192m
+      - name: PIPELINE_KIND
+        value: release
+      - name: REPO_OWNER
+        value: abayer
+      - name: REPO_NAME
+        value: jx-demo-qs
+      - name: JOB_NAME
+        value: abayer/jx-demo-qs/master
+      - name: BRANCH_NAME
+        value: master
+      - name: JX_BATCH_MODE
+        value: "true"
+      - name: ENTRYPOINT_OPTIONS
+        value: '{"args":["/bin/sh","-c","skaffold version"],"process_log":"/tools/process-log.txt","marker_file":"/tools/marker-file.txt"}'
+      image: jenkinsxio/builder-maven-java11:0.1.235
+      imagePullPolicy: IfNotPresent
+      name: build-step-build-skaffold-version
+      resources:
+        requests:
+          cpu: 400m
+          memory: 512Mi
+      securityContext:
+        privileged: true
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /home/jenkins
+        name: workspace-volume
+      - mountPath: /var/run/docker.sock
+        name: docker-daemon
+      - mountPath: /root/.m2/
+        name: volume-0
+      - mountPath: /home/jenkins/.docker
+        name: volume-1
+      - mountPath: /home/jenkins/.gnupg
+        name: volume-2
+      - mountPath: /etc/podinfo
+        name: podinfo
+        readOnly: true
+      - mountPath: /tools
+        name: tools
+      - mountPath: /workspace
+        name: workspace
+      - mountPath: /builder/home
+        name: home
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: tekton-bot-token-b99pf
+        readOnly: true
+      workingDir: /workspace/source
+    - command:
+      - /tools/entrypoint
+      env:
+      - name: HOME
+        value: /builder/home
+      - name: DOCKER_REGISTRY
+        valueFrom:
+          configMapKeyRef:
+            key: docker.registry
+            name: jenkins-x-docker-registry
+      - name: TILLER_NAMESPACE
+        value: kube-system
+      - name: DOCKER_CONFIG
+        value: /home/jenkins/.docker/
+      - name: GIT_AUTHOR_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_AUTHOR_NAME
+        value: jenkins-x-bot
+      - name: GIT_COMMITTER_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_COMMITTER_NAME
+        value: jenkins-x-bot
+      - name: XDG_CONFIG_HOME
+        value: /home/jenkins
+      - name: _JAVA_OPTIONS
+        value: -XX:+UnlockExperimentalVMOptions -Dsun.zip.disableMemoryMapping=true
+          -XX:+UseParallelGC -XX:MinHeapFreeRatio=5 -XX:MaxHeapFreeRatio=10 -XX:GCTimeRatio=4
+          -XX:AdaptiveSizePolicyWeight=90 -Xms10m -Xmx192m
+      - name: PIPELINE_KIND
+        value: release
+      - name: REPO_OWNER
+        value: abayer
+      - name: REPO_NAME
+        value: jx-demo-qs
+      - name: JOB_NAME
+        value: abayer/jx-demo-qs/master
+      - name: BRANCH_NAME
+        value: master
+      - name: JX_BATCH_MODE
+        value: "true"
+      - name: ENTRYPOINT_OPTIONS
+        value: '{"args":["/bin/sh","-c","export VERSION=`cat VERSION` \u0026\u0026 skaffold
+          build -f skaffold.yaml"],"process_log":"/tools/process-log.txt","marker_file":"/tools/marker-file.txt"}'
+      image: jenkinsxio/builder-maven-java11:0.1.235
+      imagePullPolicy: IfNotPresent
+      name: build-step-build-container-build
+      resources:
+        requests:
+          cpu: 400m
+          memory: 512Mi
+      securityContext:
+        privileged: true
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /home/jenkins
+        name: workspace-volume
+      - mountPath: /var/run/docker.sock
+        name: docker-daemon
+      - mountPath: /root/.m2/
+        name: volume-0
+      - mountPath: /home/jenkins/.docker
+        name: volume-1
+      - mountPath: /home/jenkins/.gnupg
+        name: volume-2
+      - mountPath: /etc/podinfo
+        name: podinfo
+        readOnly: true
+      - mountPath: /tools
+        name: tools
+      - mountPath: /workspace
+        name: workspace
+      - mountPath: /builder/home
+        name: home
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: tekton-bot-token-b99pf
+        readOnly: true
+      workingDir: /workspace/source
+    - command:
+      - /tools/entrypoint
+      env:
+      - name: HOME
+        value: /builder/home
+      - name: DOCKER_REGISTRY
+        valueFrom:
+          configMapKeyRef:
+            key: docker.registry
+            name: jenkins-x-docker-registry
+      - name: TILLER_NAMESPACE
+        value: kube-system
+      - name: DOCKER_CONFIG
+        value: /home/jenkins/.docker/
+      - name: GIT_AUTHOR_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_AUTHOR_NAME
+        value: jenkins-x-bot
+      - name: GIT_COMMITTER_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_COMMITTER_NAME
+        value: jenkins-x-bot
+      - name: XDG_CONFIG_HOME
+        value: /home/jenkins
+      - name: _JAVA_OPTIONS
+        value: -XX:+UnlockExperimentalVMOptions -Dsun.zip.disableMemoryMapping=true
+          -XX:+UseParallelGC -XX:MinHeapFreeRatio=5 -XX:MaxHeapFreeRatio=10 -XX:GCTimeRatio=4
+          -XX:AdaptiveSizePolicyWeight=90 -Xms10m -Xmx192m
+      - name: PIPELINE_KIND
+        value: release
+      - name: REPO_OWNER
+        value: abayer
+      - name: REPO_NAME
+        value: jx-demo-qs
+      - name: JOB_NAME
+        value: abayer/jx-demo-qs/master
+      - name: BRANCH_NAME
+        value: master
+      - name: JX_BATCH_MODE
+        value: "true"
+      - name: ENTRYPOINT_OPTIONS
+        value: '{"args":["/bin/sh","-c","jx step post build --image $DOCKER_REGISTRY/$ORG/$APP_NAME:$(cat
+          VERSION)"],"process_log":"/tools/process-log.txt","marker_file":"/tools/marker-file.txt"}'
+      image: jenkinsxio/builder-maven-java11:0.1.235
+      imagePullPolicy: IfNotPresent
+      name: build-step-build-post-build
+      resources:
+        requests:
+          cpu: 400m
+          memory: 512Mi
+      securityContext:
+        privileged: true
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /home/jenkins
+        name: workspace-volume
+      - mountPath: /var/run/docker.sock
+        name: docker-daemon
+      - mountPath: /root/.m2/
+        name: volume-0
+      - mountPath: /home/jenkins/.docker
+        name: volume-1
+      - mountPath: /home/jenkins/.gnupg
+        name: volume-2
+      - mountPath: /etc/podinfo
+        name: podinfo
+        readOnly: true
+      - mountPath: /tools
+        name: tools
+      - mountPath: /workspace
+        name: workspace
+      - mountPath: /builder/home
+        name: home
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: tekton-bot-token-b99pf
+        readOnly: true
+      workingDir: /workspace/source
+    - command:
+      - /tools/entrypoint
+      env:
+      - name: HOME
+        value: /builder/home
+      - name: DOCKER_REGISTRY
+        valueFrom:
+          configMapKeyRef:
+            key: docker.registry
+            name: jenkins-x-docker-registry
+      - name: TILLER_NAMESPACE
+        value: kube-system
+      - name: DOCKER_CONFIG
+        value: /home/jenkins/.docker/
+      - name: GIT_AUTHOR_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_AUTHOR_NAME
+        value: jenkins-x-bot
+      - name: GIT_COMMITTER_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_COMMITTER_NAME
+        value: jenkins-x-bot
+      - name: XDG_CONFIG_HOME
+        value: /home/jenkins
+      - name: _JAVA_OPTIONS
+        value: -XX:+UnlockExperimentalVMOptions -Dsun.zip.disableMemoryMapping=true
+          -XX:+UseParallelGC -XX:MinHeapFreeRatio=5 -XX:MaxHeapFreeRatio=10 -XX:GCTimeRatio=4
+          -XX:AdaptiveSizePolicyWeight=90 -Xms10m -Xmx192m
+      - name: PIPELINE_KIND
+        value: release
+      - name: REPO_OWNER
+        value: abayer
+      - name: REPO_NAME
+        value: jx-demo-qs
+      - name: JOB_NAME
+        value: abayer/jx-demo-qs/master
+      - name: BRANCH_NAME
+        value: master
+      - name: JX_BATCH_MODE
+        value: "true"
+      - name: ENTRYPOINT_OPTIONS
+        value: '{"args":["/bin/sh","-c","jx step changelog --version v$(cat ../../VERSION)"],"process_log":"/tools/process-log.txt","marker_file":"/tools/marker-file.txt"}'
+      image: jenkinsxio/builder-maven-java11:0.1.235
+      imagePullPolicy: IfNotPresent
+      name: build-step-promote-changelog
+      resources:
+        requests:
+          cpu: 400m
+          memory: 512Mi
+      securityContext:
+        privileged: true
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /home/jenkins
+        name: workspace-volume
+      - mountPath: /var/run/docker.sock
+        name: docker-daemon
+      - mountPath: /root/.m2/
+        name: volume-0
+      - mountPath: /home/jenkins/.docker
+        name: volume-1
+      - mountPath: /home/jenkins/.gnupg
+        name: volume-2
+      - mountPath: /etc/podinfo
+        name: podinfo
+        readOnly: true
+      - mountPath: /tools
+        name: tools
+      - mountPath: /workspace
+        name: workspace
+      - mountPath: /builder/home
+        name: home
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: tekton-bot-token-b99pf
+        readOnly: true
+      workingDir: /workspace/source/charts/jx-demo-qs
+    - command:
+      - /tools/entrypoint
+      env:
+      - name: HOME
+        value: /builder/home
+      - name: DOCKER_REGISTRY
+        valueFrom:
+          configMapKeyRef:
+            key: docker.registry
+            name: jenkins-x-docker-registry
+      - name: TILLER_NAMESPACE
+        value: kube-system
+      - name: DOCKER_CONFIG
+        value: /home/jenkins/.docker/
+      - name: GIT_AUTHOR_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_AUTHOR_NAME
+        value: jenkins-x-bot
+      - name: GIT_COMMITTER_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_COMMITTER_NAME
+        value: jenkins-x-bot
+      - name: XDG_CONFIG_HOME
+        value: /home/jenkins
+      - name: _JAVA_OPTIONS
+        value: -XX:+UnlockExperimentalVMOptions -Dsun.zip.disableMemoryMapping=true
+          -XX:+UseParallelGC -XX:MinHeapFreeRatio=5 -XX:MaxHeapFreeRatio=10 -XX:GCTimeRatio=4
+          -XX:AdaptiveSizePolicyWeight=90 -Xms10m -Xmx192m
+      - name: PIPELINE_KIND
+        value: release
+      - name: REPO_OWNER
+        value: abayer
+      - name: REPO_NAME
+        value: jx-demo-qs
+      - name: JOB_NAME
+        value: abayer/jx-demo-qs/master
+      - name: BRANCH_NAME
+        value: master
+      - name: JX_BATCH_MODE
+        value: "true"
+      - name: ENTRYPOINT_OPTIONS
+        value: '{"args":["/bin/sh","-c","jx step helm release"],"process_log":"/tools/process-log.txt","marker_file":"/tools/marker-file.txt"}'
+      image: jenkinsxio/builder-maven-java11:0.1.235
+      imagePullPolicy: IfNotPresent
+      name: build-step-promote-helm-release
+      resources:
+        requests:
+          cpu: 400m
+          memory: 512Mi
+      securityContext:
+        privileged: true
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /home/jenkins
+        name: workspace-volume
+      - mountPath: /var/run/docker.sock
+        name: docker-daemon
+      - mountPath: /root/.m2/
+        name: volume-0
+      - mountPath: /home/jenkins/.docker
+        name: volume-1
+      - mountPath: /home/jenkins/.gnupg
+        name: volume-2
+      - mountPath: /etc/podinfo
+        name: podinfo
+        readOnly: true
+      - mountPath: /tools
+        name: tools
+      - mountPath: /workspace
+        name: workspace
+      - mountPath: /builder/home
+        name: home
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: tekton-bot-token-b99pf
+        readOnly: true
+      workingDir: /workspace/source/charts/jx-demo-qs
+    - command:
+      - /tools/entrypoint
+      env:
+      - name: HOME
+        value: /builder/home
+      - name: DOCKER_REGISTRY
+        valueFrom:
+          configMapKeyRef:
+            key: docker.registry
+            name: jenkins-x-docker-registry
+      - name: TILLER_NAMESPACE
+        value: kube-system
+      - name: DOCKER_CONFIG
+        value: /home/jenkins/.docker/
+      - name: GIT_AUTHOR_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_AUTHOR_NAME
+        value: jenkins-x-bot
+      - name: GIT_COMMITTER_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_COMMITTER_NAME
+        value: jenkins-x-bot
+      - name: XDG_CONFIG_HOME
+        value: /home/jenkins
+      - name: _JAVA_OPTIONS
+        value: -XX:+UnlockExperimentalVMOptions -Dsun.zip.disableMemoryMapping=true
+          -XX:+UseParallelGC -XX:MinHeapFreeRatio=5 -XX:MaxHeapFreeRatio=10 -XX:GCTimeRatio=4
+          -XX:AdaptiveSizePolicyWeight=90 -Xms10m -Xmx192m
+      - name: PIPELINE_KIND
+        value: release
+      - name: REPO_OWNER
+        value: abayer
+      - name: REPO_NAME
+        value: jx-demo-qs
+      - name: JOB_NAME
+        value: abayer/jx-demo-qs/master
+      - name: BRANCH_NAME
+        value: master
+      - name: JX_BATCH_MODE
+        value: "true"
+      - name: ENTRYPOINT_OPTIONS
+        value: '{"args":["/bin/sh","-c","jx promote -b --all-auto --timeout 1h --version
+          $(cat ../../VERSION)"],"process_log":"/tools/process-log.txt","marker_file":"/tools/marker-file.txt"}'
+      image: jenkinsxio/builder-maven-java11:0.1.235
+      imagePullPolicy: IfNotPresent
+      name: build-step-promote-jx-promote
+      resources:
+        requests:
+          cpu: 400m
+          memory: 512Mi
+      securityContext:
+        privileged: true
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /home/jenkins
+        name: workspace-volume
+      - mountPath: /var/run/docker.sock
+        name: docker-daemon
+      - mountPath: /root/.m2/
+        name: volume-0
+      - mountPath: /home/jenkins/.docker
+        name: volume-1
+      - mountPath: /home/jenkins/.gnupg
+        name: volume-2
+      - mountPath: /etc/podinfo
+        name: podinfo
+        readOnly: true
+      - mountPath: /tools
+        name: tools
+      - mountPath: /workspace
+        name: workspace
+      - mountPath: /builder/home
+        name: home
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: tekton-bot-token-b99pf
+        readOnly: true
+      workingDir: /workspace/source/charts/jx-demo-qs
+    nodeName: gke-abayer-test-cluster-default-pool-33b76534-1wj7
+    priority: 0
+    restartPolicy: Never
+    schedulerName: default-scheduler
+    securityContext: {}
+    serviceAccount: tekton-bot
+    serviceAccountName: tekton-bot
+    terminationGracePeriodSeconds: 30
+    tolerations:
+    - effect: NoExecute
+      key: node.kubernetes.io/not-ready
+      operator: Exists
+      tolerationSeconds: 300
+    - effect: NoExecute
+      key: node.kubernetes.io/unreachable
+      operator: Exists
+      tolerationSeconds: 300
+    volumes:
+    - emptyDir: {}
+      name: workspace-volume
+    - hostPath:
+        path: /var/run/docker.sock
+        type: ""
+      name: docker-daemon
+    - name: volume-0
+      secret:
+        defaultMode: 420
+        secretName: jenkins-maven-settings
+    - name: volume-1
+      secret:
+        defaultMode: 420
+        secretName: jenkins-docker-cfg
+    - name: volume-2
+      secret:
+        defaultMode: 420
+        secretName: jenkins-release-gpg
+    - downwardAPI:
+        defaultMode: 420
+        items:
+        - fieldRef:
+            apiVersion: v1
+            fieldPath: metadata.labels
+          path: labels
+      name: podinfo
+    - emptyDir: {}
+      name: tools
+    - emptyDir: {}
+      name: workspace
+    - emptyDir: {}
+      name: home
+    - name: tekton-bot-token-b99pf
+      secret:
+        defaultMode: 420
+        secretName: tekton-bot-token-b99pf
+  status:
+    conditions:
+    - lastProbeTime: null
+      lastTransitionTime: 2019-02-21T22:10:48Z
+      message: 'containers with incomplete status: [build-step-promote-jx-promote]'
+      reason: ContainersNotInitialized
+      status: "False"
+      type: Initialized
+    - lastProbeTime: null
+      lastTransitionTime: 2019-02-21T22:10:48Z
+      message: 'containers with unready status: [nop]'
+      reason: ContainersNotReady
+      status: "False"
+      type: Ready
+    - lastProbeTime: null
+      lastTransitionTime: null
+      message: 'containers with unready status: [nop]'
+      reason: ContainersNotReady
+      status: "False"
+      type: ContainersReady
+    - lastProbeTime: null
+      lastTransitionTime: 2019-02-21T22:10:48Z
+      status: "True"
+      type: PodScheduled
+    containerStatuses:
+    - image: gcr.io/knative-nightly/github.com/knative/build-pipeline/cmd/nop:v20190221-c649b42c
+      imageID: ""
+      lastState: {}
+      name: nop
+      ready: false
+      restartCount: 0
+      state:
+        waiting:
+          reason: PodInitializing
+    hostIP: 10.138.15.201
+    initContainerStatuses:
+    - containerID: docker://160fc39404800a53408d310834026c2691444863f0b88e3472adf6ec6c2a882e
+      image: gcr.io/knative-nightly/github.com/knative/build-pipeline/cmd/creds-init:v20190221-c649b42c
+      imageID: docker-pullable://gcr.io/knative-nightly/github.com/knative/build-pipeline/cmd/creds-init@sha256:693a03112e2660c4c4aacc83be27b762627a364fd7e6374f44a5ee254d128699
+      lastState: {}
+      name: build-step-credential-initializer-9wblv
+      ready: true
+      restartCount: 0
+      state:
+        terminated:
+          containerID: docker://160fc39404800a53408d310834026c2691444863f0b88e3472adf6ec6c2a882e
+          exitCode: 0
+          finishedAt: 2019-02-21T22:10:50Z
+          reason: Completed
+          startedAt: 2019-02-21T22:10:50Z
+    - containerID: docker://2c185fa1ae1ab01ba584c8c2f1eb1c7a17b2baed60750e2b41827e11099cb134
+      image: gcr.io/knative-nightly/github.com/knative/build-pipeline/cmd/git-init:v20190221-c649b42c
+      imageID: docker-pullable://gcr.io/knative-nightly/github.com/knative/build-pipeline/cmd/git-init@sha256:5b8e5f00e807b21f8d0657aef9333c6474362e83c6d09a386c6dccd04655d764
+      lastState: {}
+      name: build-step-git-source-abayer-jx-demo-qs-master-t95vf
+      ready: true
+      restartCount: 0
+      state:
+        terminated:
+          containerID: docker://2c185fa1ae1ab01ba584c8c2f1eb1c7a17b2baed60750e2b41827e11099cb134
+          exitCode: 0
+          finishedAt: 2019-02-21T22:10:52Z
+          reason: Completed
+          startedAt: 2019-02-21T22:10:51Z
+    - containerID: docker://4f38dfd1b2ff697c66fb01e1d6e0f158cf920c8cbab5c67e7aa9bb1e6cfc1d13
+      image: sha256:df99192de7956f58328aa53f0dac5f2615290064a54f0b7caa9b14e7f1050b23
+      imageID: docker-pullable://gcr.io/k8s-prow/entrypoint@sha256:7c7cd8906ce4982ffee326218e9fc75da2d4896d53cabc9833b9cc8d2d6b2b8f
+      lastState: {}
+      name: build-step-place-tools
+      ready: true
+      restartCount: 0
+      state:
+        terminated:
+          containerID: docker://4f38dfd1b2ff697c66fb01e1d6e0f158cf920c8cbab5c67e7aa9bb1e6cfc1d13
+          exitCode: 0
+          finishedAt: 2019-02-21T22:10:52Z
+          reason: Completed
+          startedAt: 2019-02-21T22:10:52Z
+    - containerID: docker://4e7c58be78c5b85a93016b83370ef5752d24b4d1de09143032e6424b1ce68037
+      image: jenkinsxio/builder-maven-java11:0.1.235
+      imageID: docker-pullable://jenkinsxio/builder-maven-java11@sha256:3eeb136cdfdf2c4e2a0c2a148a7bd6cdf2f20c70a12f847b91039f4d8ef53452
+      lastState: {}
+      name: build-step-setup-jx-git-credentials
+      ready: true
+      restartCount: 0
+      state:
+        terminated:
+          containerID: docker://4e7c58be78c5b85a93016b83370ef5752d24b4d1de09143032e6424b1ce68037
+          exitCode: 0
+          finishedAt: 2019-02-21T22:11:14Z
+          reason: Completed
+          startedAt: 2019-02-21T22:11:13Z
+    - containerID: docker://b8f8d49835529a44e7ae28222addcf3d18a0a67df33c4706c31c9d3465c6f679
+      image: jenkinsxio/builder-maven-java11:0.1.235
+      imageID: docker-pullable://jenkinsxio/builder-maven-java11@sha256:3eeb136cdfdf2c4e2a0c2a148a7bd6cdf2f20c70a12f847b91039f4d8ef53452
+      lastState: {}
+      name: build-step-setversion-next-version
+      ready: true
+      restartCount: 0
+      state:
+        terminated:
+          containerID: docker://b8f8d49835529a44e7ae28222addcf3d18a0a67df33c4706c31c9d3465c6f679
+          exitCode: 0
+          finishedAt: 2019-02-21T22:11:17Z
+          reason: Completed
+          startedAt: 2019-02-21T22:11:16Z
+    - containerID: docker://fcb691f0fe7ca61bbaa132dccf109c6c79d441390f37d77d8e6b6e70ce4c2868
+      image: jenkinsxio/builder-maven-java11:0.1.235
+      imageID: docker-pullable://jenkinsxio/builder-maven-java11@sha256:3eeb136cdfdf2c4e2a0c2a148a7bd6cdf2f20c70a12f847b91039f4d8ef53452
+      lastState: {}
+      name: build-step-setversion-set-version
+      ready: true
+      restartCount: 0
+      state:
+        terminated:
+          containerID: docker://fcb691f0fe7ca61bbaa132dccf109c6c79d441390f37d77d8e6b6e70ce4c2868
+          exitCode: 0
+          finishedAt: 2019-02-21T22:11:58Z
+          reason: Completed
+          startedAt: 2019-02-21T22:11:18Z
+    - containerID: docker://24e153f8ce6ed20ddf096d55626e4e654ca102715849da24d8f7b8a90c621c25
+      image: jenkinsxio/builder-maven-java11:0.1.235
+      imageID: docker-pullable://jenkinsxio/builder-maven-java11@sha256:3eeb136cdfdf2c4e2a0c2a148a7bd6cdf2f20c70a12f847b91039f4d8ef53452
+      lastState: {}
+      name: build-step-setversion-tag-version
+      ready: true
+      restartCount: 0
+      state:
+        terminated:
+          containerID: docker://24e153f8ce6ed20ddf096d55626e4e654ca102715849da24d8f7b8a90c621c25
+          exitCode: 0
+          finishedAt: 2019-02-21T22:12:04Z
+          reason: Completed
+          startedAt: 2019-02-21T22:11:59Z
+    - containerID: docker://16c0ce957328d44abc091efc766e041b774f46ef2c03205d821e04fe02bd3165
+      image: jenkinsxio/builder-maven-java11:0.1.235
+      imageID: docker-pullable://jenkinsxio/builder-maven-java11@sha256:3eeb136cdfdf2c4e2a0c2a148a7bd6cdf2f20c70a12f847b91039f4d8ef53452
+      lastState: {}
+      name: build-step-build-mvn-deploy
+      ready: true
+      restartCount: 0
+      state:
+        terminated:
+          containerID: docker://16c0ce957328d44abc091efc766e041b774f46ef2c03205d821e04fe02bd3165
+          exitCode: 0
+          finishedAt: 2019-02-21T22:12:54Z
+          reason: Completed
+          startedAt: 2019-02-21T22:12:05Z
+    - containerID: docker://d17bf96649888a05925bd6dcfc247846eee63b4529e25d4f3d3f356fcf668d09
+      image: jenkinsxio/builder-maven-java11:0.1.235
+      imageID: docker-pullable://jenkinsxio/builder-maven-java11@sha256:3eeb136cdfdf2c4e2a0c2a148a7bd6cdf2f20c70a12f847b91039f4d8ef53452
+      lastState: {}
+      name: build-step-build-skaffold-version
+      ready: true
+      restartCount: 0
+      state:
+        terminated:
+          containerID: docker://d17bf96649888a05925bd6dcfc247846eee63b4529e25d4f3d3f356fcf668d09
+          exitCode: 0
+          finishedAt: 2019-02-21T22:12:55Z
+          reason: Completed
+          startedAt: 2019-02-21T22:12:55Z
+    - containerID: docker://a130cfd577767170e45402eda56410377a5fe70c68464e0116d052a98cb97127
+      image: jenkinsxio/builder-maven-java11:0.1.235
+      imageID: docker-pullable://jenkinsxio/builder-maven-java11@sha256:3eeb136cdfdf2c4e2a0c2a148a7bd6cdf2f20c70a12f847b91039f4d8ef53452
+      lastState: {}
+      name: build-step-build-container-build
+      ready: true
+      restartCount: 0
+      state:
+        terminated:
+          containerID: docker://a130cfd577767170e45402eda56410377a5fe70c68464e0116d052a98cb97127
+          exitCode: 0
+          finishedAt: 2019-02-21T22:13:13Z
+          reason: Completed
+          startedAt: 2019-02-21T22:12:56Z
+    - containerID: docker://da815b55aff74013ec49d60ef27d0461e023455dcd399c67dc9d51fab7f17a14
+      image: jenkinsxio/builder-maven-java11:0.1.235
+      imageID: docker-pullable://jenkinsxio/builder-maven-java11@sha256:3eeb136cdfdf2c4e2a0c2a148a7bd6cdf2f20c70a12f847b91039f4d8ef53452
+      lastState: {}
+      name: build-step-build-post-build
+      ready: true
+      restartCount: 0
+      state:
+        terminated:
+          containerID: docker://da815b55aff74013ec49d60ef27d0461e023455dcd399c67dc9d51fab7f17a14
+          exitCode: 0
+          finishedAt: 2019-02-21T22:13:14Z
+          reason: Completed
+          startedAt: 2019-02-21T22:13:14Z
+    - containerID: docker://bff5ea3b32b41215d3922058ce713dc27ae1197b1f1f0920e52f9843d81a357b
+      image: jenkinsxio/builder-maven-java11:0.1.235
+      imageID: docker-pullable://jenkinsxio/builder-maven-java11@sha256:3eeb136cdfdf2c4e2a0c2a148a7bd6cdf2f20c70a12f847b91039f4d8ef53452
+      lastState: {}
+      name: build-step-promote-changelog
+      ready: true
+      restartCount: 0
+      state:
+        terminated:
+          containerID: docker://bff5ea3b32b41215d3922058ce713dc27ae1197b1f1f0920e52f9843d81a357b
+          exitCode: 0
+          finishedAt: 2019-02-21T22:13:19Z
+          reason: Completed
+          startedAt: 2019-02-21T22:13:15Z
+    - containerID: docker://6a06f5c53b1e414fada52438be6fe2302b6108489c56f559c9426b2024e35612
+      image: jenkinsxio/builder-maven-java11:0.1.235
+      imageID: docker-pullable://jenkinsxio/builder-maven-java11@sha256:3eeb136cdfdf2c4e2a0c2a148a7bd6cdf2f20c70a12f847b91039f4d8ef53452
+      lastState: {}
+      name: build-step-promote-helm-release
+      ready: true
+      restartCount: 0
+      state:
+        terminated:
+          containerID: docker://6a06f5c53b1e414fada52438be6fe2302b6108489c56f559c9426b2024e35612
+          exitCode: 0
+          finishedAt: 2019-02-21T22:13:25Z
+          reason: Completed
+          startedAt: 2019-02-21T22:13:20Z
+    - containerID: docker://e2fe691dc36bb861e06d3e3e6917270aa683892318f7714ded9058877e777106
+      image: jenkinsxio/builder-maven-java11:0.1.235
+      imageID: docker-pullable://jenkinsxio/builder-maven-java11@sha256:3eeb136cdfdf2c4e2a0c2a148a7bd6cdf2f20c70a12f847b91039f4d8ef53452
+      lastState: {}
+      name: build-step-promote-jx-promote
+      ready: false
+      restartCount: 0
+      state:
+        running:
+          startedAt: 2019-02-21T22:13:26Z
+    phase: Pending
+    podIP: 10.0.2.23
+    qosClass: BestEffort
+    startTime: 2019-02-21T22:10:48Z
+kind: List
+metadata:
+  resourceVersion: ""
+  selfLink: ""

@@ -1,0 +1,14 @@
+adminUser:
+  password: vault:foo/adminUser:password
+  username: admin
+docker:
+  password: vault:foo/docker:password
+  url: https://index.docker.io/v1/
+  username: james
+enableDocker: true
+enableGpg: false
+pipelineUser:
+  token: vault:foo/pipelineUser:token
+  username: james
+prow:
+  hmacToken: vault:foo/prow:hmacToken

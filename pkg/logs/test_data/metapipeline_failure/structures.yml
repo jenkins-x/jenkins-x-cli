@@ -1,0 +1,27 @@
+apiVersion: jenkins.io/v1
+items:
+  - apiVersion: jenkins.io/v1
+    kind: PipelineStructure
+    metadata:
+      creationTimestamp: 2019-03-05T20:06:13Z
+      generation: 1
+      name: meta-fakeowner-fakerepo-build-1
+      namespace: jx
+      ownerReferences:
+        - apiVersion: tekton.dev/v1alpha1
+          kind: Pipeline
+          name: meta-fakeowner-fakerepo-build-1
+          uid: 208e0fad-3f82-11e9-bd41-42010a8a00a2
+      resourceVersion: "1421155"
+      selfLink: /apis/jenkins.io/v1/namespaces/jx/pipelinestructures/meta-fakeowner-fakerepo-build-1
+      uid: 20c58bd5-3f82-11e9-bd41-42010a8a00a2
+    pipelineRef: meta-fakeowner-fakerepo-build-1
+    pipelineRunRef: meta-fakeowner-fakerepo-build-1
+    stages:
+      - depth: 0
+        name: App Extension
+        taskRef: meta-fakeowner-fakerepo-build-app-extension-8
+kind: List
+metadata:
+  resourceVersion: ""
+  selfLink: ""

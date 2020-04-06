@@ -1,0 +1,97 @@
+apiVersion: jenkins.io/v1
+kind: PipelineActivity
+metadata:
+  creationTimestamp: 2019-02-21T22:02:45Z
+  generation: 1
+  labels:
+    branch: master
+    owner: abayer
+    sourcerepository: abayer-js-test-repo
+  name: abayer-js-test-repo-master-1
+  namespace: jx
+  resourceVersion: "6304"
+  selfLink: /apis/jenkins.io/v1/namespaces/jx/pipelineactivities/abayer-js-test-repo-master-1
+  uid: 6ad71a67-3624-11e9-b776-42010a8a00ac
+spec:
+  build: "1"
+  completedTimestamp: 2019-02-21T22:04:12Z
+  gitBranch: master
+  gitOwner: abayer
+  gitRepository: js-test-repo
+  gitUrl: https://github.com/abayer/js-test-repo
+  pipeline: abayer/js-test-repo/master
+  startedTimestamp: 2019-02-21T22:02:59Z
+  status: Succeeded
+  steps:
+  - kind: Stage
+    stage:
+      completedTimestamp: 2019-02-21T22:03:42Z
+      name: Build
+      startedTimestamp: 2019-02-21T22:02:59Z
+      status: Succeeded
+      steps:
+      - completedTimestamp: 2019-02-21T22:02:59Z
+        name: Credential Initializer 5h4vq
+        startedTimestamp: 2019-02-21T22:02:59Z
+        status: Succeeded
+      - completedTimestamp: 2019-02-21T22:03:04Z
+        description: https://github.com/abayer/js-test-repo
+        name: Git Source Abayer Js Test Repo Master 52jsl
+        startedTimestamp: 2019-02-21T22:03:01Z
+        status: Succeeded
+      - completedTimestamp: 2019-02-21T22:03:07Z
+        name: Place Tools
+        startedTimestamp: 2019-02-21T22:03:07Z
+        status: Succeeded
+      - completedTimestamp: 2019-02-21T22:03:37Z
+        name: Step2
+        startedTimestamp: 2019-02-21T22:03:36Z
+        status: Succeeded
+      - completedTimestamp: 2019-02-21T22:03:38Z
+        name: Step3
+        startedTimestamp: 2019-02-21T22:03:38Z
+        status: Succeeded
+      - completedTimestamp: 2019-02-21T22:03:40Z
+        name: Source Mkdir Abayer Js Test Repo Master Dcxpj
+        startedTimestamp: 2019-02-21T22:03:40Z
+        status: Succeeded
+      - completedTimestamp: 2019-02-21T22:03:42Z
+        name: Source Copy Abayer Js Test Repo Master S468q
+        startedTimestamp: 2019-02-21T22:03:42Z
+        status: Succeeded
+  - kind: Stage
+    stage:
+      completedTimestamp: 2019-02-21T22:04:12Z
+      name: Second
+      startedTimestamp: 2019-02-21T22:04:06Z
+      status: Succeeded
+      steps:
+      - completedTimestamp: 2019-02-21T22:04:06Z
+        name: Credential Initializer 225gh
+        startedTimestamp: 2019-02-21T22:04:06Z
+        status: Succeeded
+      - completedTimestamp: 2019-02-21T22:04:07Z
+        name: Create Dir Workspace 5fvxn
+        startedTimestamp: 2019-02-21T22:04:07Z
+        status: Succeeded
+      - completedTimestamp: 2019-02-21T22:04:08Z
+        name: Source Copy Workspace 0 Txgkz
+        startedTimestamp: 2019-02-21T22:04:08Z
+        status: Succeeded
+      - completedTimestamp: 2019-02-21T22:04:09Z
+        name: Place Tools
+        startedTimestamp: 2019-02-21T22:04:09Z
+        status: Succeeded
+      - completedTimestamp: 2019-02-21T22:04:10Z
+        name: Step2
+        startedTimestamp: 2019-02-21T22:04:10Z
+        status: Succeeded
+      - completedTimestamp: 2019-02-21T22:04:11Z
+        name: Source Mkdir Abayer Js Test Repo Master Wknf8
+        startedTimestamp: 2019-02-21T22:04:11Z
+        status: Succeeded
+      - completedTimestamp: 2019-02-21T22:04:12Z
+        name: Source Copy Abayer Js Test Repo Master B9f8b
+        startedTimestamp: 2019-02-21T22:04:12Z
+        status: Succeeded
+status: {}

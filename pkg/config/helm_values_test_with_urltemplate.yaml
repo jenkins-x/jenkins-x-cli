@@ -1,0 +1,11 @@
+expose:
+  config:
+    domain: jenkinsx.io
+    exposer: Ingress
+    http: "false"
+    tlsacme: "false"
+    urltemplate: "{{.Service}}-{{.Namespace}}.{{.Domain}}"
+    pathMode: ""
+  Annotations:
+    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook-delete-policy: hook-succeeded

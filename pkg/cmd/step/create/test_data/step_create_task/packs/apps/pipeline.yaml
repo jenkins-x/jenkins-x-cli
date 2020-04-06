@@ -1,0 +1,47 @@
+agent:
+  label: builder-go
+  container: go
+pipelines:
+  pullRequest:
+    build:
+      steps:
+        - sh: make build
+          name: build
+          container: gcr.io/jenkinsxio/builder-go:0.0.0-SNAPSHOT-PR-380-56
+        - dir: charts/REPLACE_ME_APP_NAME
+          steps:
+            - sh: jx step helm build
+              name: helm-build
+              container: gcr.io/jenkinsxio/builder-go:0.0.0-SNAPSHOT-PR-380-56
+  release:
+    build:
+      steps:
+        - sh: make build
+          name: build
+          image: gcr.io/jenkinsxio/builder-go:0.0.0-SNAPSHOT-PR-380-56
+        - dir: charts/REPLACE_ME_APP_NAME
+          name: dir-block
+          steps:
+            - sh: make tag
+              name: tag
+            - sh: jx step helm build
+              name: helm-build
+            - comment: Version the helm chart
+              sh: jx step helm version
+              name: helm-version
+              container: gcr.io/jenkinsxio/builder-go:0.0.0-SNAPSHOT-PR-380-56
+    promote:
+      steps:
+        - sh: make release
+          name: release
+          container: gcr.io/jenkinsxio/builder-go:0.0.0-SNAPSHOT-PR-380-56
+        - dir: charts/REPLACE_ME_APP_NAME
+          name: dir-block
+          steps:
+            - comment: Let's release the helm chart
+              sh: jx step helm release
+              name: helm-release
+            - comment: Let's promote through all 'Auto' promotion Environments
+              sh: jx promote -b --all-auto --timeout 1h --version \$(cat ../../VERSION)
+              name: jx-promote
+              container: gcr.io/jenkinsxio/builder-go:0.0.0-SNAPSHOT-PR-380-56

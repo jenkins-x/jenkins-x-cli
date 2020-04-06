@@ -1,0 +1,753 @@
+apiVersion: v1
+items:
+- apiVersion: tekton.dev/v1alpha1
+  kind: Task
+  metadata:
+    creationTimestamp: 2019-02-21T22:10:48Z
+    generation: 1
+    labels:
+      branch: master
+      jenkins.io/task-stage-name: from-build-pack
+      owner: abayer
+      repo: jx-demo-qs
+    name: abayer-jx-demo-qs-master
+    namespace: jx
+    resourceVersion: "7695"
+    selfLink: /apis/tekton.dev/v1alpha1/namespaces/jx/tasks/abayer-jx-demo-qs-master
+    uid: 8ab4b247-3625-11e9-b776-42010a8a00ac
+  spec:
+    inputs:
+      resources:
+      - name: source
+        targetPath: ""
+        type: git
+    steps:
+    - args:
+      - -c
+      - jx step git credentials
+      command:
+      - /bin/sh
+      env:
+      - name: DOCKER_REGISTRY
+        valueFrom:
+          configMapKeyRef:
+            key: docker.registry
+            name: jenkins-x-docker-registry
+      - name: TILLER_NAMESPACE
+        value: kube-system
+      - name: DOCKER_CONFIG
+        value: /home/jenkins/.docker/
+      - name: GIT_AUTHOR_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_AUTHOR_NAME
+        value: jenkins-x-bot
+      - name: GIT_COMMITTER_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_COMMITTER_NAME
+        value: jenkins-x-bot
+      - name: XDG_CONFIG_HOME
+        value: /home/jenkins
+      - name: _JAVA_OPTIONS
+        value: -XX:+UnlockExperimentalVMOptions -Dsun.zip.disableMemoryMapping=true
+          -XX:+UseParallelGC -XX:MinHeapFreeRatio=5 -XX:MaxHeapFreeRatio=10 -XX:GCTimeRatio=4
+          -XX:AdaptiveSizePolicyWeight=90 -Xms10m -Xmx192m
+      - name: PIPELINE_KIND
+        value: release
+      - name: REPO_OWNER
+        value: abayer
+      - name: REPO_NAME
+        value: jx-demo-qs
+      - name: JOB_NAME
+        value: abayer/jx-demo-qs/master
+      - name: BRANCH_NAME
+        value: master
+      - name: JX_BATCH_MODE
+        value: "true"
+      image: jenkinsxio/builder-maven-java11:0.1.235
+      name: setup-jx-git-credentials
+      resources:
+        requests:
+          cpu: 400m
+          memory: 512Mi
+      securityContext:
+        privileged: true
+      volumeMounts:
+      - mountPath: /home/jenkins
+        name: workspace-volume
+      - mountPath: /var/run/docker.sock
+        name: docker-daemon
+      - mountPath: /root/.m2/
+        name: volume-0
+      - mountPath: /home/jenkins/.docker
+        name: volume-1
+      - mountPath: /home/jenkins/.gnupg
+        name: volume-2
+      - mountPath: /etc/podinfo
+        name: podinfo
+        readOnly: true
+      workingDir: /workspace/source
+    - args:
+      - -c
+      - echo $(jx-release-version) > VERSION
+      command:
+      - /bin/sh
+      env:
+      - name: DOCKER_REGISTRY
+        valueFrom:
+          configMapKeyRef:
+            key: docker.registry
+            name: jenkins-x-docker-registry
+      - name: TILLER_NAMESPACE
+        value: kube-system
+      - name: DOCKER_CONFIG
+        value: /home/jenkins/.docker/
+      - name: GIT_AUTHOR_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_AUTHOR_NAME
+        value: jenkins-x-bot
+      - name: GIT_COMMITTER_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_COMMITTER_NAME
+        value: jenkins-x-bot
+      - name: XDG_CONFIG_HOME
+        value: /home/jenkins
+      - name: _JAVA_OPTIONS
+        value: -XX:+UnlockExperimentalVMOptions -Dsun.zip.disableMemoryMapping=true
+          -XX:+UseParallelGC -XX:MinHeapFreeRatio=5 -XX:MaxHeapFreeRatio=10 -XX:GCTimeRatio=4
+          -XX:AdaptiveSizePolicyWeight=90 -Xms10m -Xmx192m
+      - name: PIPELINE_KIND
+        value: release
+      - name: REPO_OWNER
+        value: abayer
+      - name: REPO_NAME
+        value: jx-demo-qs
+      - name: JOB_NAME
+        value: abayer/jx-demo-qs/master
+      - name: BRANCH_NAME
+        value: master
+      - name: JX_BATCH_MODE
+        value: "true"
+      image: jenkinsxio/builder-maven-java11:0.1.235
+      name: setversion-next-version
+      resources:
+        requests:
+          cpu: 400m
+          memory: 512Mi
+      securityContext:
+        privileged: true
+      volumeMounts:
+      - mountPath: /home/jenkins
+        name: workspace-volume
+      - mountPath: /var/run/docker.sock
+        name: docker-daemon
+      - mountPath: /root/.m2/
+        name: volume-0
+      - mountPath: /home/jenkins/.docker
+        name: volume-1
+      - mountPath: /home/jenkins/.gnupg
+        name: volume-2
+      - mountPath: /etc/podinfo
+        name: podinfo
+        readOnly: true
+      workingDir: /workspace/source
+    - args:
+      - -c
+      - mvn versions:set -DnewVersion=$(cat VERSION)
+      command:
+      - /bin/sh
+      env:
+      - name: DOCKER_REGISTRY
+        valueFrom:
+          configMapKeyRef:
+            key: docker.registry
+            name: jenkins-x-docker-registry
+      - name: TILLER_NAMESPACE
+        value: kube-system
+      - name: DOCKER_CONFIG
+        value: /home/jenkins/.docker/
+      - name: GIT_AUTHOR_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_AUTHOR_NAME
+        value: jenkins-x-bot
+      - name: GIT_COMMITTER_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_COMMITTER_NAME
+        value: jenkins-x-bot
+      - name: XDG_CONFIG_HOME
+        value: /home/jenkins
+      - name: _JAVA_OPTIONS
+        value: -XX:+UnlockExperimentalVMOptions -Dsun.zip.disableMemoryMapping=true
+          -XX:+UseParallelGC -XX:MinHeapFreeRatio=5 -XX:MaxHeapFreeRatio=10 -XX:GCTimeRatio=4
+          -XX:AdaptiveSizePolicyWeight=90 -Xms10m -Xmx192m
+      - name: PIPELINE_KIND
+        value: release
+      - name: REPO_OWNER
+        value: abayer
+      - name: REPO_NAME
+        value: jx-demo-qs
+      - name: JOB_NAME
+        value: abayer/jx-demo-qs/master
+      - name: BRANCH_NAME
+        value: master
+      - name: JX_BATCH_MODE
+        value: "true"
+      image: jenkinsxio/builder-maven-java11:0.1.235
+      name: setversion-set-version
+      resources:
+        requests:
+          cpu: 400m
+          memory: 512Mi
+      securityContext:
+        privileged: true
+      volumeMounts:
+      - mountPath: /home/jenkins
+        name: workspace-volume
+      - mountPath: /var/run/docker.sock
+        name: docker-daemon
+      - mountPath: /root/.m2/
+        name: volume-0
+      - mountPath: /home/jenkins/.docker
+        name: volume-1
+      - mountPath: /home/jenkins/.gnupg
+        name: volume-2
+      - mountPath: /etc/podinfo
+        name: podinfo
+        readOnly: true
+      workingDir: /workspace/source
+    - args:
+      - -c
+      - jx step tag --version $(cat VERSION)
+      command:
+      - /bin/sh
+      env:
+      - name: DOCKER_REGISTRY
+        valueFrom:
+          configMapKeyRef:
+            key: docker.registry
+            name: jenkins-x-docker-registry
+      - name: TILLER_NAMESPACE
+        value: kube-system
+      - name: DOCKER_CONFIG
+        value: /home/jenkins/.docker/
+      - name: GIT_AUTHOR_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_AUTHOR_NAME
+        value: jenkins-x-bot
+      - name: GIT_COMMITTER_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_COMMITTER_NAME
+        value: jenkins-x-bot
+      - name: XDG_CONFIG_HOME
+        value: /home/jenkins
+      - name: _JAVA_OPTIONS
+        value: -XX:+UnlockExperimentalVMOptions -Dsun.zip.disableMemoryMapping=true
+          -XX:+UseParallelGC -XX:MinHeapFreeRatio=5 -XX:MaxHeapFreeRatio=10 -XX:GCTimeRatio=4
+          -XX:AdaptiveSizePolicyWeight=90 -Xms10m -Xmx192m
+      - name: PIPELINE_KIND
+        value: release
+      - name: REPO_OWNER
+        value: abayer
+      - name: REPO_NAME
+        value: jx-demo-qs
+      - name: JOB_NAME
+        value: abayer/jx-demo-qs/master
+      - name: BRANCH_NAME
+        value: master
+      - name: JX_BATCH_MODE
+        value: "true"
+      image: jenkinsxio/builder-maven-java11:0.1.235
+      name: setversion-tag-version
+      resources:
+        requests:
+          cpu: 400m
+          memory: 512Mi
+      securityContext:
+        privileged: true
+      volumeMounts:
+      - mountPath: /home/jenkins
+        name: workspace-volume
+      - mountPath: /var/run/docker.sock
+        name: docker-daemon
+      - mountPath: /root/.m2/
+        name: volume-0
+      - mountPath: /home/jenkins/.docker
+        name: volume-1
+      - mountPath: /home/jenkins/.gnupg
+        name: volume-2
+      - mountPath: /etc/podinfo
+        name: podinfo
+        readOnly: true
+      workingDir: /workspace/source
+    - args:
+      - -c
+      - mvn clean deploy
+      command:
+      - /bin/sh
+      env:
+      - name: DOCKER_REGISTRY
+        valueFrom:
+          configMapKeyRef:
+            key: docker.registry
+            name: jenkins-x-docker-registry
+      - name: TILLER_NAMESPACE
+        value: kube-system
+      - name: DOCKER_CONFIG
+        value: /home/jenkins/.docker/
+      - name: GIT_AUTHOR_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_AUTHOR_NAME
+        value: jenkins-x-bot
+      - name: GIT_COMMITTER_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_COMMITTER_NAME
+        value: jenkins-x-bot
+      - name: XDG_CONFIG_HOME
+        value: /home/jenkins
+      - name: _JAVA_OPTIONS
+        value: -XX:+UnlockExperimentalVMOptions -Dsun.zip.disableMemoryMapping=true
+          -XX:+UseParallelGC -XX:MinHeapFreeRatio=5 -XX:MaxHeapFreeRatio=10 -XX:GCTimeRatio=4
+          -XX:AdaptiveSizePolicyWeight=90 -Xms10m -Xmx192m
+      - name: PIPELINE_KIND
+        value: release
+      - name: REPO_OWNER
+        value: abayer
+      - name: REPO_NAME
+        value: jx-demo-qs
+      - name: JOB_NAME
+        value: abayer/jx-demo-qs/master
+      - name: BRANCH_NAME
+        value: master
+      - name: JX_BATCH_MODE
+        value: "true"
+      image: jenkinsxio/builder-maven-java11:0.1.235
+      name: build-mvn-deploy
+      resources:
+        requests:
+          cpu: 400m
+          memory: 512Mi
+      securityContext:
+        privileged: true
+      volumeMounts:
+      - mountPath: /home/jenkins
+        name: workspace-volume
+      - mountPath: /var/run/docker.sock
+        name: docker-daemon
+      - mountPath: /root/.m2/
+        name: volume-0
+      - mountPath: /home/jenkins/.docker
+        name: volume-1
+      - mountPath: /home/jenkins/.gnupg
+        name: volume-2
+      - mountPath: /etc/podinfo
+        name: podinfo
+        readOnly: true
+      workingDir: /workspace/source
+    - args:
+      - -c
+      - skaffold version
+      command:
+      - /bin/sh
+      env:
+      - name: DOCKER_REGISTRY
+        valueFrom:
+          configMapKeyRef:
+            key: docker.registry
+            name: jenkins-x-docker-registry
+      - name: TILLER_NAMESPACE
+        value: kube-system
+      - name: DOCKER_CONFIG
+        value: /home/jenkins/.docker/
+      - name: GIT_AUTHOR_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_AUTHOR_NAME
+        value: jenkins-x-bot
+      - name: GIT_COMMITTER_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_COMMITTER_NAME
+        value: jenkins-x-bot
+      - name: XDG_CONFIG_HOME
+        value: /home/jenkins
+      - name: _JAVA_OPTIONS
+        value: -XX:+UnlockExperimentalVMOptions -Dsun.zip.disableMemoryMapping=true
+          -XX:+UseParallelGC -XX:MinHeapFreeRatio=5 -XX:MaxHeapFreeRatio=10 -XX:GCTimeRatio=4
+          -XX:AdaptiveSizePolicyWeight=90 -Xms10m -Xmx192m
+      - name: PIPELINE_KIND
+        value: release
+      - name: REPO_OWNER
+        value: abayer
+      - name: REPO_NAME
+        value: jx-demo-qs
+      - name: JOB_NAME
+        value: abayer/jx-demo-qs/master
+      - name: BRANCH_NAME
+        value: master
+      - name: JX_BATCH_MODE
+        value: "true"
+      image: jenkinsxio/builder-maven-java11:0.1.235
+      name: build-skaffold-version
+      resources:
+        requests:
+          cpu: 400m
+          memory: 512Mi
+      securityContext:
+        privileged: true
+      volumeMounts:
+      - mountPath: /home/jenkins
+        name: workspace-volume
+      - mountPath: /var/run/docker.sock
+        name: docker-daemon
+      - mountPath: /root/.m2/
+        name: volume-0
+      - mountPath: /home/jenkins/.docker
+        name: volume-1
+      - mountPath: /home/jenkins/.gnupg
+        name: volume-2
+      - mountPath: /etc/podinfo
+        name: podinfo
+        readOnly: true
+      workingDir: /workspace/source
+    - args:
+      - -c
+      - export VERSION=`cat VERSION` && skaffold build -f skaffold.yaml
+      command:
+      - /bin/sh
+      env:
+      - name: DOCKER_REGISTRY
+        valueFrom:
+          configMapKeyRef:
+            key: docker.registry
+            name: jenkins-x-docker-registry
+      - name: TILLER_NAMESPACE
+        value: kube-system
+      - name: DOCKER_CONFIG
+        value: /home/jenkins/.docker/
+      - name: GIT_AUTHOR_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_AUTHOR_NAME
+        value: jenkins-x-bot
+      - name: GIT_COMMITTER_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_COMMITTER_NAME
+        value: jenkins-x-bot
+      - name: XDG_CONFIG_HOME
+        value: /home/jenkins
+      - name: _JAVA_OPTIONS
+        value: -XX:+UnlockExperimentalVMOptions -Dsun.zip.disableMemoryMapping=true
+          -XX:+UseParallelGC -XX:MinHeapFreeRatio=5 -XX:MaxHeapFreeRatio=10 -XX:GCTimeRatio=4
+          -XX:AdaptiveSizePolicyWeight=90 -Xms10m -Xmx192m
+      - name: PIPELINE_KIND
+        value: release
+      - name: REPO_OWNER
+        value: abayer
+      - name: REPO_NAME
+        value: jx-demo-qs
+      - name: JOB_NAME
+        value: abayer/jx-demo-qs/master
+      - name: BRANCH_NAME
+        value: master
+      - name: JX_BATCH_MODE
+        value: "true"
+      image: jenkinsxio/builder-maven-java11:0.1.235
+      name: build-container-build
+      resources:
+        requests:
+          cpu: 400m
+          memory: 512Mi
+      securityContext:
+        privileged: true
+      volumeMounts:
+      - mountPath: /home/jenkins
+        name: workspace-volume
+      - mountPath: /var/run/docker.sock
+        name: docker-daemon
+      - mountPath: /root/.m2/
+        name: volume-0
+      - mountPath: /home/jenkins/.docker
+        name: volume-1
+      - mountPath: /home/jenkins/.gnupg
+        name: volume-2
+      - mountPath: /etc/podinfo
+        name: podinfo
+        readOnly: true
+      workingDir: /workspace/source
+    - args:
+      - -c
+      - jx step post build --image $DOCKER_REGISTRY/$ORG/$APP_NAME:$(cat VERSION)
+      command:
+      - /bin/sh
+      env:
+      - name: DOCKER_REGISTRY
+        valueFrom:
+          configMapKeyRef:
+            key: docker.registry
+            name: jenkins-x-docker-registry
+      - name: TILLER_NAMESPACE
+        value: kube-system
+      - name: DOCKER_CONFIG
+        value: /home/jenkins/.docker/
+      - name: GIT_AUTHOR_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_AUTHOR_NAME
+        value: jenkins-x-bot
+      - name: GIT_COMMITTER_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_COMMITTER_NAME
+        value: jenkins-x-bot
+      - name: XDG_CONFIG_HOME
+        value: /home/jenkins
+      - name: _JAVA_OPTIONS
+        value: -XX:+UnlockExperimentalVMOptions -Dsun.zip.disableMemoryMapping=true
+          -XX:+UseParallelGC -XX:MinHeapFreeRatio=5 -XX:MaxHeapFreeRatio=10 -XX:GCTimeRatio=4
+          -XX:AdaptiveSizePolicyWeight=90 -Xms10m -Xmx192m
+      - name: PIPELINE_KIND
+        value: release
+      - name: REPO_OWNER
+        value: abayer
+      - name: REPO_NAME
+        value: jx-demo-qs
+      - name: JOB_NAME
+        value: abayer/jx-demo-qs/master
+      - name: BRANCH_NAME
+        value: master
+      - name: JX_BATCH_MODE
+        value: "true"
+      image: jenkinsxio/builder-maven-java11:0.1.235
+      name: build-post-build
+      resources:
+        requests:
+          cpu: 400m
+          memory: 512Mi
+      securityContext:
+        privileged: true
+      volumeMounts:
+      - mountPath: /home/jenkins
+        name: workspace-volume
+      - mountPath: /var/run/docker.sock
+        name: docker-daemon
+      - mountPath: /root/.m2/
+        name: volume-0
+      - mountPath: /home/jenkins/.docker
+        name: volume-1
+      - mountPath: /home/jenkins/.gnupg
+        name: volume-2
+      - mountPath: /etc/podinfo
+        name: podinfo
+        readOnly: true
+      workingDir: /workspace/source
+    - args:
+      - -c
+      - jx step changelog --version v$(cat ../../VERSION)
+      command:
+      - /bin/sh
+      env:
+      - name: DOCKER_REGISTRY
+        valueFrom:
+          configMapKeyRef:
+            key: docker.registry
+            name: jenkins-x-docker-registry
+      - name: TILLER_NAMESPACE
+        value: kube-system
+      - name: DOCKER_CONFIG
+        value: /home/jenkins/.docker/
+      - name: GIT_AUTHOR_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_AUTHOR_NAME
+        value: jenkins-x-bot
+      - name: GIT_COMMITTER_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_COMMITTER_NAME
+        value: jenkins-x-bot
+      - name: XDG_CONFIG_HOME
+        value: /home/jenkins
+      - name: _JAVA_OPTIONS
+        value: -XX:+UnlockExperimentalVMOptions -Dsun.zip.disableMemoryMapping=true
+          -XX:+UseParallelGC -XX:MinHeapFreeRatio=5 -XX:MaxHeapFreeRatio=10 -XX:GCTimeRatio=4
+          -XX:AdaptiveSizePolicyWeight=90 -Xms10m -Xmx192m
+      - name: PIPELINE_KIND
+        value: release
+      - name: REPO_OWNER
+        value: abayer
+      - name: REPO_NAME
+        value: jx-demo-qs
+      - name: JOB_NAME
+        value: abayer/jx-demo-qs/master
+      - name: BRANCH_NAME
+        value: master
+      - name: JX_BATCH_MODE
+        value: "true"
+      image: jenkinsxio/builder-maven-java11:0.1.235
+      name: promote-changelog
+      resources:
+        requests:
+          cpu: 400m
+          memory: 512Mi
+      securityContext:
+        privileged: true
+      volumeMounts:
+      - mountPath: /home/jenkins
+        name: workspace-volume
+      - mountPath: /var/run/docker.sock
+        name: docker-daemon
+      - mountPath: /root/.m2/
+        name: volume-0
+      - mountPath: /home/jenkins/.docker
+        name: volume-1
+      - mountPath: /home/jenkins/.gnupg
+        name: volume-2
+      - mountPath: /etc/podinfo
+        name: podinfo
+        readOnly: true
+      workingDir: /workspace/source/charts/jx-demo-qs
+    - args:
+      - -c
+      - jx step helm release
+      command:
+      - /bin/sh
+      env:
+      - name: DOCKER_REGISTRY
+        valueFrom:
+          configMapKeyRef:
+            key: docker.registry
+            name: jenkins-x-docker-registry
+      - name: TILLER_NAMESPACE
+        value: kube-system
+      - name: DOCKER_CONFIG
+        value: /home/jenkins/.docker/
+      - name: GIT_AUTHOR_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_AUTHOR_NAME
+        value: jenkins-x-bot
+      - name: GIT_COMMITTER_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_COMMITTER_NAME
+        value: jenkins-x-bot
+      - name: XDG_CONFIG_HOME
+        value: /home/jenkins
+      - name: _JAVA_OPTIONS
+        value: -XX:+UnlockExperimentalVMOptions -Dsun.zip.disableMemoryMapping=true
+          -XX:+UseParallelGC -XX:MinHeapFreeRatio=5 -XX:MaxHeapFreeRatio=10 -XX:GCTimeRatio=4
+          -XX:AdaptiveSizePolicyWeight=90 -Xms10m -Xmx192m
+      - name: PIPELINE_KIND
+        value: release
+      - name: REPO_OWNER
+        value: abayer
+      - name: REPO_NAME
+        value: jx-demo-qs
+      - name: JOB_NAME
+        value: abayer/jx-demo-qs/master
+      - name: BRANCH_NAME
+        value: master
+      - name: JX_BATCH_MODE
+        value: "true"
+      image: jenkinsxio/builder-maven-java11:0.1.235
+      name: promote-helm-release
+      resources:
+        requests:
+          cpu: 400m
+          memory: 512Mi
+      securityContext:
+        privileged: true
+      volumeMounts:
+      - mountPath: /home/jenkins
+        name: workspace-volume
+      - mountPath: /var/run/docker.sock
+        name: docker-daemon
+      - mountPath: /root/.m2/
+        name: volume-0
+      - mountPath: /home/jenkins/.docker
+        name: volume-1
+      - mountPath: /home/jenkins/.gnupg
+        name: volume-2
+      - mountPath: /etc/podinfo
+        name: podinfo
+        readOnly: true
+      workingDir: /workspace/source/charts/jx-demo-qs
+    - args:
+      - -c
+      - jx promote -b --all-auto --timeout 1h --version $(cat ../../VERSION)
+      command:
+      - /bin/sh
+      env:
+      - name: DOCKER_REGISTRY
+        valueFrom:
+          configMapKeyRef:
+            key: docker.registry
+            name: jenkins-x-docker-registry
+      - name: TILLER_NAMESPACE
+        value: kube-system
+      - name: DOCKER_CONFIG
+        value: /home/jenkins/.docker/
+      - name: GIT_AUTHOR_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_AUTHOR_NAME
+        value: jenkins-x-bot
+      - name: GIT_COMMITTER_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_COMMITTER_NAME
+        value: jenkins-x-bot
+      - name: XDG_CONFIG_HOME
+        value: /home/jenkins
+      - name: _JAVA_OPTIONS
+        value: -XX:+UnlockExperimentalVMOptions -Dsun.zip.disableMemoryMapping=true
+          -XX:+UseParallelGC -XX:MinHeapFreeRatio=5 -XX:MaxHeapFreeRatio=10 -XX:GCTimeRatio=4
+          -XX:AdaptiveSizePolicyWeight=90 -Xms10m -Xmx192m
+      - name: PIPELINE_KIND
+        value: release
+      - name: REPO_OWNER
+        value: abayer
+      - name: REPO_NAME
+        value: jx-demo-qs
+      - name: JOB_NAME
+        value: abayer/jx-demo-qs/master
+      - name: BRANCH_NAME
+        value: master
+      - name: JX_BATCH_MODE
+        value: "true"
+      image: jenkinsxio/builder-maven-java11:0.1.235
+      name: promote-jx-promote
+      resources:
+        requests:
+          cpu: 400m
+          memory: 512Mi
+      securityContext:
+        privileged: true
+      volumeMounts:
+      - mountPath: /home/jenkins
+        name: workspace-volume
+      - mountPath: /var/run/docker.sock
+        name: docker-daemon
+      - mountPath: /root/.m2/
+        name: volume-0
+      - mountPath: /home/jenkins/.docker
+        name: volume-1
+      - mountPath: /home/jenkins/.gnupg
+        name: volume-2
+      - mountPath: /etc/podinfo
+        name: podinfo
+        readOnly: true
+      workingDir: /workspace/source/charts/jx-demo-qs
+    volumes:
+    - emptyDir: {}
+      name: workspace-volume
+    - hostPath:
+        path: /var/run/docker.sock
+      name: docker-daemon
+    - name: volume-0
+      secret:
+        secretName: jenkins-maven-settings
+    - name: volume-1
+      secret:
+        secretName: jenkins-docker-cfg
+    - name: volume-2
+      secret:
+        secretName: jenkins-release-gpg
+    - downwardAPI:
+        items:
+        - fieldRef:
+            fieldPath: metadata.labels
+          path: labels
+      name: podinfo
+kind: List
+metadata:
+  resourceVersion: ""
+  selfLink: ""

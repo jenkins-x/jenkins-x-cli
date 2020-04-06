@@ -1,0 +1,4 @@
+# this is used for testing jx inside a cluster in development
+FROM gcr.io/jenkinsxio/builder-machine-learning:0.1.662
+
+COPY build/linux/jx /usr/bin/jx

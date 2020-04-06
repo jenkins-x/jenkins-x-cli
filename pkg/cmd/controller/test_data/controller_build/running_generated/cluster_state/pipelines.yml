@@ -1,0 +1,89 @@
+apiVersion: tekton.dev/v1alpha1
+items:
+- apiVersion: tekton.dev/v1alpha1
+  kind: Pipeline
+  metadata:
+    creationTimestamp: "2019-09-10T17:07:08Z"
+    generation: 1
+    labels:
+      branch: master
+      build: "1"
+      created-by-prow: "true"
+      owner: cb-kubecd
+      jenkins.io/pipelineType: meta
+      prowJobName: 6bae4c2b-d3ed-11e9-b0c6-72256f93bb5c
+      repository: bdd-spring-1568135191
+    name: meta-cb-kubecd-bdd-spring-15681-1
+    namespace: jx
+    ownerReferences:
+    - apiVersion: jenkins.io/v1
+      kind: PipelineActivity
+      name: cb-kubecd-bdd-spring-1568135191-master-1
+      uid: 6c3963df-d3ed-11e9-8142-42010a840094
+    resourceVersion: "3188"
+    selfLink: /apis/tekton.dev/v1alpha1/namespaces/jx/pipelines/meta-cb-kubecd-bdd-spring-15681-1
+    uid: 6c431e3c-d3ed-11e9-8142-42010a840094
+  spec:
+    resources:
+    - name: meta-cb-kubecd-bdd-spring-15681
+      type: git
+    tasks:
+    - name: meta-pipeline
+      resources:
+        inputs:
+        - name: workspace
+          resource: meta-cb-kubecd-bdd-spring-15681
+      taskRef:
+        name: meta-cb-kubecd-bdd-spring-15681-meta-pipeline-1
+- apiVersion: tekton.dev/v1alpha1
+  kind: Pipeline
+  metadata:
+    creationTimestamp: "2019-09-10T17:08:20Z"
+    generation: 1
+    labels:
+      branch: master
+      build: "1"
+      created-by-prow: "true"
+      owner: cb-kubecd
+      jenkins.io/pipelineType: build
+      prowJobName: 6bae4c2b-d3ed-11e9-b0c6-72256f93bb5c
+      repository: bdd-spring-1568135191
+    name: cb-kubecd-bdd-spring-1568135191-1
+    namespace: jx
+    ownerReferences:
+    - apiVersion: jenkins.io/v1
+      kind: PipelineActivity
+      name: cb-kubecd-bdd-spring-1568135191-master-1
+      uid: 6c3963df-d3ed-11e9-8142-42010a840094
+    resourceVersion: "3543"
+    selfLink: /apis/tekton.dev/v1alpha1/namespaces/jx/pipelines/cb-kubecd-bdd-spring-1568135191-1
+    uid: 9725fd7c-d3ed-11e9-8142-42010a840094
+  spec:
+    params:
+    - default: 0.0.1
+      description: the version number for this pipeline which is used as a tag on docker
+        images and helm charts
+      name: version
+    - default: "1"
+      description: the PipelineRun build number
+      name: build_id
+    resources:
+    - name: cb-kubecd-bdd-spring-1568135191
+      type: git
+    tasks:
+    - name: from-build-pack
+      params:
+      - name: version
+        value: ${params.version}
+      - name: build_id
+        value: ${params.build_id}
+      resources:
+        inputs:
+        - name: workspace
+          resource: cb-kubecd-bdd-spring-1568135191
+      taskRef:
+        name: cb-kubecd-bdd-spring-1568135191-from-build-pack-1
+kind: List
+metadata:
+  resourceVersion: ""
+  selfLink: ""

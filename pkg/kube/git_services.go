@@ -2,14 +2,17 @@ package kube
 
 import (
 	"fmt"
-	"github.com/jenkins-x/jx/pkg/log"
 	"io"
 	"net/url"
 	"strings"
 
+	"github.com/jenkins-x/jx/pkg/auth"
+	"github.com/jenkins-x/jx/pkg/kube/naming"
+	"github.com/jenkins-x/jx/pkg/log"
+
 	"github.com/pkg/errors"
 
-	"github.com/jenkins-x/jx/pkg/apis/jenkins.io/v1"
+	v1 "github.com/jenkins-x/jx/pkg/apis/jenkins.io/v1"
 	"github.com/jenkins-x/jx/pkg/client/clientset/versioned"
 	"github.com/jenkins-x/jx/pkg/gits"
 	"k8s.io/client-go/kubernetes"
@@ -26,7 +29,7 @@ func EnsureGitServiceExistsForHost(jxClient versioned.Interface, devNs string, k
 	gitServices := jxClient.JenkinsV1().GitServices(devNs)
 	list, err := gitServices.List(metav1.ListOptions{})
 	if err != nil {
-		return err
+		return errors.Wrap(err, "failed to list git services")
 	}
 	for _, gs := range list.Items {
 		if gitUrlsEqual(gs.Spec.URL, gitUrl) {
@@ -34,13 +37,13 @@ func EnsureGitServiceExistsForHost(jxClient versioned.Interface, devNs string, k
 			if oldKind != kind {
 				fmt.Fprintf(out, "Updating GitService %s as the kind has changed from %s to %s\n", gs.Name, oldKind, kind)
 				gs.Spec.GitKind = kind
-				_, err = gitServices.Update(&gs)
+				_, err = gitServices.PatchUpdate(&gs)
 				if err != nil {
 					return fmt.Errorf("Failed to update kind on GitService with name %s: %s", gs.Name, err)
 				}
-				return err
+				return errors.Wrap(err, "failed to PatchUpdate")
 			} else {
-				log.Infof("already has GitService %s in namespace %s for URL %s\n", gs.Name, devNs, gitUrl)
+				log.Logger().Infof("already has GitService %s in namespace %s for URL %s", gs.Name, devNs, gitUrl)
 				return nil
 			}
 		}
@@ -48,7 +51,7 @@ func EnsureGitServiceExistsForHost(jxClient versioned.Interface, devNs string, k
 	if name == "" {
 		u, err := url.Parse(gitUrl)
 		if err != nil {
-			return fmt.Errorf("No name supplied and could not parse URL %s due to %s", u, err)
+			return errors.Wrapf(err, "no name supplied and could not parse URL %s", u)
 		}
 		name = u.Host
 	}
@@ -56,7 +59,7 @@ func EnsureGitServiceExistsForHost(jxClient versioned.Interface, devNs string, k
 	// not found so lets create a new GitService
 	gitSvc := &v1.GitService{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: ToValidNameWithDots(name),
+			Name: naming.ToValidNameWithDots(name),
 		},
 		Spec: v1.GitServiceSpec{
 			Name:    name,
@@ -68,29 +71,36 @@ func EnsureGitServiceExistsForHost(jxClient versioned.Interface, devNs string, k
 	if err != nil {
 		_, err = gitServices.Create(gitSvc)
 		if err != nil {
-			return fmt.Errorf("Failed to create GitService with name %s: %s", gitSvc.Name, err)
+			return errors.Wrapf(err, "failed to create GitService with name %s", gitSvc.Name)
 		}
-		log.Infof("GitService %s created in namespace %s for URL %s\n", gitSvc.Name, devNs, gitUrl)
+		log.Logger().Infof("GitService %s created in namespace %s for URL %s", gitSvc.Name, devNs, gitUrl)
 	} else if current != nil {
 		if current.Spec.URL != gitSvc.Spec.URL || current.Spec.GitKind != gitSvc.Spec.GitKind {
 			current.Spec.URL = gitSvc.Spec.URL
 			current.Spec.GitKind = gitSvc.Spec.GitKind
 
-			_, err = gitServices.Update(current)
+			_, err = gitServices.PatchUpdate(current)
 			if err != nil {
-				return fmt.Errorf("Failed to update GitService with name %s: %s", gitSvc.Name, err)
+				return errors.Wrapf(err, "failed to PatchUpdate GitService with name %s", gitSvc.Name)
 			}
-			log.Infof("GitService %s updated in namespace %s for URL %s\n", gitSvc.Name, devNs, gitUrl)
+			log.Logger().Infof("GitService %s updated in namespace %s for URL %s", gitSvc.Name, devNs, gitUrl)
 		}
 	}
 	return nil
 }
 
 // GetGitServiceKind returns the kind of the given host if one can be found or ""
-func GetGitServiceKind(jxClient versioned.Interface, kubeClient kubernetes.Interface, devNs string, gitServiceURL string) (string, error) {
+func GetGitServiceKind(jxClient versioned.Interface, kubeClient kubernetes.Interface, devNs string, clusterAuthConfig *auth.AuthConfig, gitServiceURL string) (string, error) {
 	answer := gits.SaasGitKind(gitServiceURL)
 	if answer != "" {
 		return answer, nil
+	}
+
+	if clusterAuthConfig != nil {
+		clusterServer := clusterAuthConfig.GetServer(gitServiceURL)
+		if clusterServer != nil {
+			return clusterServer.Kind, nil
+		}
 	}
 
 	answer, err := GetServiceKindFromSecrets(kubeClient, devNs, gitServiceURL)
@@ -108,8 +118,12 @@ func GetServiceKindFromSecrets(kubeClient kubernetes.Interface, ns string, gitSe
 		return "", errors.Wrap(err, "failed to list the secrets")
 	}
 
+	// note sometimes the Git secret is just called 'jx-pipeline-git' if its created as part of
+	// 'jx create cluster --git-provider-url' - so lets handle the missing - on the name
+	secretNamePrefix := strings.TrimSuffix(SecretJenkinsPipelineGitCredentials, "-")
+
 	for _, secret := range secretList.Items {
-		if strings.HasPrefix(secret.GetName(), SecretJenkinsPipelineGitCredentials) {
+		if strings.HasPrefix(secret.GetName(), secretNamePrefix) {
 			annotations := secret.GetAnnotations()
 			url, ok := annotations[AnnotationURL]
 			if !ok {
@@ -121,6 +135,16 @@ func GetServiceKindFromSecrets(kubeClient kubernetes.Interface, ns string, gitSe
 				if !ok {
 					return "", fmt.Errorf("no service kind label found on secret '%s' for Git service '%s'",
 						secret.GetName(), gitServiceURL)
+				}
+				if serviceKind == "" {
+					kind := labels[LabelKind]
+					if kind == "git" {
+						serviceKind = gits.SaasGitKind(gitServiceURL)
+						if serviceKind == "" {
+							// lets default to github?
+							serviceKind = gits.KindGitHub
+						}
+					}
 				}
 				return serviceKind, nil
 			}

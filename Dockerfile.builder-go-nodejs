@@ -1,0 +1,4 @@
+# this is used for testing jx inside a cluster in development
+FROM gcr.io/jenkinsxio/builder-go-nodejs:latest
+
+COPY build/linux/jx /usr/bin/jx

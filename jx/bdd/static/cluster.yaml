@@ -1,0 +1,13 @@
+clusters:
+  - name: static-gkebdd
+    args:
+      - create
+      - cluster
+      - gke
+      - --project-id=jenkins-x-bdd3
+      - --no-tiller
+      - -m=n1-standard-2
+      - --min-num-nodes=3
+      - --max-num-nodes=5
+      - -z=europe-west1-c
+      - --skip-login

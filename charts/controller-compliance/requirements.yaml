@@ -1,3 +1,0 @@
-dependencies:
-- name: compliance-role
-  repository: file://../jx

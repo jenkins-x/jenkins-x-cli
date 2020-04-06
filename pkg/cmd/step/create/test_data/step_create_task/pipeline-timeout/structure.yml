@@ -1,0 +1,19 @@
+metadata:
+  creationTimestamp: null
+  labels:
+    branch: really-long
+    build: "1"
+    jenkins.io/pipelineType: build
+    owner: abayer
+    repository: js-test-repo
+  name: abayer-js-test-repo-really-long-j9gz7-1
+pipelineRef: null
+pipelineRunRef: null
+stages:
+- depth: 0
+  name: Build-a-really-long-stage-name-please-but-not-too-long-thanks
+  taskRef: abayer-js-test-repo-really-long-j9gz7-build-a-really-long-sta-1
+- depth: 0
+  name: Second
+  previous: Build-a-really-long-stage-name-please-but-not-too-long-thanks
+  taskRef: abayer-js-test-repo-really-long-j9gz7-second-1

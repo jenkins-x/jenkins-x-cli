@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "jenkins-pod-xml-maven"
+  labels:
+    jenkins.io/kind: podTemplateXml
+data:
+  config.xml: |-
+            <org.csanchez.jenkins.plugins.kubernetes.PodTemplate>
+              <inheritFrom></inheritFrom>
+              <name>maven</name>
+              <serviceAccount>jenkins<</serviceAccount>
+            </org.csanchez.jenkins.plugins.kubernetes.PodTemplate>

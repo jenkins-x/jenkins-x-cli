@@ -3,6 +3,7 @@ package matchers
 
 import (
 	"reflect"
+
 	"github.com/petergtz/pegomock"
 	config "gopkg.in/src-d/go-git.v4/config"
 )

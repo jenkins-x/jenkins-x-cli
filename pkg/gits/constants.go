@@ -21,6 +21,9 @@ const (
 
 	// FakeGitURL the default URL for the fake git provider
 	FakeGitURL = "https://fake.git"
+
+	ProjectOpen   = "open"   // the state of an open project
+	ProjectClosed = "closed" // the stat of a closed project
 )
 
 var (

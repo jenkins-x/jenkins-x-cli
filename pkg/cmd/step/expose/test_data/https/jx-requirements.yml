@@ -1,0 +1,6 @@
+cluster:
+  namespace: jx-staging
+webhook: prow
+secretStorage: local
+ingress:
+  namespaceSubDomain: ""

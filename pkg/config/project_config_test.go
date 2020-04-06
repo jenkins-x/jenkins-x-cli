@@ -1,42 +1,81 @@
+// +build unit
+
 package config_test
 
 import (
 	"testing"
 
 	"github.com/jenkins-x/jx/pkg/config"
+	"github.com/jenkins-x/jx/pkg/jenkinsfile"
 	"github.com/jenkins-x/jx/pkg/log"
+	"github.com/jenkins-x/jx/pkg/tekton/syntax"
 	"github.com/jenkins-x/jx/pkg/tests"
-	"gopkg.in/yaml.v2"
 	corev1 "k8s.io/api/core/v1"
+	"sigs.k8s.io/yaml"
 
 	"github.com/stretchr/testify/assert"
 )
 
-func TestProjectConfigMarshal(t *testing.T) {
-	t.Parallel()
-	projectConfig := &config.ProjectConfig{
-		Builds: []*config.BranchBuild{
+var (
+	testProjectConfigMaven = &config.ProjectConfig{
+		BuildPack: "maven",
+		Env: []corev1.EnvVar{
 			{
-				Kind: "release",
-				Build: config.Build{
-					Steps: []corev1.Container{
-						{
-							Args: []string{"mvn", "test"},
+				Name:  "ORG",
+				Value: "myorg",
+			},
+			{
+				Name:  "APP_NAME",
+				Value: "thingy",
+			},
+		},
+		PipelineConfig: &jenkinsfile.PipelineConfig{
+			Pipelines: jenkinsfile.Pipelines{
+				PullRequest: &jenkinsfile.PipelineLifecycles{
+					Build: &jenkinsfile.PipelineLifecycle{
+						Steps: []*syntax.Step{
+							{
+								Command: "mvn test",
+							},
 						},
 					},
 				},
-				ExcludePodTemplateEnv:     true,
-				ExcludePodTemplateVolumes: true,
+				Release: &jenkinsfile.PipelineLifecycles{
+					Build: &jenkinsfile.PipelineLifecycle{
+						Steps: []*syntax.Step{
+							{
+								Command: "mvn test",
+							},
+							{
+								Command: "mvn deploy",
+							},
+							{
+								Command: "jx promote --all-auto",
+							},
+						},
+					},
+					Pipeline: &syntax.ParsedPipeline{},
+				},
+			},
+			Env: []corev1.EnvVar{
+				{
+					Name:  "PREVIEW_VERSION",
+					Value: "0.0.0-SNAPSHOT-$BRANCH_NAME-$BUILD_NUMBER",
+				},
 			},
 		},
 	}
+)
 
-	data, err := yaml.Marshal(projectConfig)
+func TestProjectConfigMarshal(t *testing.T) {
+	t.Parallel()
+
+	data, err := yaml.Marshal(testProjectConfigMaven)
 	assert.NoError(t, err)
 
 	if tests.IsDebugLog() {
 		text := string(data)
-		log.Infof("Generated YAML: %s\n", text)
+		log.Logger().Infof("Generated YAML: %s", text)
 	}
 
 	copy := &config.ProjectConfig{}
@@ -44,6 +83,24 @@ func TestProjectConfigMarshal(t *testing.T) {
 	err = yaml.Unmarshal(data, copy)
 	assert.NoError(t, err)
 
-	assert.True(t, projectConfig.Builds[0].ExcludePodTemplateEnv)
-	assert.True(t, projectConfig.Builds[0].ExcludePodTemplateVolumes)
+	assert.Equal(t, 2, len(testProjectConfigMaven.Env), "len(testProjectConfigMaven.Env)")
+	assert.NotNil(t, testProjectConfigMaven.PipelineConfig, "testProjectConfigMaven.PipelineConfig")
+	assert.NotNil(t, testProjectConfigMaven.PipelineConfig.Pipelines.Release, "testProjectConfigMaven.PipelineConfig.Pipelines.Release")
+	assert.Equal(t, 1, len(testProjectConfigMaven.PipelineConfig.Env), "len(testProjectConfigMaven.PipelineConfig.Env)")
+}
+
+func TestGetPipeline(t *testing.T) {
+	releasePipeline, err := testProjectConfigMaven.GetPipeline(jenkinsfile.PipelineKindRelease)
+	assert.NoError(t, err)
+	assert.NotNil(t, releasePipeline)
+
+	pullRequestPipeline, err := testProjectConfigMaven.GetPipeline(jenkinsfile.PipelineKindPullRequest)
+	assert.Error(t, err)
+	assert.Equal(t, err.Error(), "no pipeline defined for kind pullrequest")
+	assert.Nil(t, pullRequestPipeline)
+
+	featurePipeline, err := testProjectConfigMaven.GetPipeline(jenkinsfile.PipelineKindFeature)
+	assert.Error(t, err)
+	assert.Equal(t, err.Error(), "no pipeline defined for kind feature")
+	assert.Nil(t, featurePipeline)
 }

@@ -1,0 +1,13 @@
+bootConfigURL: https://github.com/some-org/some-org-jenkins-x-boot-config.git
+cluster:
+  clusterName: my-cluster-name
+  gitKind: github
+  gitName: github
+  gitServer: https://github.com
+  namespace: jx
+  project: my-project-id
+  provider: gke
+versionStream:
+  ref: "2367726d02b9c"
+  url: https://github.com/some-org/some-org-jenkins-x-versions.git
+webhook: prow

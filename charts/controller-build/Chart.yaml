@@ -1,8 +1,0 @@
-apiVersion: v1
-description: Helm chart to watch for Knative Build pipelines and generate PipelineActivity resources with the results
-icon: https://raw.githubusercontent.com/jenkins-x/jenkins-x-platform/master/images/go.png
-maintainers:
-- name: Jenkins X Team
-  email: jenkins-x@googlegroups.com
-name: controller-build
-version: 1.0.0

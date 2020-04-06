@@ -1,0 +1,27 @@
+apiVersion: jenkins.io/v1
+kind: PipelineStructure
+metadata:
+  creationTimestamp: "2019-09-06T05:24:17Z"
+  generation: 1
+  labels:
+    branch: PR-1
+    build: "1"
+    context: pr-build
+    owner: cb-kubecd
+    repository: bdd-spring-1567745634
+  name: cb-kubecd-bdd-spring-1567745634-s92nd-1
+  namespace: jx
+  ownerReferences:
+  - apiVersion: tekton.dev/v1alpha1
+    kind: pipeline
+    name: cb-kubecd-bdd-spring-1567745634-s92nd-1
+    uid: 9264a416-d066-11e9-8eea-42010a8400f6
+  resourceVersion: "11153"
+  selfLink: /apis/jenkins.io/v1/namespaces/jx/pipelinestructures/cb-kubecd-bdd-spring-1567745634-s92nd-1
+  uid: 926720d8-d066-11e9-8eea-42010a8400f6
+pipelineRef: cb-kubecd-bdd-spring-1567745634-s92nd-1
+pipelineRunRef: cb-kubecd-bdd-spring-1567745634-s92nd-1
+stages:
+- depth: 0
+  name: from-build-pack
+  taskRef: cb-kubecd-bdd-spring-1567745634-s92nd-from-build-pack-1

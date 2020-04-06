@@ -1,0 +1,35 @@
+pipelineConfig:
+  pipelines:
+    release:
+      pipeline:
+        agent:
+          image: some-image
+        stages:
+          - name: Stage A
+            steps:
+              - command: echo
+                args: ['last']
+          - name: Stage With Stages A
+            stages:
+              - name: A Working title 1
+                steps:
+                  - command: echo
+                    args:
+                      - hello
+              - name: A Working title 2
+                steps:
+                  - command: echo
+                    args:
+                      - hello
+          - name: Stage With Stages B
+            stages:
+              - name: A Working title 1
+                steps:
+                  - command: echo
+                    args:
+                      - hello
+              - name: A Working title 2
+                steps:
+                  - command: echo
+                    args:
+                      - hello

@@ -1,3 +1,5 @@
+// +build unit
+
 package kube_test
 
 import (
@@ -6,12 +8,13 @@ import (
 	expect "github.com/Netflix/go-expect"
 	jenkinsio_v1 "github.com/jenkins-x/jx/pkg/apis/jenkins.io/v1"
 	versiond_mocks "github.com/jenkins-x/jx/pkg/client/clientset/versioned/fake"
+	cmd_mocks "github.com/jenkins-x/jx/pkg/cmd/clients/mocks"
 	"github.com/jenkins-x/jx/pkg/config"
 	"github.com/jenkins-x/jx/pkg/gits"
-	cmd_mocks "github.com/jenkins-x/jx/pkg/jx/cmd/mocks"
 	"github.com/jenkins-x/jx/pkg/kube"
 	"github.com/jenkins-x/jx/pkg/tests"
-	"k8s.io/api/core/v1"
+	"github.com/jenkins-x/jx/pkg/util"
+	v1 "k8s.io/api/core/v1"
 
 	git_mocks "github.com/jenkins-x/jx/pkg/gits/mocks"
 	. "github.com/petergtz/pegomock"
@@ -155,8 +158,8 @@ func TestCreateEnvironmentSurvey(t *testing.T) {
 
 	// mock Kubernetes interface
 	kubernetesInterface := kube_mocks.NewSimpleClientset(namespace)
-	// Override CreateClient to return mock Kubernetes interface
-	When(factory.CreateClient()).ThenReturn(kubernetesInterface, "jx-testing", nil)
+	// Override CreateKubeClient to return mock Kubernetes interface
+	When(factory.CreateKubeClient()).ThenReturn(kubernetesInterface, "jx-testing", nil)
 
 	// mock versiond interface
 	versiondInterface := versiond_mocks.NewSimpleClientset()
@@ -168,8 +171,8 @@ func TestCreateEnvironmentSurvey(t *testing.T) {
 	// Override CreateApiExtensionsClient to return mock apiextensions interface
 	When(factory.CreateApiExtensionsClient()).ThenReturn(apiextensionsInterface, nil)
 
-	console := tests.NewTerminal(t)
-	defer console.Close()
+	console := tests.NewTerminal(t, nil)
+	defer console.Cleanup()
 
 	donec := make(chan struct{})
 	go func() {
@@ -180,8 +183,8 @@ func TestCreateEnvironmentSurvey(t *testing.T) {
 		console.SendLine("Staging")
 		console.ExpectString("Namespace:")
 		console.SendLine("jx-testing")
-		console.ExpectString("Cluster URL:")
-		console.SendLine("http://good.looking.com")
+		console.ExpectString("Environment in separate cluster to Dev Environment:")
+		console.SendLine("n")
 		console.ExpectString("Promotion Strategy:")
 		console.SendLine("A")
 		console.ExpectString("Order:")
@@ -213,6 +216,11 @@ func TestCreateEnvironmentSurvey(t *testing.T) {
 	}
 	prefix := ""
 	gitter := git_mocks.NewMockGitter()
+	handles := util.IOFileHandles{
+		Err: console.Err,
+		In:  console.In,
+		Out: console.Out,
+	}
 
 	_, err := kube.CreateEnvironmentSurvey(
 		batchMode,
@@ -220,6 +228,7 @@ func TestCreateEnvironmentSurvey(t *testing.T) {
 		&devEnv,
 		&data,
 		&conf,
+		true,
 		forkEnvGitURL,
 		ns,
 		versiondInterface,
@@ -229,17 +238,54 @@ func TestCreateEnvironmentSurvey(t *testing.T) {
 		helmValues,
 		prefix,
 		gitter,
-		console.In,
-		console.Out,
-		console.Err,
+		nil,
+		handles,
 	)
-
-	// Close the slave end of the pty, and read the remaining bytes from the master end.
-	console.Close()
-	<-donec
-
 	assert.NoError(t, err, "Should not error")
 
+	// Close the slave end of the pty, and read the remaining bytes from the master end.
 	// Dump the terminal's screen.
 	t.Log(expect.StripTrailingEmptyLines(console.CurrentState()))
+	console.Close()
+	<-donec
+}
+
+func TestGetPreviewEnvironmentReleaseName(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		env                 *jenkinsio_v1.Environment
+		expectedReleaseName string
+	}{
+		{
+			env:                 nil,
+			expectedReleaseName: "",
+		},
+		{
+			env:                 &jenkinsio_v1.Environment{},
+			expectedReleaseName: "",
+		},
+		{
+			env:                 kube.NewPreviewEnvironment("test"),
+			expectedReleaseName: "",
+		},
+		{
+			env: func() *jenkinsio_v1.Environment {
+				env := kube.NewPreviewEnvironment("test")
+				if env.Annotations == nil {
+					env.Annotations = map[string]string{}
+				}
+				env.Annotations[kube.AnnotationReleaseName] = "release-name"
+				return env
+			}(),
+			expectedReleaseName: "release-name",
+		},
+	}
+
+	for i, test := range tests {
+		releaseName := kube.GetPreviewEnvironmentReleaseName(test.env)
+		if releaseName != test.expectedReleaseName {
+			t.Errorf("[%d] Expected release name %s but got %s", i, test.expectedReleaseName, releaseName)
+		}
+	}
 }

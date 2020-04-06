@@ -3,8 +3,6 @@ package spring
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/jenkins-x/jx/pkg/log"
-	"github.com/pkg/errors"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -13,9 +11,12 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/jenkins-x/jx/pkg/log"
+	"github.com/pkg/errors"
+
 	"github.com/jenkins-x/jx/pkg/util"
 	"github.com/jenkins-x/jx/pkg/version"
-	"gopkg.in/AlecAivazis/survey.v1"
+	survey "gopkg.in/AlecAivazis/survey.v1"
 )
 
 const (
@@ -29,7 +30,7 @@ const (
 	OptionDependencyKind = "kind"
 	OptionType           = "type"
 
-	startSpringURL = "http://start.spring.io"
+	startSpringURL = "https://start.spring.io"
 )
 
 var (
@@ -358,7 +359,7 @@ func (data *SpringBootForm) CreateProject(workDir string) (string, error) {
 		errorResponse := errorResponse{}
 		json.Unmarshal(errorBody, &errorResponse)
 
-		log.Infof("%s\n", util.ColorError(errorResponse.Message))
+		log.Logger().Infof("%s", util.ColorError(errorResponse.Message))
 		return answer, errors.New("unable to create spring quickstart")
 	}
 

@@ -1,8 +1,11 @@
+// +build unit
+
 package terraform
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestCanExtractVersion(t *testing.T) {

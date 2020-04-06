@@ -1,3 +1,0 @@
-dependencies:
-- name: gc-releases
-  repository: file://../jx

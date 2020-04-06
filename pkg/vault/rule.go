@@ -20,6 +20,7 @@ const (
 	PathRulesName            = "allow_secrets"
 	DefaultSecretsPathPrefix = "secret/*"
 	PoliciesName             = "policies"
+	DefaultSecretsPath       = "secret"
 )
 
 var (

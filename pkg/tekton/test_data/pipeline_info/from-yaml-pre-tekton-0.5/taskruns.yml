@@ -1,0 +1,132 @@
+apiVersion: v1
+items:
+- apiVersion: tekton.dev/v1alpha1
+  kind: TaskRun
+  metadata:
+    creationTimestamp: 2019-03-05T20:06:13Z
+    generation: 1
+    labels:
+      branch: master
+      build-number: "1"
+      jenkins.io/task-stage-name: build
+      owner: abayer
+      repo: js-test-repo
+      tekton.dev/pipeline: abayer-js-test-repo-master
+      tekton.dev/pipelineRun: abayer-js-test-repo-master-1
+      tekton.dev/task: abayer-js-test-repo-master-build
+    name: abayer-js-test-repo-master-1-build-jmcbd
+    namespace: jx
+    ownerReferences:
+    - apiVersion: tekton.dev/v1alpha1
+      blockOwnerDeletion: true
+      controller: true
+      kind: PipelineRun
+      name: abayer-js-test-repo-master-1
+      uid: 209c34f9-3f82-11e9-bd41-42010a8a00a2
+    resourceVersion: "1421341"
+    selfLink: /apis/tekton.dev/v1alpha1/namespaces/jx/taskruns/abayer-js-test-repo-master-1-build-jmcbd
+    uid: 20a2999a-3f82-11e9-bd41-42010a8a00a2
+  spec:
+    Status: ""
+    inputs:
+      resources:
+      - name: workspace
+        paths: null
+        resourceRef:
+          name: abayer-js-test-repo-master
+        resourceSpec: null
+    outputs:
+      resources:
+      - name: workspace
+        paths:
+        - /pvc/build/workspace
+        resourceRef:
+          name: abayer-js-test-repo-master
+        resourceSpec: null
+    serviceAccount: tekton-bot
+    taskRef:
+      kind: Task
+      name: abayer-js-test-repo-master-build
+    trigger:
+      type: ""
+  status:
+    conditions:
+    - lastTransitionTime: 2019-03-05T20:07:04Z
+      status: "True"
+      type: Succeeded
+    podName: abayer-js-test-repo-master-1-build-jmcbd-pod-a726d6
+    startTime: 2019-03-05T20:06:13Z
+    steps:
+    - terminated:
+        containerID: docker://cd8f631f053e6d7de0e32a943c4084518590537984ce2f551a23af8e3a236e3c
+        exitCode: 0
+        finishedAt: 2019-03-05T20:06:36Z
+        reason: Completed
+        startedAt: 2019-03-05T20:06:36Z
+- apiVersion: tekton.dev/v1alpha1
+  kind: TaskRun
+  metadata:
+    creationTimestamp: 2019-03-05T20:07:04Z
+    generation: 1
+    labels:
+      branch: master
+      build-number: "1"
+      jenkins.io/task-stage-name: second
+      owner: abayer
+      repo: js-test-repo
+      tekton.dev/pipeline: abayer-js-test-repo-master
+      tekton.dev/pipelineRun: abayer-js-test-repo-master-1
+      tekton.dev/task: abayer-js-test-repo-master-second
+    name: abayer-js-test-repo-master-1-second-wglk8
+    namespace: jx
+    ownerReferences:
+    - apiVersion: tekton.dev/v1alpha1
+      blockOwnerDeletion: true
+      controller: true
+      kind: PipelineRun
+      name: abayer-js-test-repo-master-1
+      uid: 209c34f9-3f82-11e9-bd41-42010a8a00a2
+    resourceVersion: "1421355"
+    selfLink: /apis/tekton.dev/v1alpha1/namespaces/jx/taskruns/abayer-js-test-repo-master-1-second-wglk8
+    uid: 3eaa13d6-3f82-11e9-bd41-42010a8a00a2
+  spec:
+    Status: ""
+    inputs:
+      resources:
+      - name: workspace
+        paths:
+        - /pvc/build/workspace
+        resourceRef:
+          name: abayer-js-test-repo-master
+        resourceSpec: null
+    outputs:
+      resources:
+      - name: workspace
+        paths:
+        - /pvc/second/workspace
+        resourceRef:
+          name: abayer-js-test-repo-master
+        resourceSpec: null
+    serviceAccount: tekton-bot
+    taskRef:
+      kind: Task
+      name: abayer-js-test-repo-master-second
+    trigger:
+      type: ""
+  status:
+    conditions:
+    - lastTransitionTime: 2019-03-05T20:07:05Z
+      message: 'pod status "Initialized":"False"; message: "containers with incomplete
+        status: [step-credential-initializer-cdlb9 step-place-tools]"'
+      reason: Pending
+      status: Unknown
+      type: Succeeded
+    podName: abayer-js-test-repo-master-1-second-wglk8-pod-762f8d
+    startTime: 2019-03-05T20:07:05Z
+    steps:
+    - waiting:
+        reason: PodInitializing
+kind: List
+metadata:
+  resourceVersion: ""
+  selfLink: ""

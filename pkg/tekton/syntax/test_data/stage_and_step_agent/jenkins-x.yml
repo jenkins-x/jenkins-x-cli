@@ -1,0 +1,17 @@
+pipelineConfig:
+  pipelines:
+    release:
+      pipeline:
+        stages:
+          - name: A Working Stage
+            agent:
+              image: some-image
+            steps:
+              - command: echo
+                args:
+                  - hello
+                  - world
+                agent:
+                  image: some-other-image
+              - command: echo
+                args: ['goodbye']

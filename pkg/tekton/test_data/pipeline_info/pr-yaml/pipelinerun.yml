@@ -1,0 +1,119 @@
+apiVersion: tekton.dev/v1alpha1
+kind: PipelineRun
+metadata:
+  creationTimestamp: "2019-09-06T05:24:17Z"
+  generation: 1
+  labels:
+    branch: PR-1
+    build: "1"
+    context: pr-build
+    owner: cb-kubecd
+    repository: bdd-spring-1567745634
+    tekton.dev/pipeline: cb-kubecd-bdd-spring-1567745634-s92nd-1
+  name: cb-kubecd-bdd-spring-1567745634-s92nd-1
+  namespace: jx
+  resourceVersion: "11960"
+  selfLink: /apis/tekton.dev/v1alpha1/namespaces/jx/pipelineruns/cb-kubecd-bdd-spring-1567745634-s92nd-1
+  uid: 92658df6-d066-11e9-8eea-42010a8400f6
+spec:
+  params:
+  - name: version
+    value: 0.0.0-SNAPSHOT-PR-1-1
+  - name: build_id
+    value: "1"
+  pipelineRef:
+    apiVersion: tekton.dev/v1alpha1
+    name: cb-kubecd-bdd-spring-1567745634-s92nd-1
+  resources:
+  - name: cb-kubecd-bdd-spring-1567745634
+    resourceRef:
+      apiVersion: tekton.dev/v1alpha1
+      name: cb-kubecd-bdd-spring-1567745634
+  serviceAccount: tekton-bot
+  timeout: 240h0m0s
+status:
+  completionTime: "2019-09-06T05:26:57Z"
+  conditions:
+  - lastTransitionTime: "2019-09-06T05:26:57Z"
+    message: All Tasks have completed executing
+    reason: Succeeded
+    status: "True"
+    type: Succeeded
+  startTime: "2019-09-06T05:24:17Z"
+  taskRuns:
+    cb-kubecd-bdd-spring-1567745634-s92nd-1-from-build-pack-x8hsc:
+      pipelineTaskName: from-build-pack
+      status:
+        completionTime: "2019-09-06T05:26:57Z"
+        conditions:
+        - lastTransitionTime: "2019-09-06T05:26:57Z"
+          message: All Steps have completed executing
+          reason: Succeeded
+          status: "True"
+          type: Succeeded
+        podName: cb-kubecd-bdd-spring-1567745634-s92nd-1-from-build-pack-x8hsc-pod-f15fe6
+        startTime: "2019-09-06T05:24:17Z"
+        steps:
+        - name: git-merge
+          terminated:
+            containerID: docker://4f933ae1b4e5172fb11995bd8bed81e5aba99ddbefb01cca6b164efdae57f2a8
+            exitCode: 0
+            finishedAt: "2019-09-06T05:24:32Z"
+            reason: Completed
+            startedAt: "2019-09-06T05:24:23Z"
+        - name: build-set-version
+          terminated:
+            containerID: docker://580f57695b1c9155fdd635fabf037f113030fa05a56bafeee98569cf20bbece6
+            exitCode: 0
+            finishedAt: "2019-09-06T05:24:50Z"
+            reason: Completed
+            startedAt: "2019-09-06T05:24:24Z"
+        - name: build-mvn-install
+          terminated:
+            containerID: docker://032f22674b2ca6474003134872769c707249bcba0e51c5b917951795ddc72f41
+            exitCode: 0
+            finishedAt: "2019-09-06T05:25:19Z"
+            reason: Completed
+            startedAt: "2019-09-06T05:24:25Z"
+        - name: build-skaffold-version
+          terminated:
+            containerID: docker://d1328db81230b79abf8f46be14ef1cdb213cb7dfcf241a4010e4fd13281e1e8a
+            exitCode: 0
+            finishedAt: "2019-09-06T05:25:20Z"
+            reason: Completed
+            startedAt: "2019-09-06T05:24:25Z"
+        - name: build-container-build
+          terminated:
+            containerID: docker://188efb70db9eff223f4882764bc8ae66342073984306bcb1aeca543829bbc643
+            exitCode: 0
+            finishedAt: "2019-09-06T05:25:31Z"
+            reason: Completed
+            startedAt: "2019-09-06T05:24:25Z"
+        - name: postbuild-post-build
+          terminated:
+            containerID: docker://050c60a8d8513484a496e7a3f0f777e086ec4a8d7582493074887ba554be3a00
+            exitCode: 0
+            finishedAt: "2019-09-06T05:25:31Z"
+            reason: Completed
+            startedAt: "2019-09-06T05:24:26Z"
+        - name: promote-make-preview
+          terminated:
+            containerID: docker://255cf699720dee1d4f262b4301cbdaf5ad6b3a945e1431be47ca5ecc6f6d5109
+            exitCode: 0
+            finishedAt: "2019-09-06T05:25:52Z"
+            reason: Completed
+            startedAt: "2019-09-06T05:24:26Z"
+        - name: promote-jx-preview
+          terminated:
+            containerID: docker://fb5e6440b3f7f891b2ca1b4140421c4ea6f81bf2d7e47a80140b6b4fdc2b958b
+            exitCode: 0
+            finishedAt: "2019-09-06T05:26:56Z"
+            reason: Completed
+            startedAt: "2019-09-06T05:24:27Z"
+        - name: git-source-cb-kubecd-bdd-spring-1567745634-n49gk
+          terminated:
+            containerID: docker://956dd16fa58197fa0bad42cfe88db473916649c625253c237c801fb58555762f
+            exitCode: 0
+            finishedAt: "2019-09-06T05:24:30Z"
+            reason: Completed
+            startedAt: "2019-09-06T05:24:22Z"

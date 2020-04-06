@@ -1,3 +1,5 @@
+// +build unit
+
 package gits_test
 
 import (
@@ -27,18 +29,16 @@ type BitbucketCloudProviderTestSuite struct {
 }
 
 const (
-	username           = "test-user"
-	orgName            = "test-org"
-	underscoreUsername = "test_user"
+	orgName = "test-org"
 )
 
 var profiles = []UserProfile{
-	UserProfile{
+	{
 		url:      "https://auth.example.com",
 		name:     "Test Auth Server",
 		username: "test-user",
 	},
-	UserProfile{
+	{
 		url:      "https://auth.example.com",
 		name:     "Test Auth Server with Underscore user",
 		username: "test_user",
@@ -105,6 +105,12 @@ var bitbucketRouter = util.Router{
 	},
 	"/users/test-user": util.MethodMap{
 		"GET": "users.test-user.json",
+	},
+	"/repositories/test-user/test-repo/pullrequests/1/comments": util.MethodMap{
+		"POST": "pullrequests.test-comment.json",
+	},
+	"/repositories/test-user/test-repo/issues/1/comments": util.MethodMap{
+		"POST": "issue-comments.issue-1.json",
 	},
 }
 
@@ -237,10 +243,10 @@ func (suite *BitbucketCloudProviderTestSuite) TestRenameRepository() {
 
 func (suite *BitbucketCloudProviderTestSuite) TestCreatePullRequest() {
 	args := gits.GitPullRequestArguments{
-		GitRepositoryInfo: &gits.GitRepositoryInfo{Name: "test-repo", Organisation: "test-user"},
-		Head:              "83777f6",
-		Base:              "77d0a923f297",
-		Title:             "Test Pull Request",
+		GitRepository: &gits.GitRepository{Name: "test-repo", Organisation: "test-user"},
+		Head:          "83777f6",
+		Base:          "77d0a923f297",
+		Title:         "Test Pull Request",
 	}
 
 	pr, err := suite.provider.CreatePullRequest(&args)
@@ -248,7 +254,7 @@ func (suite *BitbucketCloudProviderTestSuite) TestCreatePullRequest() {
 	suite.Require().NotNil(pr)
 	suite.Require().Nil(err)
 	suite.Require().Equal(*pr.State, "OPEN")
-	suite.Require().Equal(int(*pr.Number), 3)
+	suite.Require().Equal(*pr.Number, 3)
 	suite.Require().Equal(pr.Owner, "test-user")
 	suite.Require().Equal(pr.Repo, "test-repo")
 	suite.Require().Equal(pr.Author.Login, "test-user")
@@ -256,10 +262,10 @@ func (suite *BitbucketCloudProviderTestSuite) TestCreatePullRequest() {
 
 func (suite *BitbucketCloudProviderTestSuite) TestCreateOrgPullRequest() {
 	args := gits.GitPullRequestArguments{
-		GitRepositoryInfo: &gits.GitRepositoryInfo{Name: "test-repo", Organisation: "test-org"},
-		Head:              "83777f6",
-		Base:              "77d0a923f297",
-		Title:             "Test Pull Request",
+		GitRepository: &gits.GitRepository{Name: "test-repo", Organisation: "test-org"},
+		Head:          "83777f6",
+		Base:          "77d0a923f297",
+		Title:         "Test Pull Request",
 	}
 
 	pr, err := suite.provider.CreatePullRequest(&args)
@@ -267,7 +273,7 @@ func (suite *BitbucketCloudProviderTestSuite) TestCreateOrgPullRequest() {
 	suite.Require().NotNil(pr)
 	suite.Require().Nil(err)
 	suite.Require().Equal(*pr.State, "OPEN")
-	suite.Require().Equal(int(*pr.Number), 4)
+	suite.Require().Equal(*pr.Number, 4)
 	suite.Require().Equal(pr.Owner, "test-org")
 	suite.Require().Equal(pr.Repo, "test-repo")
 	suite.Require().Equal(pr.Author.Login, "test-user")
@@ -289,7 +295,7 @@ func (suite *BitbucketCloudProviderTestSuite) TestUpdatePullRequestStatus() {
 	suite.Require().NotNil(pr)
 	suite.Require().Nil(err)
 	suite.Require().Equal(*pr.State, "DECLINED")
-	suite.Require().Equal(int(*pr.Number), 3)
+	suite.Require().Equal(*pr.Number, 3)
 	suite.Require().Equal(pr.Owner, "test-user")
 	suite.Require().Equal(pr.Repo, "test-repo")
 	suite.Require().Equal(pr.Author.Login, "test-user")
@@ -311,7 +317,7 @@ func (suite *BitbucketCloudProviderTestSuite) TestUpdateOrgPullRequestStatus() {
 	suite.Require().NotNil(pr)
 	suite.Require().Nil(err)
 	suite.Require().Equal(*pr.State, "DECLINED")
-	suite.Require().Equal(int(*pr.Number), 4)
+	suite.Require().Equal(*pr.Number, 4)
 	suite.Require().Equal(pr.Owner, "test-org")
 	suite.Require().Equal(pr.Repo, "test-repo")
 	suite.Require().Equal(pr.Author.Login, "test-user")
@@ -321,7 +327,7 @@ func (suite *BitbucketCloudProviderTestSuite) TestGetPullRequest() {
 
 	pr, err := suite.provider.GetPullRequest(
 		"test-user",
-		&gits.GitRepositoryInfo{Name: "test-repo"},
+		&gits.GitRepository{Name: "test-repo"},
 		3,
 	)
 
@@ -330,7 +336,7 @@ func (suite *BitbucketCloudProviderTestSuite) TestGetPullRequest() {
 }
 
 func (suite *BitbucketCloudProviderTestSuite) TestPullRequestCommits() {
-	commits, err := suite.provider.GetPullRequestCommits("test-user", &gits.GitRepositoryInfo{Name: "test-repo"}, 1)
+	commits, err := suite.provider.GetPullRequestCommits("test-user", &gits.GitRepository{Name: "test-repo"}, 1)
 
 	suite.Require().Nil(err)
 	suite.Require().Equal(len(commits), 2)
@@ -391,7 +397,7 @@ func (suite *BitbucketCloudProviderTestSuite) TestMergePullRequest() {
 func (suite *BitbucketCloudProviderTestSuite) TestCreateWebHook() {
 
 	data := &gits.GitWebHookArguments{
-		Repo: &gits.GitRepositoryInfo{Name: "test-repo", Organisation: "test-user"},
+		Repo: &gits.GitRepository{Name: "test-repo", Organisation: "test-user"},
 		URL:  "https://my-jenkins.example.com/bitbucket-webhook/",
 	}
 	err := suite.provider.CreateWebHook(data)
@@ -431,13 +437,43 @@ func (suite *BitbucketCloudProviderTestSuite) TestCreateIssue() {
 }
 
 func (suite *BitbucketCloudProviderTestSuite) TestAddPRComment() {
-	err := suite.provider.AddPRComment(nil, "")
+	comment := "This is my comment. There are many like it but this one is mine."
+	prNumber := 1
+
+	pr := &gits.GitPullRequest{
+		Number: &prNumber,
+		Owner:  "test-user",
+		Repo:   "test-repo",
+	}
+	err := suite.provider.AddPRComment(pr, comment)
 	suite.Require().Nil(err)
+
+	pr = &gits.GitPullRequest{
+		Number: &prNumber,
+		Owner:  "test-user",
+	}
+	err = suite.provider.AddPRComment(pr, comment)
+	suite.Require().NotNil(err)
 }
 
 func (suite *BitbucketCloudProviderTestSuite) TestCreateIssueComment() {
-	err := suite.provider.CreateIssueComment("", "", 0, "")
+	comment := "This is my comment. There are many like it but this one is mine."
+
+	err := suite.provider.CreateIssueComment(
+		"test-user",
+		"test-repo",
+		1,
+		comment,
+	)
 	suite.Require().Nil(err)
+
+	err = suite.provider.CreateIssueComment(
+		"test-user",
+		"test-repo",
+		0,
+		comment,
+	)
+	suite.Require().NotNil(err)
 }
 
 func (suite *BitbucketCloudProviderTestSuite) TestUpdateRelease() {

@@ -1,0 +1,13 @@
+pipelineConfig:
+  env:
+    - name: FRUIT
+      value: BANANA
+    - name: GIT_AUTHOR_NAME
+      value: somebodyelse
+    - name: _JAVA_OPTIONS
+      value: something else
+  pipelines:
+    release:
+      promote:
+        steps:
+          - sh: echo "FRUIT is ${FRUIT}"

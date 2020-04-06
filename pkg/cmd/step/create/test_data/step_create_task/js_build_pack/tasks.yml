@@ -1,0 +1,627 @@
+items:
+- apiVersion: tekton.dev/v1alpha1
+  kind: Task
+  metadata:
+    creationTimestamp: null
+    labels:
+      branch: build-pack
+      build: "1"
+      jenkins.io/pipelineType: build
+      jenkins.io/task-stage-name: from-build-pack
+      owner: abayer
+      repository: js.test.repo
+    name: abayer-js-test-repo-build-pack-9l9zj-from-build-pack-1
+    namespace: jx
+  spec:
+    inputs:
+      params:
+      - default: 0.0.1
+        description: the version number for this pipeline which is used as a tag on
+          docker images and helm charts
+        name: version
+        type: string
+      resources:
+      - name: workspace
+        targetPath: source
+        type: git
+    steps:
+    - args:
+      - step
+      - git
+      - merge
+      - --verbose
+      command:
+      - jx
+      env:
+      - name: DOCKER_CONFIG
+        value: /home/jenkins/.docker/
+      - name: DOCKER_REGISTRY
+        valueFrom:
+          configMapKeyRef:
+            key: docker.registry
+            name: jenkins-x-docker-registry
+      - name: GIT_AUTHOR_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_AUTHOR_NAME
+        value: jenkins-x-bot
+      - name: GIT_COMMITTER_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_COMMITTER_NAME
+        value: jenkins-x-bot
+      - name: TILLER_NAMESPACE
+        value: kube-system
+      - name: XDG_CONFIG_HOME
+        value: /workspace/xdg_config
+      - name: BUILD_NUMBER
+        value: "1"
+      - name: PIPELINE_KIND
+        value: release
+      - name: REPO_OWNER
+        value: abayer
+      - name: REPO_NAME
+        value: js.test.repo
+      - name: JOB_NAME
+        value: abayer/js.test.repo/build-pack
+      - name: APP_NAME
+        value: js.test.repo
+      - name: BRANCH_NAME
+        value: build-pack
+      - name: JX_BATCH_MODE
+        value: "true"
+      - name: VERSION
+        value: $(inputs.params.version)
+      - name: PREVIEW_VERSION
+        value: $(inputs.params.version)
+      image: gcr.io/jenkinsxio/builder-jx:0.1.527
+      name: git-merge
+      resources:
+        requests:
+          cpu: 400m
+          memory: 512Mi
+      securityContext:
+        privileged: true
+      volumeMounts:
+      - mountPath: /home/jenkins
+        name: workspace-volume
+      - mountPath: /var/run/docker.sock
+        name: docker-daemon
+      - mountPath: /home/jenkins/.docker
+        name: volume-0
+      - mountPath: /etc/podinfo
+        name: podinfo
+        readOnly: true
+      workingDir: /workspace/source
+    - args:
+      - jx step git credentials
+      command:
+      - /bin/sh
+      - -c
+      env:
+      - name: DOCKER_CONFIG
+        value: /home/jenkins/.docker/
+      - name: DOCKER_REGISTRY
+        valueFrom:
+          configMapKeyRef:
+            key: docker.registry
+            name: jenkins-x-docker-registry
+      - name: GIT_AUTHOR_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_AUTHOR_NAME
+        value: jenkins-x-bot
+      - name: GIT_COMMITTER_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_COMMITTER_NAME
+        value: jenkins-x-bot
+      - name: TILLER_NAMESPACE
+        value: kube-system
+      - name: XDG_CONFIG_HOME
+        value: /workspace/xdg_config
+      - name: BUILD_NUMBER
+        value: "1"
+      - name: PIPELINE_KIND
+        value: release
+      - name: REPO_OWNER
+        value: abayer
+      - name: REPO_NAME
+        value: js.test.repo
+      - name: JOB_NAME
+        value: abayer/js.test.repo/build-pack
+      - name: APP_NAME
+        value: js.test.repo
+      - name: BRANCH_NAME
+        value: build-pack
+      - name: JX_BATCH_MODE
+        value: "true"
+      - name: VERSION
+        value: $(inputs.params.version)
+      - name: PREVIEW_VERSION
+        value: $(inputs.params.version)
+      image: jenkinsxio/builder-nodejs:0.1.235
+      name: setup-jx-git-credentials
+      resources:
+        requests:
+          cpu: 400m
+          memory: 512Mi
+      securityContext:
+        privileged: true
+      volumeMounts:
+      - mountPath: /home/jenkins
+        name: workspace-volume
+      - mountPath: /var/run/docker.sock
+        name: docker-daemon
+      - mountPath: /home/jenkins/.docker
+        name: volume-0
+      - mountPath: /etc/podinfo
+        name: podinfo
+        readOnly: true
+      workingDir: /workspace/source
+    - args:
+      - npm install
+      command:
+      - /bin/sh
+      - -c
+      env:
+      - name: DOCKER_CONFIG
+        value: /home/jenkins/.docker/
+      - name: DOCKER_REGISTRY
+        valueFrom:
+          configMapKeyRef:
+            key: docker.registry
+            name: jenkins-x-docker-registry
+      - name: GIT_AUTHOR_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_AUTHOR_NAME
+        value: jenkins-x-bot
+      - name: GIT_COMMITTER_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_COMMITTER_NAME
+        value: jenkins-x-bot
+      - name: TILLER_NAMESPACE
+        value: kube-system
+      - name: XDG_CONFIG_HOME
+        value: /workspace/xdg_config
+      - name: BUILD_NUMBER
+        value: "1"
+      - name: PIPELINE_KIND
+        value: release
+      - name: REPO_OWNER
+        value: abayer
+      - name: REPO_NAME
+        value: js.test.repo
+      - name: JOB_NAME
+        value: abayer/js.test.repo/build-pack
+      - name: APP_NAME
+        value: js.test.repo
+      - name: BRANCH_NAME
+        value: build-pack
+      - name: JX_BATCH_MODE
+        value: "true"
+      - name: VERSION
+        value: $(inputs.params.version)
+      - name: PREVIEW_VERSION
+        value: $(inputs.params.version)
+      image: jenkinsxio/builder-nodejs:0.1.235
+      name: build-npm-install
+      resources:
+        requests:
+          cpu: 400m
+          memory: 512Mi
+      securityContext:
+        privileged: true
+      volumeMounts:
+      - mountPath: /home/jenkins
+        name: workspace-volume
+      - mountPath: /var/run/docker.sock
+        name: docker-daemon
+      - mountPath: /home/jenkins/.docker
+        name: volume-0
+      - mountPath: /etc/podinfo
+        name: podinfo
+        readOnly: true
+      workingDir: /workspace/source
+    - args:
+      - CI=true DISPLAY=:99 npm test
+      command:
+      - /bin/sh
+      - -c
+      env:
+      - name: DOCKER_CONFIG
+        value: /home/jenkins/.docker/
+      - name: DOCKER_REGISTRY
+        valueFrom:
+          configMapKeyRef:
+            key: docker.registry
+            name: jenkins-x-docker-registry
+      - name: GIT_AUTHOR_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_AUTHOR_NAME
+        value: jenkins-x-bot
+      - name: GIT_COMMITTER_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_COMMITTER_NAME
+        value: jenkins-x-bot
+      - name: TILLER_NAMESPACE
+        value: kube-system
+      - name: XDG_CONFIG_HOME
+        value: /workspace/xdg_config
+      - name: BUILD_NUMBER
+        value: "1"
+      - name: PIPELINE_KIND
+        value: release
+      - name: REPO_OWNER
+        value: abayer
+      - name: REPO_NAME
+        value: js.test.repo
+      - name: JOB_NAME
+        value: abayer/js.test.repo/build-pack
+      - name: APP_NAME
+        value: js.test.repo
+      - name: BRANCH_NAME
+        value: build-pack
+      - name: JX_BATCH_MODE
+        value: "true"
+      - name: VERSION
+        value: $(inputs.params.version)
+      - name: PREVIEW_VERSION
+        value: $(inputs.params.version)
+      image: jenkinsxio/builder-nodejs:0.1.235
+      name: build-npm-test
+      resources:
+        requests:
+          cpu: 400m
+          memory: 512Mi
+      securityContext:
+        privileged: true
+      volumeMounts:
+      - mountPath: /home/jenkins
+        name: workspace-volume
+      - mountPath: /var/run/docker.sock
+        name: docker-daemon
+      - mountPath: /home/jenkins/.docker
+        name: volume-0
+      - mountPath: /etc/podinfo
+        name: podinfo
+        readOnly: true
+      workingDir: /workspace/source
+    - args:
+      - /kaniko/executor --cache=true --cache-dir=/workspace --context=/workspace/source
+        --dockerfile=/workspace/source/Dockerfile --destination=gcr.io/abayer/js-test-repo:$(inputs.params.version)
+        --cache-repo=gcr.io//cache
+      command:
+      - /busybox/sh
+      - -c
+      env:
+      - name: DOCKER_CONFIG
+        value: /home/jenkins/.docker/
+      - name: DOCKER_REGISTRY
+        valueFrom:
+          configMapKeyRef:
+            key: docker.registry
+            name: jenkins-x-docker-registry
+      - name: GIT_AUTHOR_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_AUTHOR_NAME
+        value: jenkins-x-bot
+      - name: GIT_COMMITTER_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_COMMITTER_NAME
+        value: jenkins-x-bot
+      - name: TILLER_NAMESPACE
+        value: kube-system
+      - name: XDG_CONFIG_HOME
+        value: /workspace/xdg_config
+      - name: BUILD_NUMBER
+        value: "1"
+      - name: PIPELINE_KIND
+        value: release
+      - name: REPO_OWNER
+        value: abayer
+      - name: REPO_NAME
+        value: js.test.repo
+      - name: JOB_NAME
+        value: abayer/js.test.repo/build-pack
+      - name: APP_NAME
+        value: js.test.repo
+      - name: BRANCH_NAME
+        value: build-pack
+      - name: JX_BATCH_MODE
+        value: "true"
+      - name: VERSION
+        value: $(inputs.params.version)
+      - name: GOOGLE_APPLICATION_CREDENTIALS
+        value: /kaniko-secret/secret.json
+      - name: PREVIEW_VERSION
+        value: $(inputs.params.version)
+      image: gcr.io/kaniko-project/executor:debug-v0.19.0
+      name: build-container-build
+      resources:
+        requests:
+          cpu: 400m
+          memory: 512Mi
+      securityContext:
+        privileged: true
+      volumeMounts:
+      - mountPath: /home/jenkins
+        name: workspace-volume
+      - mountPath: /var/run/docker.sock
+        name: docker-daemon
+      - mountPath: /home/jenkins/.docker
+        name: volume-0
+      - mountPath: /etc/podinfo
+        name: podinfo
+        readOnly: true
+      workingDir: /workspace/source
+    - args:
+      - jx step post build --image $DOCKER_REGISTRY/$ORG/$APP_NAME:${VERSION}
+      command:
+      - /bin/sh
+      - -c
+      env:
+      - name: DOCKER_CONFIG
+        value: /home/jenkins/.docker/
+      - name: DOCKER_REGISTRY
+        valueFrom:
+          configMapKeyRef:
+            key: docker.registry
+            name: jenkins-x-docker-registry
+      - name: GIT_AUTHOR_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_AUTHOR_NAME
+        value: jenkins-x-bot
+      - name: GIT_COMMITTER_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_COMMITTER_NAME
+        value: jenkins-x-bot
+      - name: TILLER_NAMESPACE
+        value: kube-system
+      - name: XDG_CONFIG_HOME
+        value: /workspace/xdg_config
+      - name: BUILD_NUMBER
+        value: "1"
+      - name: PIPELINE_KIND
+        value: release
+      - name: REPO_OWNER
+        value: abayer
+      - name: REPO_NAME
+        value: js.test.repo
+      - name: JOB_NAME
+        value: abayer/js.test.repo/build-pack
+      - name: APP_NAME
+        value: js.test.repo
+      - name: BRANCH_NAME
+        value: build-pack
+      - name: JX_BATCH_MODE
+        value: "true"
+      - name: VERSION
+        value: $(inputs.params.version)
+      - name: PREVIEW_VERSION
+        value: $(inputs.params.version)
+      image: jenkinsxio/builder-nodejs:0.1.235
+      name: build-post-build
+      resources:
+        requests:
+          cpu: 400m
+          memory: 512Mi
+      securityContext:
+        privileged: true
+      volumeMounts:
+      - mountPath: /home/jenkins
+        name: workspace-volume
+      - mountPath: /var/run/docker.sock
+        name: docker-daemon
+      - mountPath: /home/jenkins/.docker
+        name: volume-0
+      - mountPath: /etc/podinfo
+        name: podinfo
+        readOnly: true
+      workingDir: /workspace/source
+    - args:
+      - cd /workspace/source/charts/js.test.repo && jx step changelog --batch-mode
+        --version v${VERSION}
+      command:
+      - /bin/sh
+      - -c
+      env:
+      - name: DOCKER_CONFIG
+        value: /home/jenkins/.docker/
+      - name: DOCKER_REGISTRY
+        valueFrom:
+          configMapKeyRef:
+            key: docker.registry
+            name: jenkins-x-docker-registry
+      - name: GIT_AUTHOR_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_AUTHOR_NAME
+        value: jenkins-x-bot
+      - name: GIT_COMMITTER_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_COMMITTER_NAME
+        value: jenkins-x-bot
+      - name: TILLER_NAMESPACE
+        value: kube-system
+      - name: XDG_CONFIG_HOME
+        value: /workspace/xdg_config
+      - name: BUILD_NUMBER
+        value: "1"
+      - name: PIPELINE_KIND
+        value: release
+      - name: REPO_OWNER
+        value: abayer
+      - name: REPO_NAME
+        value: js.test.repo
+      - name: JOB_NAME
+        value: abayer/js.test.repo/build-pack
+      - name: APP_NAME
+        value: js.test.repo
+      - name: BRANCH_NAME
+        value: build-pack
+      - name: JX_BATCH_MODE
+        value: "true"
+      - name: VERSION
+        value: $(inputs.params.version)
+      - name: PREVIEW_VERSION
+        value: $(inputs.params.version)
+      image: jenkinsxio/builder-nodejs:0.1.235
+      name: promote-changelog
+      resources:
+        requests:
+          cpu: 400m
+          memory: 512Mi
+      securityContext:
+        privileged: true
+      volumeMounts:
+      - mountPath: /home/jenkins
+        name: workspace-volume
+      - mountPath: /var/run/docker.sock
+        name: docker-daemon
+      - mountPath: /home/jenkins/.docker
+        name: volume-0
+      - mountPath: /etc/podinfo
+        name: podinfo
+        readOnly: true
+      workingDir: /workspace/source
+    - args:
+      - cd /workspace/source/charts/js.test.repo && jx step helm release
+      command:
+      - /bin/sh
+      - -c
+      env:
+      - name: DOCKER_CONFIG
+        value: /home/jenkins/.docker/
+      - name: DOCKER_REGISTRY
+        valueFrom:
+          configMapKeyRef:
+            key: docker.registry
+            name: jenkins-x-docker-registry
+      - name: GIT_AUTHOR_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_AUTHOR_NAME
+        value: jenkins-x-bot
+      - name: GIT_COMMITTER_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_COMMITTER_NAME
+        value: jenkins-x-bot
+      - name: TILLER_NAMESPACE
+        value: kube-system
+      - name: XDG_CONFIG_HOME
+        value: /workspace/xdg_config
+      - name: BUILD_NUMBER
+        value: "1"
+      - name: PIPELINE_KIND
+        value: release
+      - name: REPO_OWNER
+        value: abayer
+      - name: REPO_NAME
+        value: js.test.repo
+      - name: JOB_NAME
+        value: abayer/js.test.repo/build-pack
+      - name: APP_NAME
+        value: js.test.repo
+      - name: BRANCH_NAME
+        value: build-pack
+      - name: JX_BATCH_MODE
+        value: "true"
+      - name: VERSION
+        value: $(inputs.params.version)
+      - name: PREVIEW_VERSION
+        value: $(inputs.params.version)
+      image: jenkinsxio/builder-nodejs:0.1.235
+      name: promote-helm-release
+      resources:
+        requests:
+          cpu: 400m
+          memory: 512Mi
+      securityContext:
+        privileged: true
+      volumeMounts:
+      - mountPath: /home/jenkins
+        name: workspace-volume
+      - mountPath: /var/run/docker.sock
+        name: docker-daemon
+      - mountPath: /home/jenkins/.docker
+        name: volume-0
+      - mountPath: /etc/podinfo
+        name: podinfo
+        readOnly: true
+      workingDir: /workspace/source
+    - args:
+      - cd /workspace/source/charts/js.test.repo && jx promote -b --all-auto --timeout
+        1h --version ${VERSION}
+      command:
+      - /bin/sh
+      - -c
+      env:
+      - name: DOCKER_CONFIG
+        value: /home/jenkins/.docker/
+      - name: DOCKER_REGISTRY
+        valueFrom:
+          configMapKeyRef:
+            key: docker.registry
+            name: jenkins-x-docker-registry
+      - name: GIT_AUTHOR_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_AUTHOR_NAME
+        value: jenkins-x-bot
+      - name: GIT_COMMITTER_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_COMMITTER_NAME
+        value: jenkins-x-bot
+      - name: TILLER_NAMESPACE
+        value: kube-system
+      - name: XDG_CONFIG_HOME
+        value: /workspace/xdg_config
+      - name: BUILD_NUMBER
+        value: "1"
+      - name: PIPELINE_KIND
+        value: release
+      - name: REPO_OWNER
+        value: abayer
+      - name: REPO_NAME
+        value: js.test.repo
+      - name: JOB_NAME
+        value: abayer/js.test.repo/build-pack
+      - name: APP_NAME
+        value: js.test.repo
+      - name: BRANCH_NAME
+        value: build-pack
+      - name: JX_BATCH_MODE
+        value: "true"
+      - name: VERSION
+        value: $(inputs.params.version)
+      - name: PREVIEW_VERSION
+        value: $(inputs.params.version)
+      image: jenkinsxio/builder-nodejs:0.1.235
+      name: promote-jx-promote
+      resources:
+        requests:
+          cpu: 400m
+          memory: 512Mi
+      securityContext:
+        privileged: true
+      volumeMounts:
+      - mountPath: /home/jenkins
+        name: workspace-volume
+      - mountPath: /var/run/docker.sock
+        name: docker-daemon
+      - mountPath: /home/jenkins/.docker
+        name: volume-0
+      - mountPath: /etc/podinfo
+        name: podinfo
+        readOnly: true
+      workingDir: /workspace/source
+    volumes:
+    - hostPath:
+        path: /var/run/docker.sock
+      name: docker-daemon
+    - name: volume-0
+      secret:
+        secretName: jenkins-docker-cfg
+    - emptyDir: {}
+      name: workspace-volume
+    - downwardAPI:
+        items:
+        - fieldRef:
+            fieldPath: metadata.labels
+          path: labels
+      name: podinfo
+metadata: {}

@@ -1,0 +1,12 @@
+cluster:
+  clusterName: my-cluster-name
+  gitKind: github
+  gitName: github
+  gitServer: https://github.com
+  namespace: jx
+  project: my-project-id
+  provider: gke
+versionStream:
+  ref: "2367726d02b8c"
+  url: https://github.com/jenkins-x/jenkins-x-versions.git
+webhook: prow

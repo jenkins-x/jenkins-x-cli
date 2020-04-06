@@ -1,0 +1,31 @@
+pipelineConfig:
+  pipelines:
+    release:
+      pipeline:
+        options:
+          containerOptions:
+            resources:
+              limits:
+                cpu: 0.2
+                memory: 128Mi
+              requests:
+                cpu: 0.1
+                memory: 64Mi
+        agent:
+          image: some-image
+        stages:
+          - name: A Working Stage
+            steps:
+              - command: echo
+                args:
+                  - hello
+                  - world
+            options:
+              containerOptions:
+                resources:
+                  limits:
+                    cpu: 0.4
+                    memory: 256Mi
+                  requests:
+                    cpu: 0.2
+                    memory: 128Mi

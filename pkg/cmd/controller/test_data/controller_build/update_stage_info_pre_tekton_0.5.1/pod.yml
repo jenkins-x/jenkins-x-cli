@@ -1,0 +1,534 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  annotations:
+    sidecar.istio.io/inject: "false"
+  creationTimestamp: 2019-06-07T18:14:19Z
+  labels:
+    branch: PR-4135
+    context: integration
+    created-by-prow: "true"
+    jenkins.io/task-stage-name: ci
+    owner: jenkins-x
+    prowJobName: f068b6e2-894f-11e9-9bb6-1e11cff6831b
+    repo: jx
+    tekton.dev/pipeline: jenkins-x-jx-pr-4135-integratio-42
+    tekton.dev/pipelineRun: jenkins-x-jx-pr-4135-integratio-42
+    tekton.dev/task: jenkins-x-jx-pr-4135-integratio-ci-42
+    tekton.dev/taskRun: jenkins-x-jx-pr-4135-integratio-42-ci-kdjkp
+  name: jenkins-x-jx-pr-4135-integratio-42-ci-kdjkp-pod-d964e6
+  namespace: jx
+  ownerReferences:
+  - apiVersion: tekton.dev/v1alpha1
+    blockOwnerDeletion: true
+    controller: true
+    kind: TaskRun
+    name: jenkins-x-jx-pr-4135-integratio-42-ci-kdjkp
+    uid: 11a0f69a-8950-11e9-b81a-42010af0000e
+  resourceVersion: "27394905"
+  selfLink: /api/v1/namespaces/jx/pods/jenkins-x-jx-pr-4135-integratio-42-ci-kdjkp-pod-d964e6
+  uid: 11bcad60-8950-11e9-b81a-42010af0000e
+spec:
+  containers:
+  - args:
+    - -wait_file
+    - ""
+    - -post_file
+    - /builder/tools/0
+    - -entrypoint
+    - /ko-app/git-init
+    - --
+    - -url
+    - https://github.com/jenkins-x/jx
+    - -revision
+    - c7962e364260da489b326b78ce45a668652f2d72
+    - -path
+    - /workspace/source
+    command:
+    - /builder/tools/entrypoint
+    env:
+    - name: HOME
+      value: /builder/home
+    image: gcr.io/abayer-jx-experiment/git-init:v20190508-91b53326
+    imagePullPolicy: IfNotPresent
+    name: build-step-git-source-jenkins-x-jx-pr-4135-integratio-lxddq
+    resources:
+      requests:
+        cpu: "0"
+        ephemeral-storage: "0"
+        memory: "0"
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /builder/tools
+      name: tools
+    - mountPath: /workspace
+      name: workspace
+    - mountPath: /builder/home
+      name: home
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: tekton-bot-token-2lb5w
+      readOnly: true
+    workingDir: /workspace
+  - args:
+    - -wait_file
+    - /builder/tools/0
+    - -post_file
+    - /builder/tools/1
+    - -entrypoint
+    - jx
+    - --
+    - step
+    - git
+    - merge
+    - --verbose
+    command:
+    - /builder/tools/entrypoint
+    env: []
+    image: rawlingsj/builder-jx:wip34
+    imagePullPolicy: IfNotPresent
+    name: build-step-git-merge
+    resources: {}
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts: []
+    workingDir: /workspace/source
+  - args:
+    - -wait_file
+    - /builder/tools/1
+    - -post_file
+    - /builder/tools/2
+    - -entrypoint
+    - /bin/sh
+    - --
+    - -c
+    - jx create git token -n fake -t 1234 -u https://github.com fake
+    command:
+    - /builder/tools/entrypoint
+    env: []
+    image: jenkinsxio/jx:2.0.128
+    imagePullPolicy: IfNotPresent
+    name: build-step-init-jx
+    resources: {}
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts: []
+    workingDir: /workspace/source
+  - args:
+    - -wait_file
+    - /builder/tools/2
+    - -post_file
+    - /builder/tools/3
+    - -entrypoint
+    - /bin/sh
+    - --
+    - -c
+    - helm init --client-only
+    command:
+    - /builder/tools/entrypoint
+    env: []
+    image: alpine/helm:2.12.3
+    imagePullPolicy: IfNotPresent
+    name: build-step-init-helm
+    resources: {}
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts: []
+    workingDir: /workspace/source
+  - args:
+    - -wait_file
+    - /builder/tools/3
+    - -post_file
+    - /builder/tools/4
+    - -entrypoint
+    - /bin/sh
+    - --
+    - -c
+    - make build
+    command:
+    - /builder/tools/entrypoint
+    env: []
+    image: gcr.io/jenkinsxio/builder-go:0.1.332
+    imagePullPolicy: IfNotPresent
+    name: build-step-build
+    resources: {}
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts: []
+    workingDir: /workspace/source
+  - args:
+    - -wait_file
+    - /builder/tools/4
+    - -post_file
+    - /builder/tools/5
+    - -entrypoint
+    - /bin/sh
+    - --
+    - -c
+    - make test-slow-integration
+    command:
+    - /builder/tools/entrypoint
+    env: []
+    image: gcr.io/jenkinsxio/builder-go:0.1.477
+    imagePullPolicy: IfNotPresent
+    name: build-step-test-integration
+    resources: {}
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts: []
+    workingDir: /workspace/source
+  - args:
+    - -wait_file
+    - /builder/tools/5
+    - -post_file
+    - /builder/tools/6
+    - -entrypoint
+    - /bin/sh
+    - --
+    - -c
+    - jx step stash -c integration-tests -p build/reports/*.junit.xml --bucket-url
+      gs://jx-prod-logs
+    command:
+    - /builder/tools/entrypoint
+    env: []
+    image: jenkinsxio/jx:2.0.128
+    imagePullPolicy: IfNotPresent
+    name: build-step-stash-test-results
+    resources: {}
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts: []
+    workingDir: /workspace/source
+  - args:
+    - -wait_file
+    - /builder/tools/6
+    - -post_file
+    - /builder/tools/7
+    - -entrypoint
+    - /bin/sh
+    - --
+    - -c
+    - make codecov-upload
+    command:
+    - /builder/tools/entrypoint
+    env: []
+    image: gcr.io/jenkinsxio/builder-go:0.1.332
+    imagePullPolicy: IfNotPresent
+    name: build-step-codecov-upload
+    resources: {}
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts: []
+    workingDir: /workspace/source
+  - args:
+    - -wait_file
+    - /builder/tools/7
+    - -post_file
+    - /builder/tools/8
+    - -entrypoint
+    - /ko-app/nop
+    - --
+    command:
+    - /builder/tools/entrypoint
+    image: gcr.io/abayer-jx-experiment/nop:v20190508-91b53326
+    imagePullPolicy: IfNotPresent
+    name: nop
+    resources: {}
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /builder/tools
+      name: tools
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: tekton-bot-token-2lb5w
+      readOnly: true
+  dnsPolicy: ClusterFirst
+  initContainers:
+  - args:
+    - -basic-git=knative-git-user-pass=https://github.com
+    - -basic-docker=knative-docker-user-pass=https://index.docker.io/v1/
+    command:
+    - /ko-app/creds-init
+    env:
+    - name: HOME
+      value: /builder/home
+    image: gcr.io/abayer-jx-experiment/creds-init:v20190508-91b53326
+    imagePullPolicy: IfNotPresent
+    name: build-step-credential-initializer-9g4st
+    resources: {}
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts: []
+    workingDir: /workspace
+  - args:
+    - -args
+    - mkdir -p /workspace/source
+    command:
+    - /ko-app/bash
+    env:
+    - name: HOME
+      value: /builder/home
+    image: gcr.io/abayer-jx-experiment/bash:v20190508-91b53326
+    imagePullPolicy: IfNotPresent
+    name: build-step-working-dir-initializer-2zdml
+    resources: {}
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts: []
+    workingDir: /workspace
+  - args:
+    - -c
+    - cp /ko-app/entrypoint /builder/tools/entrypoint
+    command:
+    - /bin/sh
+    env:
+    - name: HOME
+      value: /builder/home
+    image: gcr.io/abayer-jx-experiment/entrypoint:v20190508-91b53326
+    imagePullPolicy: IfNotPresent
+    name: build-step-place-tools
+    resources: {}
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts: []
+    workingDir: /workspace
+  nodeName: gke-tekton-mole-pool-6-3382d9cf-93bq
+  priority: 0
+  restartPolicy: Never
+  schedulerName: default-scheduler
+  securityContext: {}
+  serviceAccount: tekton-bot
+  serviceAccountName: tekton-bot
+  terminationGracePeriodSeconds: 30
+  tolerations:
+  - effect: NoExecute
+    key: node.kubernetes.io/not-ready
+    operator: Exists
+    tolerationSeconds: 300
+  - effect: NoExecute
+    key: node.kubernetes.io/unreachable
+    operator: Exists
+    tolerationSeconds: 300
+  volumes:
+  - downwardAPI:
+      defaultMode: 420
+      items:
+      - fieldRef:
+          apiVersion: v1
+          fieldPath: metadata.labels
+        path: labels
+    name: podinfo
+  - emptyDir: {}
+    name: tools
+  - emptyDir: {}
+    name: workspace
+  - emptyDir: {}
+    name: home
+  - name: secret-volume-knative-git-user-pass-hrd8q
+    secret:
+      defaultMode: 420
+      secretName: knative-git-user-pass
+  - name: secret-volume-knative-docker-user-pass-q7fwz
+    secret:
+      defaultMode: 420
+      secretName: knative-docker-user-pass
+  - name: tekton-bot-token-2lb5w
+    secret:
+      defaultMode: 420
+      secretName: tekton-bot-token-2lb5w
+status:
+  conditions:
+  - lastProbeTime: null
+    lastTransitionTime: 2019-06-07T18:14:24Z
+    reason: PodCompleted
+    status: "True"
+    type: Initialized
+  - lastProbeTime: null
+    lastTransitionTime: 2019-06-07T18:14:30Z
+    reason: PodCompleted
+    status: "False"
+    type: Ready
+  - lastProbeTime: null
+    lastTransitionTime: 2019-06-07T18:14:30Z
+    reason: PodCompleted
+    status: "False"
+    type: ContainersReady
+  - lastProbeTime: null
+    lastTransitionTime: 2019-06-07T18:14:19Z
+    status: "True"
+    type: PodScheduled
+  containerStatuses:
+  - containerID: docker://2e67ad3e76967640a0c92c1abeb2c479aba03d6a62861d080bf29315216a2938
+    image: gcr.io/jenkinsxio/builder-go:0.1.332
+    imageID: docker-pullable://gcr.io/jenkinsxio/builder-go@sha256:a3b9d596846270059398237a51111282338b6a2582a6e46f6f492ebc19b4e29e
+    lastState: {}
+    name: build-step-build
+    ready: false
+    restartCount: 0
+    state:
+      terminated:
+        containerID: docker://2e67ad3e76967640a0c92c1abeb2c479aba03d6a62861d080bf29315216a2938
+        exitCode: 0
+        finishedAt: 2019-06-07T18:18:41Z
+        reason: Completed
+        startedAt: 2019-06-07T18:14:25Z
+  - containerID: docker://3bac4439971e6f3e56fe4f1242e06365bb82d2dcab25a076313cbc9776fffa2f
+    image: gcr.io/jenkinsxio/builder-go:0.1.332
+    imageID: docker-pullable://gcr.io/jenkinsxio/builder-go@sha256:a3b9d596846270059398237a51111282338b6a2582a6e46f6f492ebc19b4e29e
+    lastState: {}
+    name: build-step-codecov-upload
+    ready: false
+    restartCount: 0
+    state:
+      terminated:
+        containerID: docker://3bac4439971e6f3e56fe4f1242e06365bb82d2dcab25a076313cbc9776fffa2f
+        exitCode: 0
+        finishedAt: 2019-06-07T18:47:35Z
+        reason: Completed
+        startedAt: 2019-06-07T18:14:26Z
+  - containerID: docker://d85f6447c9fae8718c642279872d7d4b94df0db92968075867c45a43dd61ad5e
+    image: rawlingsj/builder-jx:wip34
+    imageID: docker-pullable://rawlingsj/builder-jx@sha256:f78ab020e7ee7143270ebea90d013e1c2420b70cebc135dfa965464da175b29c
+    lastState: {}
+    name: build-step-git-merge
+    ready: false
+    restartCount: 0
+    state:
+      terminated:
+        containerID: docker://d85f6447c9fae8718c642279872d7d4b94df0db92968075867c45a43dd61ad5e
+        exitCode: 0
+        finishedAt: 2019-06-07T18:14:58Z
+        reason: Completed
+        startedAt: 2019-06-07T18:14:25Z
+  - containerID: docker://29602cbb78c54b439242db17f7c225368a386d77347cfc37f74a56f76d56af06
+    image: gcr.io/abayer-jx-experiment/git-init:v20190508-91b53326
+    imageID: docker-pullable://gcr.io/abayer-jx-experiment/git-init@sha256:de30e3ee6e12b7d7aa6638e87fa36436c2b5e77f024af7c7f1a4846955a45e19
+    lastState: {}
+    name: build-step-git-source-jenkins-x-jx-pr-4135-integratio-lxddq
+    ready: false
+    restartCount: 0
+    state:
+      terminated:
+        containerID: docker://29602cbb78c54b439242db17f7c225368a386d77347cfc37f74a56f76d56af06
+        exitCode: 0
+        finishedAt: 2019-06-07T18:14:29Z
+        reason: Completed
+        startedAt: 2019-06-07T18:14:24Z
+  - containerID: docker://78217e26d7a96b02f6905c80b8d29b218fa970636a04cc538020a7e609918a5b
+    image: alpine/helm:2.12.3
+    imageID: docker-pullable://alpine/helm@sha256:0ed203b85eada6a4b259142772f818ba2eb8dac2b5b7a676756af554e9505fae
+    lastState: {}
+    name: build-step-init-helm
+    ready: false
+    restartCount: 0
+    state:
+      terminated:
+        containerID: docker://78217e26d7a96b02f6905c80b8d29b218fa970636a04cc538020a7e609918a5b
+        exitCode: 0
+        finishedAt: 2019-06-07T18:15:08Z
+        reason: Completed
+        startedAt: 2019-06-07T18:14:25Z
+  - containerID: docker://06aa8c32417854273e0c5f524a69a92bd22fac25b7c86f7136b6132d3fceac6a
+    image: jenkinsxio/jx:2.0.128
+    imageID: docker-pullable://jenkinsxio/jx@sha256:bd0b60eecbb6d47974fa5f7583589afcbbea0f3ad5e041ef1b026472d006f331
+    lastState: {}
+    name: build-step-init-jx
+    ready: false
+    restartCount: 0
+    state:
+      terminated:
+        containerID: docker://06aa8c32417854273e0c5f524a69a92bd22fac25b7c86f7136b6132d3fceac6a
+        exitCode: 0
+        finishedAt: 2019-06-07T18:15:04Z
+        reason: Completed
+        startedAt: 2019-06-07T18:14:25Z
+  - containerID: docker://05d4af4fc6235144feaaaefe9fb49232e7c30417cd2d8859a2445b50b69ab259
+    image: jenkinsxio/jx:2.0.128
+    imageID: docker-pullable://jenkinsxio/jx@sha256:bd0b60eecbb6d47974fa5f7583589afcbbea0f3ad5e041ef1b026472d006f331
+    lastState: {}
+    name: build-step-stash-test-results
+    ready: false
+    restartCount: 0
+    state:
+      terminated:
+        containerID: docker://05d4af4fc6235144feaaaefe9fb49232e7c30417cd2d8859a2445b50b69ab259
+        exitCode: 0
+        finishedAt: 2019-06-07T18:47:13Z
+        reason: Completed
+        startedAt: 2019-06-07T18:14:26Z
+  - containerID: docker://c391ca73ca38417c9ef5cf9cb09e3c400ad6e14da9a32d35915d6d742080ce18
+    image: gcr.io/jenkinsxio/builder-go:0.1.477
+    imageID: docker-pullable://gcr.io/jenkinsxio/builder-go@sha256:50b50a30a673867db6128a760de9b8da6bf194a63451cb632bb1217ab95070c7
+    lastState: {}
+    name: build-step-test-integration
+    ready: false
+    restartCount: 0
+    state:
+      terminated:
+        containerID: docker://c391ca73ca38417c9ef5cf9cb09e3c400ad6e14da9a32d35915d6d742080ce18
+        exitCode: 0
+        finishedAt: 2019-06-07T18:47:06Z
+        reason: Completed
+        startedAt: 2019-06-07T18:14:25Z
+  - containerID: docker://88239795fc6d7f22af33f9b9ad165348c7209fa130e751547fb9fc9b19757936
+    image: gcr.io/abayer-jx-experiment/nop:v20190508-91b53326
+    imageID: docker-pullable://gcr.io/abayer-jx-experiment/nop@sha256:93442619c2c282d4efffd6864aac3433205158d95f6a4dab98baafdf3c7cf5f6
+    lastState: {}
+    name: nop
+    ready: false
+    restartCount: 0
+    state:
+      terminated:
+        containerID: docker://88239795fc6d7f22af33f9b9ad165348c7209fa130e751547fb9fc9b19757936
+        exitCode: 0
+        finishedAt: 2019-06-07T18:47:37Z
+        reason: Completed
+        startedAt: 2019-06-07T18:14:26Z
+  hostIP: 10.132.0.52
+  initContainerStatuses:
+  - containerID: docker://3e0a5feae98a1f1d92c272017e7e830bd674b583fcc6b72a4a7c0580c034d056
+    image: gcr.io/abayer-jx-experiment/creds-init:v20190508-91b53326
+    imageID: docker-pullable://gcr.io/abayer-jx-experiment/creds-init@sha256:bef4483127b56b5aa3c0edbddb09f321508b6d43f7d90f77fe11cf79363f1b1d
+    lastState: {}
+    name: build-step-credential-initializer-9g4st
+    ready: true
+    restartCount: 0
+    state:
+      terminated:
+        containerID: docker://3e0a5feae98a1f1d92c272017e7e830bd674b583fcc6b72a4a7c0580c034d056
+        exitCode: 0
+        finishedAt: 2019-06-07T18:14:21Z
+        reason: Completed
+        startedAt: 2019-06-07T18:14:21Z
+  - containerID: docker://d8d498e0b6677b744170b08b84e3d80affaeaef46bb132691ebdfa7e61530c21
+    image: gcr.io/abayer-jx-experiment/bash:v20190508-91b53326
+    imageID: docker-pullable://gcr.io/abayer-jx-experiment/bash@sha256:223c0ea771731579fdbaff7ce595e023337c8a03cfbe4dc0704ae7435d0cedb7
+    lastState: {}
+    name: build-step-working-dir-initializer-2zdml
+    ready: true
+    restartCount: 0
+    state:
+      terminated:
+        containerID: docker://d8d498e0b6677b744170b08b84e3d80affaeaef46bb132691ebdfa7e61530c21
+        exitCode: 0
+        finishedAt: 2019-06-07T18:14:23Z
+        reason: Completed
+        startedAt: 2019-06-07T18:14:22Z
+  - containerID: docker://b119391e5a02356afe5e47f51f901f758bee91744f3cc64b661a5c81d7df4b60
+    image: gcr.io/abayer-jx-experiment/entrypoint:v20190508-91b53326
+    imageID: docker-pullable://gcr.io/abayer-jx-experiment/entrypoint@sha256:934772312238f550c40ec0f55f04208cf9b9687e4f73d2c7d466e89cddeddedf
+    lastState: {}
+    name: build-step-place-tools
+    ready: true
+    restartCount: 0
+    state:
+      terminated:
+        containerID: docker://b119391e5a02356afe5e47f51f901f758bee91744f3cc64b661a5c81d7df4b60
+        exitCode: 0
+        finishedAt: 2019-06-07T18:14:23Z
+        reason: Completed
+        startedAt: 2019-06-07T18:14:23Z
+  phase: Succeeded
+  podIP: 10.52.22.186
+  qosClass: Burstable
+  startTime: 2019-06-07T18:14:20Z

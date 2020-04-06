@@ -1,0 +1,71 @@
+# Default values for Maven projects.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+replicaCount: 1
+image:
+  repository: draft
+  tag: dev
+  pullPolicy: IfNotPresent
+
+# define environment variables here as a map of key: value
+env:
+
+# enable this flag to use knative serve to deploy the app
+knativeDeploy: false
+
+# HorizontalPodAutoscaler
+hpa:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 6
+  cpuTargetAverageUtilization: 80
+  memoryTargetAverageUtilization: 80
+
+# Canary deployments
+# If enabled, Istio and Flagger need to be installed in the cluster
+canary:
+  enabled: false
+  progressDeadlineSeconds: 60
+  canaryAnalysis:
+    interval: "1m"
+    threshold: 5
+    maxWeight: 60
+    stepWeight: 20
+    # WARNING: Canary deployments will fail and rollback if there is no traffic that will generate the below specified metrics.
+    metrics:
+      requestSuccessRate:
+        threshold: 99
+        interval: "1m"
+      requestDuration:
+        threshold: 1000
+        interval: "1m"
+  # The host is using Istio Gateway and is currently not auto-generated
+  # Please overwrite the `canary.host` in `values.yaml` in each environment repository (e.g., staging, production)
+  host: acme.com
+
+service:
+  name: REPLACE_ME_APP_NAME
+  type: ClusterIP
+  externalPort: 80
+  internalPort: 8080
+  annotations:
+    fabric8.io/expose: "true"
+    fabric8.io/ingress.annotations: "kubernetes.io/ingress.class: nginx"
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 400m
+    memory: 512Mi
+probePath: /actuator/health
+livenessProbe:
+  initialDelaySeconds: 60
+  periodSeconds: 10
+  successThreshold: 1
+  timeoutSeconds: 1
+readinessProbe:
+  failureThreshold: 1
+  periodSeconds: 10
+  successThreshold: 1
+  timeoutSeconds: 1

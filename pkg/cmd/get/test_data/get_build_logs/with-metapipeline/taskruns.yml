@@ -1,0 +1,223 @@
+apiVersion: tekton.dev/v1alpha1
+items:
+- apiVersion: tekton.dev/v1alpha1
+  kind: TaskRun
+  metadata:
+    creationTimestamp: "2019-07-02T12:34:56Z"
+    generation: 1
+    labels:
+      jenkins.io/task-stage-name: from-build-pack
+      tekton.dev/pipeline: abayer-js-test-repo-build-pack-8
+      tekton.dev/pipelineRun: abayer-js-test-repo-build-pack-8
+      tekton.dev/task: abayer-js-test-repo-build-pack-from-build-pack-8
+    name: abayer-js-test-repo-build-pack-8-from-build-pack-rbw8t
+    namespace: jx
+    ownerReferences:
+    - apiVersion: tekton.dev/v1alpha1
+      blockOwnerDeletion: true
+      controller: true
+      kind: PipelineRun
+      name: abayer-js-test-repo-build-pack-8
+      uid: cc59f237-9cc5-11e9-aa2e-42010a8a00fe
+    resourceVersion: "236413"
+    selfLink: /apis/tekton.dev/v1alpha1/namespaces/jx/taskruns/abayer-js-test-repo-build-pack-8-from-build-pack-rbw8t
+    uid: cc5f7217-9cc5-11e9-aa2e-42010a8a00fe
+  spec:
+    inputs:
+      params:
+      - name: version
+        value: 0.0.7
+      - name: build_id
+        value: "8"
+      resources:
+      - name: workspace
+        resourceRef:
+          name: abayer-js-test-repo-build-pack
+    outputs: {}
+    serviceAccount: tekton-bot
+    taskRef:
+      kind: Task
+      name: abayer-js-test-repo-build-pack-from-build-pack-8
+    timeout: 240h0m0s
+  status:
+    completionTime: "2019-07-02T12:36:47Z"
+    conditions:
+    - lastTransitionTime: "2019-07-02T12:36:47Z"
+      message: '"build-step-promote-jx-promote" exited with code 1 (image: "docker-pullable://gcr.io/jenkinsxio/builder-nodejs@sha256:41fb7143aa5ff044e29dd608e6bfc9b4ac37705f70ba6ae0f45b1ebddc89aa82");
+        for logs run: kubectl -n jx logs abayer-js-test-repo-build-pack-8-from-build-pack-rbw8t-pod-1682b0
+        -c build-step-promote-jx-promote'
+      status: "False"
+      type: Succeeded
+    podName: abayer-js-test-repo-build-pack-8-from-build-pack-rbw8t-pod-1682b0
+    startTime: "2019-07-02T12:34:56Z"
+    steps:
+    - name: build-container-build
+      terminated:
+        containerID: docker://ee94afd22cdb071ffd2566ec3478d1290b54185b87d530cf907908c02e63195b
+        exitCode: 0
+        finishedAt: "2019-07-02T12:36:05Z"
+        reason: Completed
+        startedAt: "2019-07-02T12:35:02Z"
+    - name: build-npm-install
+      terminated:
+        containerID: docker://60fae7303bc984339e5ad90c9279910bc873e16a19efa026d024c421c2c77056
+        exitCode: 0
+        finishedAt: "2019-07-02T12:35:38Z"
+        reason: Completed
+        startedAt: "2019-07-02T12:35:01Z"
+    - name: build-npm-test
+      terminated:
+        containerID: docker://15b3ad11f0ee9a47ec69033f17375670f26810a6e4dbba6ed4f01821c8f4ff6c
+        exitCode: 0
+        finishedAt: "2019-07-02T12:35:41Z"
+        reason: Completed
+        startedAt: "2019-07-02T12:35:02Z"
+    - name: build-npmrc
+      terminated:
+        containerID: docker://5f6fe39d8b812945a914dd7ff10c386f1bebd70c4f8dbe023360f92289ceca7e
+        exitCode: 0
+        finishedAt: "2019-07-02T12:35:03Z"
+        reason: Completed
+        startedAt: "2019-07-02T12:35:01Z"
+    - name: build-post-build
+      terminated:
+        containerID: docker://b02211c50527464acb6133331904f156b1b1b09c472aa50c463123dc9a101533
+        exitCode: 0
+        finishedAt: "2019-07-02T12:36:06Z"
+        reason: Completed
+        startedAt: "2019-07-02T12:35:02Z"
+    - name: git-merge
+      terminated:
+        containerID: docker://bf9a1b3872c8e343ca9b17d5e999692abadadd1b0c49084a12c93cefdea1e828
+        exitCode: 0
+        finishedAt: "2019-07-02T12:35:02Z"
+        reason: Completed
+        startedAt: "2019-07-02T12:35:01Z"
+    - name: git-source-abayer-js-test-repo-build-pack-72kkp
+      terminated:
+        containerID: docker://087e23e897b77226706cf686a074a942ce9d4a50fc651d3bf9a54b2b1aeb8b40
+        exitCode: 0
+        finishedAt: "2019-07-02T12:35:02Z"
+        reason: Completed
+        startedAt: "2019-07-02T12:35:00Z"
+    - name: promote-changelog
+      terminated:
+        containerID: docker://5780df05616c5f396b108d2549359061fc79d7eec5fc062c237f70472fa2f95d
+        exitCode: 0
+        finishedAt: "2019-07-02T12:36:12Z"
+        reason: Completed
+        startedAt: "2019-07-02T12:35:02Z"
+    - name: promote-helm-release
+      terminated:
+        containerID: docker://fda8599e3607d47d86d7e62ad68eb96cb4646e912b53166500d2b1c54b6a1835
+        exitCode: 0
+        finishedAt: "2019-07-02T12:36:17Z"
+        reason: Completed
+        startedAt: "2019-07-02T12:35:02Z"
+    - name: promote-jx-promote
+      terminated:
+        containerID: docker://d4abd70d8942c22bcd1d9fa1ec8a9440fa65ef4143c15b0286e0589f1dbb2a22
+        exitCode: 1
+        finishedAt: "2019-07-02T12:36:46Z"
+        reason: Error
+        startedAt: "2019-07-02T12:35:03Z"
+    - name: setup-jx-git-credentials
+      terminated:
+        containerID: docker://8ef0a0090393a926ac59b0ed792d9e4fa32ed93443a2da251d0f8913688d1c10
+        exitCode: 0
+        finishedAt: "2019-07-02T12:35:03Z"
+        reason: Completed
+        startedAt: "2019-07-02T12:35:01Z"
+    - name: nop
+      terminated:
+        containerID: docker://654321b1884f8d3d7408e9a19b0a6371275b42f8a62cc765def420941ce8b835
+        exitCode: 0
+        finishedAt: "2019-07-02T12:36:47Z"
+        reason: Completed
+        startedAt: "2019-07-02T12:35:03Z"
+- apiVersion: tekton.dev/v1alpha1
+  kind: TaskRun
+  metadata:
+    creationTimestamp: "2019-07-02T12:34:45Z"
+    generation: 1
+    labels:
+      branch: build-pack
+      build: "8"
+      jenkins.io/task-stage-name: app-extension
+      owner: abayer
+      repo: js-test-repo
+      tekton.dev/pipeline: meta-abayer-js-test-repo-build-8
+      tekton.dev/pipelineRun: meta-abayer-js-test-repo-build-8
+      tekton.dev/task: meta-abayer-js-test-repo-build-app-extension-8
+    name: meta-abayer-js-test-repo-build-8-app-extension-kvvp6
+    namespace: jx
+    ownerReferences:
+      - apiVersion: tekton.dev/v1alpha1
+        blockOwnerDeletion: true
+        controller: true
+        kind: PipelineRun
+        name: meta-abayer-js-test-repo-build-8
+        uid: c5bd38e9-9cc5-11e9-aa2e-42010a8a00fe
+    resourceVersion: "235893"
+    selfLink: /apis/tekton.dev/v1alpha1/namespaces/jx/taskruns/meta-abayer-js-test-repo-build-8-app-extension-kvvp6
+    uid: c5c20379-9cc5-11e9-aa2e-42010a8a00fe
+  spec:
+    inputs:
+      resources:
+        - name: workspace
+          resourceRef:
+            name: meta-abayer-js-test-repo-build
+    outputs: {}
+    serviceAccount: tekton-bot
+    taskRef:
+      kind: Task
+      name: meta-abayer-js-test-repo-build-app-extension-8
+    timeout: 240h0m0s
+  status:
+    completionTime: "2019-07-02T12:34:57Z"
+    conditions:
+      - lastTransitionTime: "2019-07-02T12:34:57Z"
+        status: "True"
+        type: Succeeded
+    podName: meta-abayer-js-test-repo-build-8-app-extension-kvvp6-pod-fcf1fe
+    startTime: "2019-07-02T12:34:45Z"
+    steps:
+      - name: create-effective-pipeline
+        terminated:
+          containerID: docker://1e02e8305372c87d7ae119dc8674550a11357292bfabdf4dad2d71b9b9933d07
+          exitCode: 0
+          finishedAt: "2019-07-02T12:34:52Z"
+          reason: Completed
+          startedAt: "2019-07-02T12:34:49Z"
+      - name: create-tekton-crds
+        terminated:
+          containerID: docker://52d9bb435df3c1205ac0c4f236a254b3492e00476870661c7c10738517ae29b5
+          exitCode: 0
+          finishedAt: "2019-07-02T12:34:56Z"
+          reason: Completed
+          startedAt: "2019-07-02T12:34:49Z"
+      - name: git-merge
+        terminated:
+          containerID: docker://d57909b6e267152b4278f0cdb57eb611a80157abfd723003f07d3e6d38d3a719
+          exitCode: 0
+          finishedAt: "2019-07-02T12:34:50Z"
+          reason: Completed
+          startedAt: "2019-07-02T12:34:49Z"
+      - name: git-source-meta-abayer-js-test-repo-build-v7hvv
+        terminated:
+          containerID: docker://9bd11fefa342196453f05e458e72bc0b9dfb756bdd3ce86098cba4c23df8d902
+          exitCode: 0
+          finishedAt: "2019-07-02T12:34:49Z"
+          reason: Completed
+          startedAt: "2019-07-02T12:34:49Z"
+      - name: nop
+        terminated:
+          containerID: docker://f20141db591e676595149dd8c27bad4f4a0e94f734023a0d64de6b6153167756
+          exitCode: 0
+          finishedAt: "2019-07-02T12:34:57Z"
+          reason: Completed
+          startedAt: "2019-07-02T12:34:50Z"
+kind: List
+metadata:
+  resourceVersion: ""
+  selfLink: ""

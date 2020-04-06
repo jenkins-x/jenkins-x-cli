@@ -1,0 +1,3 @@
+cluster:
+  environmentGitPublic: true
+  environmentGitPrivate: true

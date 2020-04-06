@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/jenkins-x/jx/pkg/kube"
+
 	"github.com/pkg/errors"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
@@ -21,10 +23,10 @@ type ImagePullSecret struct {
 
 // PatchImagePullSecrets patches the specified ImagePullSecrets to the given service account
 func PatchImagePullSecrets(kubeClient kubernetes.Interface, ns string, sa string, imagePullSecrets []string) error {
-	// If we ever have log.Debugf, these would be useful to print
-	//log.Infof("Namespace: %s\n", ns)
-	//log.Infof("Service Account: %s\n", sa)
-	//log.Infof("Secret: %s\n", imagePullSecrets)
+	// If we ever have log.Logger().Debugf, these would be useful to print
+	//log.Logger().Infof("Namespace: %s\n", ns)
+	//log.Logger().Infof("Service Account: %s\n", sa)
+	//log.Logger().Infof("Secret: %s\n", imagePullSecrets)
 
 	// '{"imagePullSecrets": [{"name": "<secret>"}]}'
 	var ips []ImagePullSecret
@@ -41,7 +43,7 @@ func PatchImagePullSecrets(kubeClient kubernetes.Interface, ns string, sa string
 	if err != nil {
 		return err
 	}
-	//log.Infof("Resultant JSON: %s\n", string(b))
+	//log.Logger().Infof("Resultant JSON: %s\n", string(b))
 	_, err = kubeClient.CoreV1().ServiceAccounts(ns).Patch(sa, types.StrategicMergePatchType, b)
 	if err != nil {
 		return err
@@ -57,6 +59,10 @@ const (
 
 // CreateServiceAccount creates a new services account in the given namespace and returns the service account name
 func CreateServiceAccount(kubeClient kubernetes.Interface, namespace string, name string) (*v1.ServiceAccount, error) {
+	err := kube.EnsureNamespaceCreated(kubeClient, namespace, nil, nil)
+	if err != nil {
+		return nil, err
+	}
 	sa, err := kubeClient.CoreV1().ServiceAccounts(namespace).Get(name, metav1.GetOptions{})
 	// If a services account already exists just re-use it
 	if err == nil {

@@ -1,0 +1,27 @@
+apiVersion: tekton.dev/v1alpha1
+kind: PipelineRun
+metadata:
+  creationTimestamp: null
+  labels:
+    branch: fix-kaniko-special-casing
+    build: "1"
+    jenkins.io/pipelineType: build
+    owner: jenkins-x
+    repository: jx
+  name: jenkins-x-jx-fix-kaniko-special-6nl7g-1
+spec:
+  params:
+  - name: version
+    value: 0.0.1
+  pipelineRef:
+    apiVersion: tekton.dev/v1alpha1
+    name: jenkins-x-jx-fix-kaniko-special-6nl7g-1
+  podTemplate: {}
+  resources:
+  - name: jenkins-x-jx-fix-kaniko-special-6nl7g
+    resourceRef:
+      apiVersion: tekton.dev/v1alpha1
+      name: jenkins-x-jx-fix-kaniko-special-6nl7g
+  serviceAccountName: tekton-bot
+  timeout: 240h0m0s
+status: {}

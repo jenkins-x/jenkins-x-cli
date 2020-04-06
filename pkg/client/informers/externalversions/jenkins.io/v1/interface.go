@@ -20,12 +20,24 @@ type Interface interface {
 	EnvironmentRoleBindings() EnvironmentRoleBindingInformer
 	// Extensions returns a ExtensionInformer.
 	Extensions() ExtensionInformer
+	// Facts returns a FactInformer.
+	Facts() FactInformer
 	// GitServices returns a GitServiceInformer.
 	GitServices() GitServiceInformer
 	// PipelineActivities returns a PipelineActivityInformer.
 	PipelineActivities() PipelineActivityInformer
+	// PipelineStructures returns a PipelineStructureInformer.
+	PipelineStructures() PipelineStructureInformer
+	// Plugins returns a PluginInformer.
+	Plugins() PluginInformer
 	// Releases returns a ReleaseInformer.
 	Releases() ReleaseInformer
+	// Schedulers returns a SchedulerInformer.
+	Schedulers() SchedulerInformer
+	// SourceRepositories returns a SourceRepositoryInformer.
+	SourceRepositories() SourceRepositoryInformer
+	// SourceRepositoryGroups returns a SourceRepositoryGroupInformer.
+	SourceRepositoryGroups() SourceRepositoryGroupInformer
 	// Teams returns a TeamInformer.
 	Teams() TeamInformer
 	// Users returns a UserInformer.
@@ -75,6 +87,11 @@ func (v *version) Extensions() ExtensionInformer {
 	return &extensionInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
+// Facts returns a FactInformer.
+func (v *version) Facts() FactInformer {
+	return &factInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
 // GitServices returns a GitServiceInformer.
 func (v *version) GitServices() GitServiceInformer {
 	return &gitServiceInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
@@ -85,9 +102,34 @@ func (v *version) PipelineActivities() PipelineActivityInformer {
 	return &pipelineActivityInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
+// PipelineStructures returns a PipelineStructureInformer.
+func (v *version) PipelineStructures() PipelineStructureInformer {
+	return &pipelineStructureInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
+// Plugins returns a PluginInformer.
+func (v *version) Plugins() PluginInformer {
+	return &pluginInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
 // Releases returns a ReleaseInformer.
 func (v *version) Releases() ReleaseInformer {
 	return &releaseInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
+// Schedulers returns a SchedulerInformer.
+func (v *version) Schedulers() SchedulerInformer {
+	return &schedulerInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
+// SourceRepositories returns a SourceRepositoryInformer.
+func (v *version) SourceRepositories() SourceRepositoryInformer {
+	return &sourceRepositoryInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
+// SourceRepositoryGroups returns a SourceRepositoryGroupInformer.
+func (v *version) SourceRepositoryGroups() SourceRepositoryGroupInformer {
+	return &sourceRepositoryGroupInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
 // Teams returns a TeamInformer.

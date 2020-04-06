@@ -1,0 +1,16 @@
+merger:
+  blockerLabel: /hold
+  maxGoroutines: 10
+  targetUrl: http://targeturl
+  squashLabel: squash
+  policy:
+    skipUnknownContexts: false
+    requiredContexts:
+      replace: false
+      entries:
+        - context3
+    requiredIfPresentContexts:
+      replace: true
+      entries:
+        - context5
+        - context6

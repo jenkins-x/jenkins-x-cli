@@ -1,0 +1,15 @@
+items:
+- apiVersion: tekton.dev/v1alpha1
+  kind: PipelineResource
+  metadata:
+    creationTimestamp: null
+    name: jenkins-x-jx-fix-kaniko-special-6nl7g
+  spec:
+    params:
+    - name: revision
+      value: v0.0.1
+    - name: url
+      value: https://github.com/jenkins-x/jx
+    type: git
+  status: {}
+metadata: {}

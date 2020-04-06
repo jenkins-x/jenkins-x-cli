@@ -1,0 +1,8 @@
+dependencies:
+- component: cheese
+  host: fake.git
+  owner: acme
+  repo: roadrunner
+  url: https://fake.git/acme/roadrunner.git
+  version: 0.0.2
+  versionURL: https://fake.git/acme/roadrunner/releases/v0.0.2

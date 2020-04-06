@@ -1,3 +1,3 @@
-FROM jenkinsxio/builder-base:latest
+FROM gcr.io/jenkinsxio/builder-jx:latest
 
 COPY build/linux/jx /usr/bin/jx

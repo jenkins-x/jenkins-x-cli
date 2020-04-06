@@ -1,0 +1,119 @@
+apiVersion: v1
+items:
+- apiVersion: tekton.dev/v1alpha1
+  kind: TaskRun
+  metadata:
+    creationTimestamp: 2019-02-27T19:05:33Z
+    generation: 1
+    labels:
+      branch: master
+      build-number: "1"
+      jenkins.io/task-stage-name: from-build-pack
+      owner: abayer
+      repo: jx-demo-qs
+      tekton.dev/pipeline: abayer-jx-demo-qs-master
+      tekton.dev/pipelineRun: abayer-jx-demo-qs-master-1
+      tekton.dev/task: abayer-jx-demo-qs-master
+    name: abayer-jx-demo-qs-master-1-build-jllqx
+    namespace: jx
+    ownerReferences:
+    - apiVersion: tekton.dev/v1alpha1
+      blockOwnerDeletion: true
+      controller: true
+      kind: PipelineRun
+      name: abayer-jx-demo-qs-master-1
+      uid: a87ed5ae-3ac2-11e9-b04e-42010a8a0075
+    resourceVersion: "14791"
+    selfLink: /apis/tekton.dev/v1alpha1/namespaces/jx/taskruns/abayer-jx-demo-qs-master-1-build-jllqx
+    uid: a883ca5c-3ac2-11e9-b04e-42010a8a0075
+  spec:
+    Status: ""
+    inputs:
+      resources:
+      - name: source
+        paths: null
+        resourceRef:
+          name: abayer-jx-demo-qs-master
+        resourceSpec: null
+    outputs: {}
+    serviceAccount: tekton-bot
+    taskRef:
+      kind: Task
+      name: abayer-jx-demo-qs-master
+    trigger:
+      type: ""
+  status:
+    conditions:
+    - lastTransitionTime: 2019-02-27T19:06:14Z
+      message: 'build step "build-step-setversion-set-version" exited with code 1
+        (image: "docker-pullable://jenkinsxio/builder-maven-java11@sha256:3eeb136cdfdf2c4e2a0c2a148a7bd6cdf2f20c70a12f847b91039f4d8ef53452");
+        for logs run: kubectl -n jx logs abayer-jx-demo-qs-master-1-build-jllqx-pod-ff92ac
+        -c build-step-setversion-set-version'
+      status: "False"
+      type: Succeeded
+    podName: abayer-jx-demo-qs-master-1-build-jllqx-pod-ff92ac
+    startTime: 2019-02-27T19:05:33Z
+    steps:
+    - logsURL: ""
+      terminated:
+        containerID: docker://537d36e832e3331ff8a0dad4a8219766166c752e5f081f24618a7b77dff78435
+        exitCode: 0
+        finishedAt: 2019-02-27T19:05:38Z
+        reason: Completed
+        startedAt: 2019-02-27T19:05:37Z
+    - logsURL: ""
+      terminated:
+        containerID: docker://aa5300012396fd1e35037a68631fe81e62763fcd8092ee2e761e8ee7ed0d1a4a
+        exitCode: 0
+        finishedAt: 2019-02-27T19:05:40Z
+        reason: Completed
+        startedAt: 2019-02-27T19:05:40Z
+    - logsURL: ""
+      terminated:
+        containerID: docker://787ce333c6a15d5a6a6ec801a7ebcb5d27aa4dabeb486b5ccb49a95f5b4dc126
+        exitCode: 0
+        finishedAt: 2019-02-27T19:05:42Z
+        reason: Completed
+        startedAt: 2019-02-27T19:05:42Z
+    - logsURL: ""
+      terminated:
+        containerID: docker://41db037440b0c87503363e1d355a392abe6f5453e0fafe7fef62e8359d77205a
+        exitCode: 0
+        finishedAt: 2019-02-27T19:05:45Z
+        reason: Completed
+        startedAt: 2019-02-27T19:05:43Z
+    - logsURL: ""
+      terminated:
+        containerID: docker://fa217f7977da3472bb6949ef395f1411543fda15d79e6a054768653c0de97a62
+        exitCode: 1
+        finishedAt: 2019-02-27T19:06:11Z
+        reason: Error
+        startedAt: 2019-02-27T19:05:47Z
+    - logsURL: ""
+      waiting:
+        reason: PodInitializing
+    - logsURL: ""
+      waiting:
+        reason: PodInitializing
+    - logsURL: ""
+      waiting:
+        reason: PodInitializing
+    - logsURL: ""
+      waiting:
+        reason: PodInitializing
+    - logsURL: ""
+      waiting:
+        reason: PodInitializing
+    - logsURL: ""
+      waiting:
+        reason: PodInitializing
+    - logsURL: ""
+      waiting:
+        reason: PodInitializing
+    - logsURL: ""
+      waiting:
+        reason: PodInitializing
+kind: List
+metadata:
+  resourceVersion: ""
+  selfLink: ""

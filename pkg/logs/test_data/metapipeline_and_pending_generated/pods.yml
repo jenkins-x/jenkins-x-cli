@@ -1,0 +1,503 @@
+apiVersion: v1
+items:
+  - apiVersion: v1
+    kind: Pod
+    metadata:
+      annotations:
+        sidecar.istio.io/inject: "false"
+      creationTimestamp: "2019-07-02T12:34:45Z"
+      labels:
+        branch: fakebranch
+        build: "1"
+        jenkins.io/task-stage-name: app-extension
+        owner: fakeowner
+        repo: fakerepo
+        tekton.dev/pipeline: meta-fakeowner-fakerepo-build-1
+        tekton.dev/pipelineRun: meta-fakeowner-fakerepo-build-1
+        tekton.dev/task: meta-fakeowner-fakerepo-build-app-extension-1
+        tekton.dev/taskRun: meta-fakeowner-fakerepo-build-1-app-extension-kvvp6
+      name: meta-fakeowner-fakerepo-build-1-app-extension-kvvp6-pod-fcf1fe
+      namespace: jx
+      ownerReferences:
+        - apiVersion: tekton.dev/v1alpha1
+          blockOwnerDeletion: true
+          controller: true
+          kind: TaskRun
+          name: meta-fakeowner-fakerepo-build-1-app-extension-kvvp6
+          uid: c5c20379-9cc5-11e9-aa2e-42010a8a00fe
+      resourceVersion: "235888"
+      selfLink: /api/v1/namespaces/jx/pods/meta-fakeowner-fakerepo-build-1-app-extension-kvvp6-pod-fcf1fe
+      uid: c5c6d6f9-9cc5-11e9-aa2e-42010a8a00fe
+    spec:
+      containers:
+        - args:
+            - -wait_file
+            - ""
+            - -post_file
+            - /builder/tools/0
+            - -entrypoint
+            - /ko-app/git-init
+            - --
+            - -url
+            - https://github.com/fakeowner/fakerepo
+            - -revision
+            - fakebranch
+            - -path
+            - /workspace/source
+          command:
+            - /builder/tools/entrypoint
+          env:
+            - name: HOME
+              value: /builder/home
+          image: gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/git-init:v0.4.0
+          imagePullPolicy: IfNotPresent
+          name: build-step-git-source-meta-fakeowner-fakerepo-build-v7hvv
+          resources:
+            requests:
+              cpu: "0"
+              ephemeral-storage: "0"
+              memory: "0"
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+            - mountPath: /builder/tools
+              name: tools
+            - mountPath: /workspace
+              name: workspace
+            - mountPath: /builder/home
+              name: home
+            - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+              name: tekton-bot-token-kbbrz
+              readOnly: true
+          workingDir: /workspace
+        - args:
+            - -wait_file
+            - /builder/tools/0
+            - -post_file
+            - /builder/tools/1
+            - -entrypoint
+            - jx
+            - --
+            - step
+            - git
+            - merge
+            - --verbose
+          command:
+            - /builder/tools/entrypoint
+          env:
+            - name: HOME
+              value: /builder/home
+            - name: APP_NAME
+              value: fakerepo
+            - name: BRANCH_NAME
+              value: fakebranch
+            - name: BUILD_NUMBER
+              value: "1"
+            - name: JOB_NAME
+              value: fakeowner/fakerepo/fakebranch
+            - name: JX_LOG_FORMAT
+              value: json
+            - name: PIPELINE_KIND
+              value: release
+            - name: REPO_NAME
+              value: fakerepo
+            - name: REPO_OWNER
+              value: fakeowner
+          image: gcr.io/jenkinsxio/builder-maven:0.1.542
+          imagePullPolicy: IfNotPresent
+          name: build-step-git-merge
+          resources:
+            requests:
+              cpu: "0"
+              ephemeral-storage: "0"
+              memory: "0"
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+            - mountPath: /builder/tools
+              name: tools
+            - mountPath: /workspace
+              name: workspace
+            - mountPath: /builder/home
+              name: home
+            - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+              name: tekton-bot-token-kbbrz
+              readOnly: true
+          workingDir: /workspace/source
+        - args:
+            - -wait_file
+            - /builder/tools/1
+            - -post_file
+            - /builder/tools/2
+            - -entrypoint
+            - /bin/sh
+            - --
+            - -c
+            - jx step syntax effective --output-dir .
+          command:
+            - /builder/tools/entrypoint
+          env:
+            - name: HOME
+              value: /builder/home
+            - name: APP_NAME
+              value: fakerepo
+            - name: BRANCH_NAME
+              value: fakebranch
+            - name: BUILD_NUMBER
+              value: "1"
+            - name: JOB_NAME
+              value: fakeowner/fakerepo/fakebranch
+            - name: JX_LOG_FORMAT
+              value: json
+            - name: PIPELINE_KIND
+              value: release
+            - name: REPO_NAME
+              value: fakerepo
+            - name: REPO_OWNER
+              value: fakeowner
+          image: gcr.io/jenkinsxio/builder-maven:0.1.542
+          imagePullPolicy: IfNotPresent
+          name: build-step-create-effective-pipeline
+          resources:
+            requests:
+              cpu: "0"
+              ephemeral-storage: "0"
+              memory: "0"
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+            - mountPath: /builder/tools
+              name: tools
+            - mountPath: /workspace
+              name: workspace
+            - mountPath: /builder/home
+              name: home
+            - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+              name: tekton-bot-token-kbbrz
+              readOnly: true
+          workingDir: /workspace/source
+        - args:
+            - -wait_file
+            - /builder/tools/2
+            - -post_file
+            - /builder/tools/3
+            - -entrypoint
+            - /bin/sh
+            - --
+            - -c
+            - jx step create task --clone-dir /workspace/source --build-number 8 --trigger
+              manual --service-account tekton-bot --source source --branch fakebranch
+          command:
+            - /builder/tools/entrypoint
+          env:
+            - name: HOME
+              value: /builder/home
+            - name: APP_NAME
+              value: fakerepo
+            - name: BRANCH_NAME
+              value: fakebranch
+            - name: BUILD_NUMBER
+              value: "1"
+            - name: JOB_NAME
+              value: fakeowner/fakerepo/fakebranch
+            - name: JX_LOG_FORMAT
+              value: json
+            - name: PIPELINE_KIND
+              value: release
+            - name: REPO_NAME
+              value: fakerepo
+            - name: REPO_OWNER
+              value: fakeowner
+          image: gcr.io/jenkinsxio/builder-maven:0.1.542
+          imagePullPolicy: IfNotPresent
+          name: build-step-create-tekton-crds
+          resources:
+            requests:
+              cpu: "0"
+              ephemeral-storage: "0"
+              memory: "0"
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+            - mountPath: /builder/tools
+              name: tools
+            - mountPath: /workspace
+              name: workspace
+            - mountPath: /builder/home
+              name: home
+            - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+              name: tekton-bot-token-kbbrz
+              readOnly: true
+          workingDir: /workspace/source
+        - args:
+            - -wait_file
+            - /builder/tools/3
+            - -post_file
+            - /builder/tools/4
+            - -entrypoint
+            - /ko-app/nop
+            - --
+          command:
+            - /builder/tools/entrypoint
+          image: gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/nop:v0.4.0
+          imagePullPolicy: IfNotPresent
+          name: nop
+          resources: {}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+            - mountPath: /builder/tools
+              name: tools
+            - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+              name: tekton-bot-token-kbbrz
+              readOnly: true
+      dnsPolicy: ClusterFirst
+      initContainers:
+        - args:
+            - -basic-git=knative-git-user-pass=https://github.com
+          command:
+            - /ko-app/creds-init
+          env:
+            - name: HOME
+              value: /builder/home
+          image: gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/creds-init:v0.4.0
+          imagePullPolicy: IfNotPresent
+          name: build-step-credential-initializer-xht92
+          resources: {}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+            - mountPath: /workspace
+              name: workspace
+            - mountPath: /builder/home
+              name: home
+            - mountPath: /var/build-secrets/knative-git-user-pass
+              name: secret-volume-knative-git-user-pass-6zhjb
+            - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+              name: tekton-bot-token-kbbrz
+              readOnly: true
+          workingDir: /workspace
+        - args:
+            - -args
+            - mkdir -p /workspace/source
+          command:
+            - /ko-app/bash
+          env:
+            - name: HOME
+              value: /builder/home
+          image: gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/bash:v0.4.0
+          imagePullPolicy: IfNotPresent
+          name: build-step-working-dir-initializer-1c9w5
+          resources: {}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+            - mountPath: /workspace
+              name: workspace
+            - mountPath: /builder/home
+              name: home
+            - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+              name: tekton-bot-token-kbbrz
+              readOnly: true
+          workingDir: /workspace
+        - args:
+            - -c
+            - cp /ko-app/entrypoint /builder/tools/entrypoint
+          command:
+            - /bin/sh
+          env:
+            - name: HOME
+              value: /builder/home
+          image: gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/entrypoint:v0.4.0
+          imagePullPolicy: IfNotPresent
+          name: build-step-place-tools
+          resources: {}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+            - mountPath: /builder/tools
+              name: tools
+            - mountPath: /workspace
+              name: workspace
+            - mountPath: /builder/home
+              name: home
+            - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+              name: tekton-bot-token-kbbrz
+              readOnly: true
+          workingDir: /workspace
+      nodeName: gke-fakeowner-test-cluster-default-pool-666b1aa4-k4xk
+      priority: 0
+      restartPolicy: Never
+      schedulerName: default-scheduler
+      securityContext: {}
+      serviceAccount: tekton-bot
+      serviceAccountName: tekton-bot
+      terminationGracePeriodSeconds: 30
+      tolerations:
+        - effect: NoExecute
+          key: node.kubernetes.io/not-ready
+          operator: Exists
+          tolerationSeconds: 300
+        - effect: NoExecute
+          key: node.kubernetes.io/unreachable
+          operator: Exists
+          tolerationSeconds: 300
+      volumes:
+        - emptyDir: {}
+          name: tools
+        - emptyDir: {}
+          name: workspace
+        - emptyDir: {}
+          name: home
+        - name: secret-volume-knative-git-user-pass-6zhjb
+          secret:
+            defaultMode: 420
+            secretName: knative-git-user-pass
+        - name: tekton-bot-token-kbbrz
+          secret:
+            defaultMode: 420
+            secretName: tekton-bot-token-kbbrz
+    status:
+      conditions:
+        - lastProbeTime: null
+          lastTransitionTime: "2019-07-02T12:34:49Z"
+          reason: PodCompleted
+          status: "True"
+          type: Initialized
+        - lastProbeTime: null
+          lastTransitionTime: "2019-07-02T12:34:45Z"
+          reason: PodCompleted
+          status: "False"
+          type: Ready
+        - lastProbeTime: null
+          lastTransitionTime: "2019-07-02T12:34:45Z"
+          reason: PodCompleted
+          status: "False"
+          type: ContainersReady
+        - lastProbeTime: null
+          lastTransitionTime: "2019-07-02T12:34:45Z"
+          status: "True"
+          type: PodScheduled
+      containerStatuses:
+        - containerID: docker://1e02e8305372c87d7ae119dc8674550a11357292bfabdf4dad2d71b9b9933d07
+          image: gcr.io/jenkinsxio/builder-maven:0.1.542
+          imageID: docker-pullable://gcr.io/jenkinsxio/builder-maven@sha256:3d9e0c647efb7fcee74ac7181fdda79bf5d6313f1a5f35792bcc699c7405d281
+          lastState: {}
+          name: build-step-create-effective-pipeline
+          ready: false
+          restartCount: 0
+          state:
+            terminated:
+              containerID: docker://1e02e8305372c87d7ae119dc8674550a11357292bfabdf4dad2d71b9b9933d07
+              exitCode: 0
+              finishedAt: "2019-07-02T12:34:52Z"
+              reason: Completed
+              startedAt: "2019-07-02T12:34:49Z"
+        - containerID: docker://52d9bb435df3c1205ac0c4f236a254b3492e00476870661c7c10738517ae29b5
+          image: gcr.io/jenkinsxio/builder-maven:0.1.542
+          imageID: docker-pullable://gcr.io/jenkinsxio/builder-maven@sha256:3d9e0c647efb7fcee74ac7181fdda79bf5d6313f1a5f35792bcc699c7405d281
+          lastState: {}
+          name: build-step-create-tekton-crds
+          ready: false
+          restartCount: 0
+          state:
+            terminated:
+              containerID: docker://52d9bb435df3c1205ac0c4f236a254b3492e00476870661c7c10738517ae29b5
+              exitCode: 0
+              finishedAt: "2019-07-02T12:34:56Z"
+              reason: Completed
+              startedAt: "2019-07-02T12:34:49Z"
+        - containerID: docker://d57909b6e267152b4278f0cdb57eb611a80157abfd723003f07d3e6d38d3a719
+          image: gcr.io/jenkinsxio/builder-maven:0.1.542
+          imageID: docker-pullable://gcr.io/jenkinsxio/builder-maven@sha256:3d9e0c647efb7fcee74ac7181fdda79bf5d6313f1a5f35792bcc699c7405d281
+          lastState: {}
+          name: build-step-git-merge
+          ready: false
+          restartCount: 0
+          state:
+            terminated:
+              containerID: docker://d57909b6e267152b4278f0cdb57eb611a80157abfd723003f07d3e6d38d3a719
+              exitCode: 0
+              finishedAt: "2019-07-02T12:34:50Z"
+              reason: Completed
+              startedAt: "2019-07-02T12:34:49Z"
+        - containerID: docker://9bd11fefa342196453f05e458e72bc0b9dfb756bdd3ce86098cba4c23df8d902
+          image: gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/git-init:v0.4.0
+          imageID: docker-pullable://gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/git-init@sha256:4b91c31560f18a8f09c68d5288f2261797b6df31522a57a9d7350bc0060a1284
+          lastState: {}
+          name: build-step-git-source-meta-fakeowner-fakerepo-build-v7hvv
+          ready: false
+          restartCount: 0
+          state:
+            terminated:
+              containerID: docker://9bd11fefa342196453f05e458e72bc0b9dfb756bdd3ce86098cba4c23df8d902
+              exitCode: 0
+              finishedAt: "2019-07-02T12:34:49Z"
+              reason: Completed
+              startedAt: "2019-07-02T12:34:49Z"
+        - containerID: docker://f20141db591e676595149dd8c27bad4f4a0e94f734023a0d64de6b6153167756
+          image: gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/nop:v0.4.0
+          imageID: docker-pullable://gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/nop@sha256:9160ed41b20b2822d06e907d89f6398ea866c86a971f83371efb9e147fba079f
+          lastState: {}
+          name: nop
+          ready: false
+          restartCount: 0
+          state:
+            terminated:
+              containerID: docker://f20141db591e676595149dd8c27bad4f4a0e94f734023a0d64de6b6153167756
+              exitCode: 0
+              finishedAt: "2019-07-02T12:34:57Z"
+              reason: Completed
+              startedAt: "2019-07-02T12:34:50Z"
+      hostIP: 10.138.0.56
+      initContainerStatuses:
+        - containerID: docker://5e897a5dfaf1687cad1692d9c8c6261108735e595ed37e03b43bcf51f86a7330
+          image: gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/creds-init:v0.4.0
+          imageID: docker-pullable://gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/creds-init@sha256:b4877c99d928fad3cf26c995d171674b34d206178d6f9f0efb337ebff01bb34b
+          lastState: {}
+          name: build-step-credential-initializer-xht92
+          ready: true
+          restartCount: 0
+          state:
+            terminated:
+              containerID: docker://5e897a5dfaf1687cad1692d9c8c6261108735e595ed37e03b43bcf51f86a7330
+              exitCode: 0
+              finishedAt: "2019-07-02T12:34:46Z"
+              reason: Completed
+              startedAt: "2019-07-02T12:34:46Z"
+        - containerID: docker://1e68c4fcfc19db3c695ff5ac3cbd7b4f2cf8c5a92637267fd2745a97eaf21150
+          image: gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/bash:v0.4.0
+          imageID: docker-pullable://gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/bash@sha256:0355a9b21a7c0cc9466bf75071648e266de07b5e13fbfd271ec791c45a818bdb
+          lastState: {}
+          name: build-step-working-dir-initializer-1c9w5
+          ready: true
+          restartCount: 0
+          state:
+            terminated:
+              containerID: docker://1e68c4fcfc19db3c695ff5ac3cbd7b4f2cf8c5a92637267fd2745a97eaf21150
+              exitCode: 0
+              finishedAt: "2019-07-02T12:34:47Z"
+              reason: Completed
+              startedAt: "2019-07-02T12:34:47Z"
+        - containerID: docker://4109f59817a239085ce4084ae87cec62297ada549cb42e247160cd41f7479426
+          image: gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/entrypoint:v0.4.0
+          imageID: docker-pullable://gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/entrypoint@sha256:4d1fe990ca06ecc671370dfeab31d857efa8ccf81d632a672561c60482fd9aae
+          lastState: {}
+          name: build-step-place-tools
+          ready: true
+          restartCount: 0
+          state:
+            terminated:
+              containerID: docker://4109f59817a239085ce4084ae87cec62297ada549cb42e247160cd41f7479426
+              exitCode: 0
+              finishedAt: "2019-07-02T12:34:48Z"
+              reason: Completed
+              startedAt: "2019-07-02T12:34:48Z"
+      phase: Succeeded
+      podIP: 10.28.0.32
+      qosClass: BestEffort
+      startTime: "2019-07-02T12:34:45Z"
+kind: List
+metadata:
+  resourceVersion: ""
+  selfLink: ""

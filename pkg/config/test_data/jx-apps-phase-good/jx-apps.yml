@@ -1,0 +1,10 @@
+defaultNamespace: jx
+applications:
+- name: velero
+  repository: https://kubernetes-charts.storage.googleapis.com
+  namespace: velero
+  phase: system
+- name: external-dns
+  repository: https://kubernetes-charts.storage.googleapis.com
+  namespace: jx
+  phase: apps

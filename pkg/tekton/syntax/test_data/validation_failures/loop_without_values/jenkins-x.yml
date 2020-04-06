@@ -1,0 +1,17 @@
+pipelineConfig:
+  pipelines:
+    release:
+      pipeline:
+        agent:
+          image: some-image
+        stages:
+          - name: A Working Stage
+            steps:
+              - loop:
+                  variable: LANGUAGE
+                  values: []
+                  steps:
+                    - command: echo
+                      args:
+                        - hello
+                        - ${LANGUAGE}

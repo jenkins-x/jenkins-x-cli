@@ -1,0 +1,15 @@
+# override the pipelinerunner image
+pipelinerunner:
+  args:
+  - controller
+  - pipelinerunner
+  - --meta-pipeline-image=gcr.io/jenkinsxio/builder-maven:$VERSION
+  enabled: true
+  image:
+    repository: gcr.io/jenkinsxio/builder-maven
+    tag: $VERSION
+  env:
+    GIT_AUTHOR_NAME: "jenkins-x-bot"
+    GIT_AUTHOR_EMAIL: "jenkins-x@googlegroups.com"
+    XDG_CONFIG_HOME: "/home/jenkins"
+    MAVEN_OPTS: "-Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn"

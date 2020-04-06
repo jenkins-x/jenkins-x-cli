@@ -1,0 +1,124 @@
+apiVersion: jenkins.io/v1
+kind: PipelineActivity
+metadata:
+  creationTimestamp: 2019-02-21T22:10:48Z
+  generation: 1
+  labels:
+    branch: master
+    owner: abayer
+    sourcerepository: abayer-jx-demo-qs
+  name: abayer-jx-demo-qs-master-1
+  namespace: jx
+  resourceVersion: "8291"
+  selfLink: /apis/jenkins.io/v1/namespaces/jx/pipelineactivities/abayer-jx-demo-qs-master-1
+  uid: 8b191bee-3625-11e9-b776-42010a8a00ac
+spec:
+  build: "1"
+  gitBranch: master
+  gitOwner: abayer
+  gitRepository: jx-demo-qs
+  gitUrl: https://github.com/abayer/jx-demo-qs
+  lastCommitMessage: |
+    release 1.0.14
+  lastCommitSHA: d4db9e17db285523468e8ce8728df64402fb1c73
+  pipeline: abayer/jx-demo-qs/master
+  releaseNotesURL: https://github.com/abayer/jx-demo-qs/releases/tag/v1.0.14
+  startedTimestamp: 2019-02-21T22:10:50Z
+  status: Running
+  steps:
+  - kind: Stage
+    stage:
+      completedTimestamp: 2019-02-21T22:10:50Z
+      name: Credential Initializer 9wblv
+      startedTimestamp: 2019-02-21T22:10:50Z
+      status: Succeeded
+  - kind: Stage
+    stage:
+      completedTimestamp: 2019-02-21T22:10:52Z
+      description: https://github.com/abayer/jx-demo-qs
+      name: Git Source Abayer Jx Demo Qs Master T95vf
+      startedTimestamp: 2019-02-21T22:10:51Z
+      status: Succeeded
+  - kind: Stage
+    stage:
+      completedTimestamp: 2019-02-21T22:10:52Z
+      name: Place Tools
+      startedTimestamp: 2019-02-21T22:10:52Z
+      status: Succeeded
+  - kind: Stage
+    stage:
+      completedTimestamp: 2019-02-21T22:11:14Z
+      name: Setup Jx Git Credentials
+      startedTimestamp: 2019-02-21T22:11:13Z
+      status: Succeeded
+  - kind: Stage
+    stage:
+      completedTimestamp: 2019-02-21T22:11:17Z
+      name: Setversion Next Version
+      startedTimestamp: 2019-02-21T22:11:16Z
+      status: Succeeded
+  - kind: Stage
+    stage:
+      completedTimestamp: 2019-02-21T22:11:58Z
+      name: Setversion Set Version
+      startedTimestamp: 2019-02-21T22:11:18Z
+      status: Succeeded
+  - kind: Stage
+    stage:
+      completedTimestamp: 2019-02-21T22:12:04Z
+      name: Setversion Tag Version
+      startedTimestamp: 2019-02-21T22:11:59Z
+      status: Succeeded
+  - kind: Stage
+    stage:
+      completedTimestamp: 2019-02-21T22:12:54Z
+      name: Build Mvn Deploy
+      startedTimestamp: 2019-02-21T22:12:05Z
+      status: Succeeded
+  - kind: Stage
+    stage:
+      completedTimestamp: 2019-02-21T22:12:55Z
+      name: Build Skaffold Version
+      startedTimestamp: 2019-02-21T22:12:55Z
+      status: Succeeded
+  - kind: Stage
+    stage:
+      completedTimestamp: 2019-02-21T22:13:13Z
+      name: Build Container Build
+      startedTimestamp: 2019-02-21T22:12:56Z
+      status: Succeeded
+  - kind: Stage
+    stage:
+      completedTimestamp: 2019-02-21T22:13:14Z
+      name: Build Post Build
+      startedTimestamp: 2019-02-21T22:13:14Z
+      status: Succeeded
+  - kind: Stage
+    stage:
+      completedTimestamp: 2019-02-21T22:13:19Z
+      name: Promote Changelog
+      startedTimestamp: 2019-02-21T22:13:15Z
+      status: Succeeded
+  - kind: Stage
+    stage:
+      completedTimestamp: 2019-02-21T22:13:25Z
+      name: Promote Helm Release
+      startedTimestamp: 2019-02-21T22:13:20Z
+      status: Succeeded
+  - kind: Stage
+    stage:
+      name: Promote Jx Promote
+      startedTimestamp: 2019-02-21T22:13:26Z
+      status: Running
+  - kind: Promote
+    promote:
+      environment: staging
+      pullRequest:
+        pullRequestURL: https://github.com/abayer/environment-abayer-test-cluster-staging/pull/8
+        startedTimestamp: 2019-02-21T22:13:31Z
+        status: Running
+      startedTimestamp: 2019-02-21T22:13:31Z
+      status: Running
+  version: 1.0.14
+  workflowStatus: Running
+status: {}

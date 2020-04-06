@@ -1,0 +1,78 @@
+apiVersion: tekton.dev/v1alpha1
+items:
+  - apiVersion: tekton.dev/v1alpha1
+    kind: Pipeline
+    metadata:
+      creationTimestamp: "2019-07-02T12:34:56Z"
+      generation: 1
+      name: fakeowner-fakerepo-fakebranch-1
+      namespace: jx
+      ownerReferences:
+        - apiVersion: jenkins.io/v1
+          kind: PipelineActivity
+          name: fakeowner-fakerepo-fakebranch-1
+          uid: c5e1fa64-9cc5-11e9-aa2e-42010a8a00fe
+      resourceVersion: "235864"
+      selfLink: /apis/tekton.dev/v1alpha1/namespaces/jx/pipelines/fakeowner-fakerepo-fakebranch-1
+      uid: cc57794e-9cc5-11e9-aa2e-42010a8a00fe
+    spec:
+      params:
+        - default: 0.0.7
+          description: the version number for this pipeline which is used as a tag on docker
+            images and helm charts
+          name: version
+        - default: "1"
+          description: the PipelineRun build number
+          name: build_id
+      resources:
+        - name: fakeowner-fakerepo-fakebranch
+          type: git
+      tasks:
+        - name: from-fakebranch
+          params:
+            - name: version
+              value: ${params.version}
+            - name: build_id
+              value: ${params.build_id}
+          resources:
+            inputs:
+              - name: workspace
+                resource: fakeowner-fakerepo-fakebranch
+          taskRef:
+            name: fakeowner-fakerepo-fakebranch-from-fakebranch-8
+  - apiVersion: tekton.dev/v1alpha1
+    kind: Pipeline
+    metadata:
+      creationTimestamp: "2019-07-02T12:34:45Z"
+      generation: 1
+      labels:
+        branch: fakebranch
+        build: "1"
+        owner: fakeowner
+        repo: fakerepo
+      name: meta-fakeowner-fakerepo-build-1
+      namespace: jx
+      ownerReferences:
+        - apiVersion: jenkins.io/v1
+          kind: PipelineActivity
+          name: fakeowner-fakerepo-fakebranch-meta-1
+          uid: c57379a2-9cc5-11e9-aa2e-42010a8a00fe
+      resourceVersion: "235775"
+      selfLink: /apis/tekton.dev/v1alpha1/namespaces/jx/pipelines/meta-fakeowner-fakerepo-build-8
+      uid: c5ad1626-9cc5-11e9-aa2e-42010a8a00fe
+    spec:
+      resources:
+        - name: meta-fakeowner-fakerepo-build
+          type: git
+      tasks:
+        - name: app-extension
+          resources:
+            inputs:
+              - name: workspace
+                resource: meta-fakeowner-fakerepo-build
+          taskRef:
+            name: meta-fakeowner-fakerepo-build-app-extension-8
+kind: List
+metadata:
+  resourceVersion: ""
+  selfLink: ""

@@ -1,0 +1,133 @@
+apiVersion: v1
+data:
+  config.yaml: |
+    branch-protection:
+      orgs:
+        testOrg:
+          repos:
+            environment-cluster-dev-cluster-production:
+              required_status_checks:
+                contexts:
+                - promotion-build
+            environment-cluster-dev-cluster-staging:
+              required_status_checks:
+                contexts:
+                - promotion-build
+            p22:
+              required_status_checks:
+                contexts:
+                - serverless-jenkins
+        jenkins-x:
+          repos:
+            dummy:
+              required_status_checks:
+                contexts:
+                - serverless-jenkins
+      protect-tested-repos: true
+    deck:
+      spyglass: {}
+    gerrit: {}
+    owners_dir_blacklist:
+      default: null
+      repos: null
+    plank: {}
+    pod_namespace: jx
+    postsubmits:
+      testOrg/environment-cluster-dev-cluster-production:
+      - agent: tekton
+        branches:
+        - master
+        context: ""
+        name: promotion
+      testOrg/environment-cluster-dev-cluster-staging:
+      - agent: tekton
+        branches:
+        - master
+        context: ""
+        name: promotion
+      testOrg/p22:
+      - agent: tekton
+        branches:
+        - master
+        context: ""
+        name: release
+      jenkins-x/dummy:
+      - agent: tekton
+        branches:
+        - master
+        context: ""
+        name: release
+    presubmits:
+      testOrg/environment-cluster-dev-cluster-production:
+      - agent: tekton
+        always_run: true
+        context: promotion-build
+        name: promotion-build
+        rerun_command: /test this
+        trigger: (?m)^/test( all| this),?(\s+|$)
+      testOrg/environment-cluster-dev-cluster-staging:
+      - agent: tekton
+        always_run: true
+        context: promotion-build
+        name: promotion-build
+        rerun_command: /test this
+        trigger: (?m)^/test( all| this),?(\s+|$)
+      testOrg/p22:
+      - agent: tekton
+        always_run: true
+        context: serverless-jenkins
+        name: serverless-jenkins
+        rerun_command: /test this
+        trigger: (?m)^/test( all| this),?(\s+|$)
+      jenkins-x/dummy:
+      - agent: tekton
+        always_run: true
+        context: serverless-jenkins
+        name: serverless-jenkins
+        rerun_command: /test this
+        trigger: (?m)^/test( all| this),?(\s+|$)
+    prowjob_namespace: jx
+    push_gateway: {}
+    sinker: {}
+    tide:
+      context_options:
+        from-branch-protection: true
+        required-if-present-contexts: null
+        skip-unknown-contexts: false
+      queries:
+      - labels:
+        - approved
+        missingLabels:
+        - do-not-merge
+        - do-not-merge/hold
+        - do-not-merge/work-in-progress
+        - needs-ok-to-test
+        - needs-rebase
+        repos:
+        - jenkins-x/dummy
+        - testOrg/p22
+      - missingLabels:
+        - do-not-merge
+        - do-not-merge/hold
+        - do-not-merge/work-in-progress
+        - needs-ok-to-test
+        - needs-rebase
+        repos:
+        - jenkins-x/dummy-environment
+        - testOrg/environment-cluster-dev-cluster-staging
+        - testOrg/environment-cluster-dev-cluster-production
+      target_url: http://deck.jx.35.241.163.166.nip.io
+kind: ConfigMap
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"v1","data":{"config.yaml":"branch-protection:\n  orgs:\n    testOrg:\n      repos:\n        environment-cluster-dev-cluster-production:\n          required_status_checks:\n            contexts:\n            - promotion-build\n        environment-cluster-dev-cluster-staging:\n          required_status_checks:\n            contexts:\n            - promotion-build\n        p22:\n          required_status_checks:\n            contexts:\n            - serverless-jenkins\n    jenkins-x:\n      repos:\n        dummy:\n          required_status_checks:\n            contexts:\n            - serverless-jenkins\n  protect-tested-repos: true\ndeck:\n  spyglass: {}\ngerrit: {}\nowners_dir_blacklist:\n  default: null\n  repos: null\nplank: {}\npod_namespace: jx\npostsubmits:\n  testOrg/environment-cluster-dev-cluster-production:\n  - agent: tekton\n    branches:\n    - master\n    context: \"\"\n    name: promotion\n  testOrg/environment-cluster-dev-cluster-staging:\n  - agent: tekton\n    branches:\n    - master\n    context: \"\"\n    name: promotion\n  testOrg/p22:\n  - agent: tekton\n    branches:\n    - master\n    context: \"\"\n    name: release\n  jenkins-x/dummy:\n  - agent: tekton\n    branches:\n    - master\n    context: \"\"\n    name: release\npresubmits:\n  testOrg/environment-cluster-dev-cluster-production:\n  - agent: tekton\n    always_run: true\n    context: promotion-build\n    name: promotion-build\n    rerun_command: /test this\n    trigger: (?m)^/test( all| this),?(\\s+|$)\n  testOrg/environment-cluster-dev-cluster-staging:\n  - agent: tekton\n    always_run: true\n    context: promotion-build\n    name: promotion-build\n    rerun_command: /test this\n    trigger: (?m)^/test( all| this),?(\\s+|$)\n  testOrg/p22:\n  - agent: tekton\n    always_run: true\n    context: serverless-jenkins\n    name: serverless-jenkins\n    rerun_command: /test this\n    trigger: (?m)^/test( all| this),?(\\s+|$)\n  jenkins-x/dummy:\n  - agent: tekton\n    always_run: true\n    context: serverless-jenkins\n    name: serverless-jenkins\n    rerun_command: /test this\n    trigger: (?m)^/test( all| this),?(\\s+|$)\nprowjob_namespace: jx\npush_gateway: {}\nsinker: {}\ntide:\n  context_options:\n    from-branch-protection: true\n    required-if-present-contexts: null\n    skip-unknown-contexts: false\n  queries:\n  - labels:\n    - approved\n    missingLabels:\n    - do-not-merge\n    - do-not-merge/hold\n    - do-not-merge/work-in-progress\n    - needs-ok-to-test\n    - needs-rebase\n    repos:\n    - jenkins-x/dummy\n    - testOrg/p22\n  - missingLabels:\n    - do-not-merge\n    - do-not-merge/hold\n    - do-not-merge/work-in-progress\n    - needs-ok-to-test\n    - needs-rebase\n    repos:\n    - jenkins-x/dummy-environment\n    - testOrg/environment-cluster-dev-cluster-staging\n    - testOrg/environment-cluster-dev-cluster-production\n  target_url: http://deck.jx.35.241.163.166.nip.io\n"},"kind":"ConfigMap","metadata":{"annotations":{},"creationTimestamp":"2019-05-24T08:33:35Z","name":"config","namespace":"jx","resourceVersion":"1392357","selfLink":"/api/v1/namespaces/jx/configmaps/config","uid":"9f1ca775-7dfe-11e9-8c23-42010a84008a"}}
+  creationTimestamp: "2019-05-24T08:33:35Z"
+  name: config
+  initializers:
+    result:
+      status: "status"
+  namespace: jx
+  resourceVersion: "1393930"
+  selfLink: /api/v1/namespaces/jx/configmaps/config
+  uid: 9f1ca775-7dfe-11e9-8c23-42010a84008a

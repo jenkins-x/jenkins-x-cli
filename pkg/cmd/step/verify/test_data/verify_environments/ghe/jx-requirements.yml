@@ -1,0 +1,42 @@
+autoUpdate:
+  enabled: false
+  schedule: ""
+cluster:
+  clusterName: my-cluster-name
+  environmentGitOwner: myorg
+  gitKind: github
+  gitName: ghe
+  gitServer: https://github.something.com
+  namespace: jx
+  project: foo
+  provider: gke
+  zone: myzone
+ingress:
+  domain: ""
+  externalDNS: false
+  namespaceSubDomain: -jx.
+  tls:
+    email: ""
+    enabled: false
+    production: false
+repository: nexus
+secretStorage: local
+storage:
+  backup:
+    enabled: false
+    url: ""
+  logs:
+    enabled: false
+    url: ""
+  reports:
+    enabled: false
+    url: ""
+  repository:
+    enabled: false
+    url: ""
+vault: {}
+velero: {}
+versionStream:
+  ref: v1.0.0
+  url: https://github.com/jenkins-x/jenkins-x-versions.git
+webhook: prow

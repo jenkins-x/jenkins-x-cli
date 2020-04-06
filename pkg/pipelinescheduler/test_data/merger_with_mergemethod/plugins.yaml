@@ -1,0 +1,44 @@
+approve:
+- lgtm_acts_as_approve: true
+  repos:
+  - acme/dummy
+  ignore_review_state: false
+#blunderbuss: {}
+#cat: {}
+#cherry_pick_unapproved: {}
+#config_updater:
+#  maps:
+#    prow/config.yaml:
+#      name: config
+#    prow/plugins.yaml:
+#      name: plugins
+external_plugins:
+  acme/dummy:
+  - endpoint: http://jx-app-cheese
+    name: jx-app-cheese
+#heart: {}
+#owners: {}
+plugins:
+  acme/dummy:
+  - config-updater
+  - approve
+  - assign
+  - blunderbuss
+  - help
+  - hold
+  - lgtm
+  - lifecycle
+  - size
+  - trigger
+  - wip
+  - heart
+  - override
+#requiresig: {}
+#sigmention: {}
+#slack: {}
+triggers:
+- repos:
+  - acme/dummy
+  trusted_org: roadrunner-corp
+#welcome:
+#- message_template: Welcome

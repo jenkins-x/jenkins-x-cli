@@ -1,3 +1,5 @@
+// +build unit
+
 package kube_test
 
 import (
@@ -5,7 +7,7 @@ import (
 
 	"github.com/jenkins-x/jx/pkg/kube"
 	"github.com/stretchr/testify/assert"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -18,7 +20,7 @@ func TestGetPodConditionPodReady(t *testing.T) {
 	status := v1.PodStatus{
 		Phase: v1.PodRunning,
 		Conditions: []v1.PodCondition{
-			v1.PodCondition{
+			{
 				Type:   condition,
 				Status: v1.ConditionTrue,
 			},
@@ -40,7 +42,7 @@ func TestGetPodConditionFailures(t *testing.T) {
 	status := v1.PodStatus{
 		Phase: v1.PodRunning,
 		Conditions: []v1.PodCondition{
-			v1.PodCondition{
+			{
 				Status: v1.ConditionTrue,
 			},
 		},
@@ -60,7 +62,7 @@ func TestGetPodReadyCondition(t *testing.T) {
 	status := v1.PodStatus{
 		Phase: v1.PodRunning,
 		Conditions: []v1.PodCondition{
-			v1.PodCondition{
+			{
 				Type:   v1.PodReady,
 				Status: v1.ConditionTrue,
 			},
@@ -78,7 +80,7 @@ func TestGetPodReadyConditionFailures(t *testing.T) {
 	status := v1.PodStatus{
 		Phase: v1.PodRunning,
 		Conditions: []v1.PodCondition{
-			v1.PodCondition{
+			{
 				Status: v1.ConditionTrue,
 			},
 		},
@@ -95,7 +97,7 @@ func TestIsPodReadyConditionTrue(t *testing.T) {
 	status := v1.PodStatus{
 		Phase: v1.PodRunning,
 		Conditions: []v1.PodCondition{
-			v1.PodCondition{
+			{
 				Type:   v1.PodReady,
 				Status: v1.ConditionTrue,
 			},
@@ -112,7 +114,7 @@ func TestIsPodReadyConditionTrueFailures(t *testing.T) {
 	status := v1.PodStatus{
 		Phase: v1.PodRunning,
 		Conditions: []v1.PodCondition{
-			v1.PodCondition{
+			{
 				Status: v1.ConditionTrue,
 			},
 		},
@@ -124,7 +126,7 @@ func TestIsPodReadyConditionTrueFailures(t *testing.T) {
 	status = v1.PodStatus{
 		Phase: v1.PodRunning,
 		Conditions: []v1.PodCondition{
-			v1.PodCondition{
+			{
 				Type: v1.PodReady,
 			},
 		},
@@ -164,7 +166,7 @@ func TestIsPodReady(t *testing.T) {
 		Status: v1.PodStatus{
 			Phase: v1.PodRunning,
 			Conditions: []v1.PodCondition{
-				v1.PodCondition{
+				{
 					Type:   v1.PodReady,
 					Status: v1.ConditionTrue,
 				},
@@ -206,7 +208,7 @@ func TestIsPodReadyFailures(t *testing.T) {
 		Status: v1.PodStatus{
 			Phase: v1.PodRunning,
 			Conditions: []v1.PodCondition{
-				v1.PodCondition{
+				{
 					Type:   "Something else",
 					Status: v1.ConditionTrue,
 				},
@@ -241,7 +243,7 @@ func TestIsPodReadyFailures(t *testing.T) {
 		Status: v1.PodStatus{
 			Phase: v1.PodRunning,
 			Conditions: []v1.PodCondition{
-				v1.PodCondition{
+				{
 					Type:   v1.PodReady,
 					Status: "Something else",
 				},

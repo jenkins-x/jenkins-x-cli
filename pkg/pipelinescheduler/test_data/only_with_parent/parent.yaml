@@ -1,0 +1,58 @@
+trigger:
+  trustedOrg: roadrunner-corp
+schedulerAgent:
+  agent: prow
+policy:
+  protectTested: true
+merger:
+  policy:
+    fromBranchProtection: true
+    skipUnknownContexts: false
+postsubmits:
+  entries:
+  - name: release
+    context: ""
+    branches:
+      entries:
+      - master
+    agent: tekton
+presubmits:
+  entries:
+  - name: integration
+    agent: tekton
+    alwaysRun: true
+    context: integration
+    rerunCommand: /test this
+    trigger: (?m)^/test( all| this),?(\s+|$)
+    queries:
+      - labels:
+          entries:
+            - approved
+        missingLabels:
+          entries:
+          - do-not-merge
+          - do-not-merge/hold
+          - do-not-merge/work-in-progress
+          - needs-ok-to-test
+          - needs-rebase
+    policy:
+      protect: true
+      requiredStatusChecks:
+        contexts:
+          entries:
+          - integration
+plugins:
+  entries:
+  - config-updater
+  - approve
+  - assign
+  - blunderbuss
+  - help
+  - hold
+  - lgtm
+  - lifecycle
+  - size
+  - trigger
+  - wip
+  - heart
+  - override

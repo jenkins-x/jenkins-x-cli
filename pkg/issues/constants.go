@@ -8,5 +8,10 @@ const (
 )
 
 var (
+	IssueOpen   = "open"
+	IssueClosed = "closed"
+)
+
+var (
 	IssueTrackerKinds = []string{Bugzilla, Jira, Trello}
 )

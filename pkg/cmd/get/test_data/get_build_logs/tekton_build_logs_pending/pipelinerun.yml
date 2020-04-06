@@ -1,0 +1,60 @@
+apiVersion: tekton.dev/v1alpha1
+kind: PipelineRun
+metadata:
+  generation: 1
+  labels:
+    branch: fakebranch
+    build: "1"
+    created-by-prow: "true"
+    owner: fakeowner
+    jenkins.io/pipelineType: build
+    prowJobName: 3930a5ce-9da8-11e9-9b3d-acde48001122
+    repository: fakerepo
+    tekton.dev/pipeline: fakeowner-fakerepo-fakebranch-1
+  name: fakeowner-fakerepo-fakebranch-1
+  namespace: jx
+  ownerReferences:
+    - apiVersion: tekton.dev/v1alpha1
+      kind: pipeline
+      name: fakeowner-fakerepo-fakebranch-1
+      uid: 3fe9c5ff-9da8-11e9-8283-42010a840059
+  selfLink: /apis/tekton.dev/v1alpha1/namespaces/jx/pipelineruns/fakeowner-fakerepo-fakebranch-1
+spec:
+  params:
+    - name: version
+      value: 0.0.1
+    - name: build_id
+      value: "1"
+  pipelineRef:
+    apiVersion: tekton.dev/v1alpha1
+    name: fakeowner-fakerepo-fakebranch-1
+  resources:
+    - name: fakeowner-fakerepo-fakebranch
+      resourceRef:
+        apiVersion: tekton.dev/v1alpha1
+        name: fakeowner-fakerepo-fakebranch
+  serviceAccount: tekton-bot
+  timeout: 240h0m0s
+status:
+  conditions:
+    - lastTransitionTime: 2019-07-19T18:30:02Z
+      message: Not all Tasks in the Pipeline have finished executing
+      reason: Running
+      status: Unknown
+      type: Succeeded
+  startTime: 2019-07-19T18:30:02Z
+  taskRuns:
+    faketaskrun:
+      pipelineTaskName: faketask
+      status:
+        conditions:
+          - lastTransitionTime: "2019-07-22T17:36:16Z"
+            reason: Building
+            status: Unknown
+            type: Succeeded
+        podName: meta-fakeowner-fakerepo-build-1-app-extension-kvvp6-pod-fcf1fe
+        startTime: "2019-07-22T17:35:01Z"
+        steps:
+          - name: build-container-build
+            waiting:
+              message: Pending for reasons

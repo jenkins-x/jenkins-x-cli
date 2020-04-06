@@ -1,0 +1,34 @@
+apiVersion: tekton.dev/v1alpha1
+kind: Pipeline
+metadata:
+  creationTimestamp: null
+  labels:
+    branch: build-pack
+    build: "1"
+    jenkins.io/pipelineType: build
+    owner: abayer
+    repository: js.test.repo
+  name: abayer-js-test-repo-build-pack-9l9zj-1
+  namespace: jx
+spec:
+  params:
+  - default: 0.0.1
+    description: the version number for this pipeline which is used as a tag on docker
+      images and helm charts
+    name: version
+    type: string
+  resources:
+  - name: abayer-js-test-repo-build-pack-9l9zj
+    type: git
+  tasks:
+  - name: from-build-pack
+    params:
+    - name: version
+      value: $(params.version)
+    resources:
+      inputs:
+      - name: workspace
+        resource: abayer-js-test-repo-build-pack-9l9zj
+    taskRef:
+      name: abayer-js-test-repo-build-pack-9l9zj-from-build-pack-1
+status: {}

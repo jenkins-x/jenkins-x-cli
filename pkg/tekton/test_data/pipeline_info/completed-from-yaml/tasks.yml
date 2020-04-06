@@ -1,0 +1,213 @@
+apiVersion: v1
+items:
+- apiVersion: tekton.dev/v1alpha1
+  kind: Task
+  metadata:
+    creationTimestamp: 2019-02-21T22:02:43Z
+    generation: 1
+    labels:
+      jenkins.io/task-stage-name: Build
+    name: abayer-js-test-repo-master-build
+    namespace: jx
+    resourceVersion: "5934"
+    selfLink: /apis/tekton.dev/v1alpha1/namespaces/jx/tasks/abayer-js-test-repo-master-build
+    uid: 69cdbaff-3624-11e9-b776-42010a8a00ac
+  spec:
+    inputs:
+      resources:
+      - name: workspace
+        targetPath: workspace
+        type: git
+      - name: temp-ordering-resource
+        targetPath: ""
+        type: image
+    outputs:
+      resources:
+      - name: workspace
+        targetPath: ""
+        type: git
+      - name: temp-ordering-resource
+        targetPath: ""
+        type: image
+    steps:
+    - args:
+      - echo hello world
+      command:
+      - /bin/sh
+      - -c
+      env:
+      - name: DOCKER_REGISTRY
+        value: 10.3.245.235:5000
+      - name: PIPELINE_KIND
+        value: release
+      - name: REPO_OWNER
+        value: abayer
+      - name: REPO_NAME
+        value: js-test-repo
+      - name: JOB_NAME
+        value: abayer/js-test-repo/master
+      - name: BRANCH_NAME
+        value: master
+      - name: JX_BATCH_MODE
+        value: "true"
+      image: jenkinsxio/builder-nodejs:0.1.235
+      name: step2
+      resources:
+        requests:
+          cpu: 400m
+          memory: 512Mi
+      securityContext:
+        privileged: true
+      volumeMounts:
+      - mountPath: /home/jenkins
+        name: workspace-volume
+      - mountPath: /var/run/docker.sock
+        name: docker-daemon
+      - mountPath: /home/jenkins/.docker
+        name: volume-0
+      - mountPath: /etc/podinfo
+        name: podinfo
+        readOnly: true
+      workingDir: /workspace/workspace
+    - args:
+      - ls -la
+      command:
+      - /bin/sh
+      - -c
+      env:
+      - name: DOCKER_REGISTRY
+        value: 10.3.245.235:5000
+      - name: PIPELINE_KIND
+        value: release
+      - name: REPO_OWNER
+        value: abayer
+      - name: REPO_NAME
+        value: js-test-repo
+      - name: JOB_NAME
+        value: abayer/js-test-repo/master
+      - name: BRANCH_NAME
+        value: master
+      - name: JX_BATCH_MODE
+        value: "true"
+      image: jenkinsxio/builder-nodejs:0.1.235
+      name: step3
+      resources:
+        requests:
+          cpu: 400m
+          memory: 512Mi
+      securityContext:
+        privileged: true
+      volumeMounts:
+      - mountPath: /home/jenkins
+        name: workspace-volume
+      - mountPath: /var/run/docker.sock
+        name: docker-daemon
+      - mountPath: /home/jenkins/.docker
+        name: volume-0
+      - mountPath: /etc/podinfo
+        name: podinfo
+        readOnly: true
+      workingDir: /workspace/workspace
+    volumes:
+    - hostPath:
+        path: /var/run/docker.sock
+      name: docker-daemon
+    - name: volume-0
+      secret:
+        secretName: jenkins-docker-cfg
+    - emptyDir: {}
+      name: workspace-volume
+    - downwardAPI:
+        items:
+        - fieldRef:
+            fieldPath: metadata.labels
+          path: labels
+      name: podinfo
+- apiVersion: tekton.dev/v1alpha1
+  kind: Task
+  metadata:
+    creationTimestamp: 2019-02-21T22:02:43Z
+    generation: 1
+    labels:
+      jenkins.io/task-stage-name: Second
+    name: abayer-js-test-repo-master-second
+    namespace: jx
+    resourceVersion: "5935"
+    selfLink: /apis/tekton.dev/v1alpha1/namespaces/jx/tasks/abayer-js-test-repo-master-second
+    uid: 69dd2a16-3624-11e9-b776-42010a8a00ac
+  spec:
+    inputs:
+      resources:
+      - name: workspace
+        targetPath: ""
+        type: git
+      - name: temp-ordering-resource
+        targetPath: ""
+        type: image
+    outputs:
+      resources:
+      - name: workspace
+        targetPath: ""
+        type: git
+      - name: temp-ordering-resource
+        targetPath: ""
+        type: image
+    steps:
+    - args:
+      - echo hi everybody
+      command:
+      - /bin/sh
+      - -c
+      env:
+      - name: DOCKER_REGISTRY
+        value: 10.3.245.235:5000
+      - name: PIPELINE_KIND
+        value: release
+      - name: REPO_OWNER
+        value: abayer
+      - name: REPO_NAME
+        value: js-test-repo
+      - name: JOB_NAME
+        value: abayer/js-test-repo/master
+      - name: BRANCH_NAME
+        value: master
+      - name: JX_BATCH_MODE
+        value: "true"
+      image: jenkinsxio/builder-nodejs:0.1.235
+      name: step2
+      resources:
+        requests:
+          cpu: 400m
+          memory: 512Mi
+      securityContext:
+        privileged: true
+      volumeMounts:
+      - mountPath: /home/jenkins
+        name: workspace-volume
+      - mountPath: /var/run/docker.sock
+        name: docker-daemon
+      - mountPath: /home/jenkins/.docker
+        name: volume-0
+      - mountPath: /etc/podinfo
+        name: podinfo
+        readOnly: true
+      workingDir: /workspace/workspace
+    volumes:
+    - emptyDir: {}
+      name: workspace-volume
+    - hostPath:
+        path: /var/run/docker.sock
+      name: docker-daemon
+    - name: volume-0
+      secret:
+        secretName: jenkins-docker-cfg
+    - downwardAPI:
+        items:
+        - fieldRef:
+            fieldPath: metadata.labels
+          path: labels
+      name: podinfo
+kind: List
+metadata:
+  resourceVersion: ""
+  selfLink: ""

@@ -1,0 +1,22 @@
+extends:
+  import: classic
+  file: pipeline.yaml
+agent:
+  label: jenkins-maven
+  container: maven
+pipelines:
+  release:
+    build:
+      steps:
+        - dir: env
+          steps:
+            - sh: jx step helm apply
+              name: helm-apply
+
+  pullRequest:
+    build:
+      steps:
+        - dir: env
+          steps:
+            - sh: jx step helm build
+              name: helm-build

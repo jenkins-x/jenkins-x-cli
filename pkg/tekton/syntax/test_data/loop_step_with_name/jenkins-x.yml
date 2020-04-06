@@ -1,0 +1,27 @@
+pipelineConfig:
+  pipelines:
+    release:
+      pipeline:
+        env:
+          - name: LANGUAGE
+            value: rust
+        agent:
+          image: some-image
+        stages:
+          - name: A Working Stage
+            env:
+              - name: DISTRO
+                value: gentoo
+            steps:
+              - loop:
+                  variable: LANGUAGE
+                  values:
+                    - maven
+                    - gradle
+                    - nodejs
+                  steps:
+                    - command: echo
+                      name: echo-step
+                      args:
+                        - hello
+                        - ${LANGUAGE}

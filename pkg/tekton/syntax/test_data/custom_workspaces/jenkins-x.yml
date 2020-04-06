@@ -1,0 +1,25 @@
+pipelineConfig:
+  pipelines:
+    release:
+      pipeline:
+        agent:
+          image: some-image
+        stages:
+          - name: stage1
+            steps:
+              - command: ls
+          - name: stage2
+            options:
+              workspace: custom
+            steps:
+              - command: ls
+          - name: stage3
+            options:
+              workspace: default
+            steps:
+              - command: ls
+          - name: stage4
+            options:
+              workspace: custom
+            steps:
+              - command: ls

@@ -1,0 +1,21 @@
+pipelineConfig:
+  pipelines:
+    release:
+      pipeline:
+        agent:
+          image: some-image
+        stages:
+          - name: A Working Stage
+            steps:
+              - command: echo
+                loop:
+                  variable: LANGUAGE
+                  values:
+                    - maven
+                    - gradle
+                    - nodejs
+                  steps:
+                    - command: echo
+                      args:
+                        - hello
+                        - ${LANGUAGE}

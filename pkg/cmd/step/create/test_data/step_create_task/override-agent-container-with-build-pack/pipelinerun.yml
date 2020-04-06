@@ -1,0 +1,27 @@
+apiVersion: tekton.dev/v1alpha1
+kind: PipelineRun
+metadata:
+  creationTimestamp: null
+  labels:
+    branch: override-default-agent
+    build: "1"
+    jenkins.io/pipelineType: build
+    owner: abayer
+    repository: js-test-repo
+  name: abayer-js-test-repo-override-de-vr6ds-1
+spec:
+  params:
+  - name: version
+    value: 0.0.1
+  pipelineRef:
+    apiVersion: tekton.dev/v1alpha1
+    name: abayer-js-test-repo-override-de-vr6ds-1
+  podTemplate: {}
+  resources:
+  - name: abayer-js-test-repo-override-de-vr6ds
+    resourceRef:
+      apiVersion: tekton.dev/v1alpha1
+      name: abayer-js-test-repo-override-de-vr6ds
+  serviceAccountName: tekton-bot
+  timeout: 240h0m0s
+status: {}

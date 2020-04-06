@@ -7,35 +7,53 @@ import (
 	"io/ioutil"
 	"os/exec"
 	"strings"
+
+	"github.com/jenkins-x/jx/pkg/util"
 )
+
+// ReleaseFileGetter defines the interface for read system file
+type ReleaseFileGetter interface {
+	GetFileContents(string) (string, error)
+}
+
+// DefaultReleaseFileGetter is the default implementation of ReleaseFileGetter
+type DefaultReleaseFileGetter struct{}
+
+// GetFileContents returns the file contents
+func (r *DefaultReleaseFileGetter) GetFileContents(file string) (string, error) {
+	buf, err := ioutil.ReadFile(file)
+	if err != nil {
+		return "", err
+	}
+	return strings.Trim(string(buf), "\n"), nil
+}
+
+// SetReleaseGetter sets the current releaseFileGetter
+func SetReleaseGetter(r ReleaseFileGetter) {
+	releaseGetter = r
+}
+
+var releaseGetter ReleaseFileGetter = &DefaultReleaseFileGetter{}
 
 // GetOsVersion returns a human friendly string of the current OS
 // in the case of an error this still returns a valid string for the details that can be found.
-func GetOsVersion() (string,  error) {
-	// generic LSB compliant Linux
-	output, err := runCommand("lsb_release", "-d", "-s")
+func GetOsVersion() (string, error) {
+	output, err := releaseGetter.GetFileContents("/etc/os-release")
+	if err == nil {
+		release, err := util.ExtractKeyValuePairs(strings.Split(strings.TrimSpace(output), "\n"), "=")
+		if err == nil && len(release["PRETTY_NAME"]) != 0 {
+			return strings.ReplaceAll(release["PRETTY_NAME"], "\"", ""), nil
+		}
+	}
+	// fallback
+	output, err = runCommand("lsb_release", "-d", "-s")
 	if err == nil {
 		return output, nil
 	}
-	// redHat and co these have the OS and version
-	output, err = getFileContents("/etc/redhat-release")
-	if err == nil {
-		return output , nil
-	}
-	// Debian and derivatives this is just the base (Sid) which is not quite enough to say exactly
-	output, err = getFileContents("/etc/debian_version")
-	if err == nil {
-		return fmt.Sprintf("Debian %s based distribution", output), nil
-	}
-	// Alpine Linux
-	output, err = getFileContents("/etc/alpine-release")
-	if err == nil {
-		return fmt.Sprintf("Alpine Linux %s", output), nil
-	}
 	// procfs will tell us the kernel version
-	output, err = getFileContents("/proc/version")
+	output, err = releaseGetter.GetFileContents("/proc/version")
 	if err == nil {
-		return fmt.Sprintf("Unkown Linux distribution %s", output), nil
+		return fmt.Sprintf("Unknown Linux distribution %s", output), nil
 	}
 	return "Unknown Linux version", fmt.Errorf("Unknown Linux version")
 }
@@ -49,12 +67,4 @@ func runCommand(command string, args ...string) (string, error) {
 		return "", fmt.Errorf("command failed '%s %s': %s %s\n", command, strings.Join(args, " "), text, err)
 	}
 	return text, err
-}
-
-func getFileContents(file string) (string, error) {
-	bytes, err := ioutil.ReadFile(file)
-	if err != nil {
-		return "", err
-	}
-	return strings.Trim(string(bytes), "\n"), nil
 }

@@ -2,12 +2,12 @@ github:
   organisations:
   - name: jenkins-x
     repositories:
-    - name: homebrew-jx
     - name: jx-docs
     - name: jenkins-x-platform
     - name: jenkins-x-builders
     - name: jenkins-x-serverless
     - name: jx-tutorial
+    - name: dev-env-base
   - name: jenkins-x-charts
     repositories:
     - name: prow

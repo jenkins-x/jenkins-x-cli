@@ -4,19 +4,27 @@
 package util_test
 
 import (
+	"reflect"
+	"time"
+
 	backoff "github.com/cenkalti/backoff"
 	pegomock "github.com/petergtz/pegomock"
-	"reflect"
-	time "time"
 )
 
 type MockCommander struct {
 	fail func(message string, callerSkip ...int)
 }
 
-func NewMockCommander() *MockCommander {
-	return &MockCommander{fail: pegomock.GlobalFailHandler}
+func NewMockCommander(options ...pegomock.Option) *MockCommander {
+	mock := &MockCommander{}
+	for _, option := range options {
+		option.Apply(mock)
+	}
+	return mock
 }
+
+func (mock *MockCommander) SetFailHandler(fh pegomock.FailHandler) { mock.fail = fh }
+func (mock *MockCommander) FailHandler() pegomock.FailHandler      { return mock.fail }
 
 func (mock *MockCommander) CurrentArgs() []string {
 	if mock == nil {
@@ -217,197 +225,216 @@ func (mock *MockCommander) SetTimeout(_param0 time.Duration) {
 	pegomock.GetGenericMockFrom(mock).Invoke("SetTimeout", params, []reflect.Type{})
 }
 
-func (mock *MockCommander) VerifyWasCalledOnce() *VerifierCommander {
-	return &VerifierCommander{mock, pegomock.Times(1), nil}
+func (mock *MockCommander) VerifyWasCalledOnce() *VerifierMockCommander {
+	return &VerifierMockCommander{
+		mock:                   mock,
+		invocationCountMatcher: pegomock.Times(1),
+	}
 }
 
-func (mock *MockCommander) VerifyWasCalled(invocationCountMatcher pegomock.Matcher) *VerifierCommander {
-	return &VerifierCommander{mock, invocationCountMatcher, nil}
+func (mock *MockCommander) VerifyWasCalled(invocationCountMatcher pegomock.Matcher) *VerifierMockCommander {
+	return &VerifierMockCommander{
+		mock:                   mock,
+		invocationCountMatcher: invocationCountMatcher,
+	}
 }
 
-func (mock *MockCommander) VerifyWasCalledInOrder(invocationCountMatcher pegomock.Matcher, inOrderContext *pegomock.InOrderContext) *VerifierCommander {
-	return &VerifierCommander{mock, invocationCountMatcher, inOrderContext}
+func (mock *MockCommander) VerifyWasCalledInOrder(invocationCountMatcher pegomock.Matcher, inOrderContext *pegomock.InOrderContext) *VerifierMockCommander {
+	return &VerifierMockCommander{
+		mock:                   mock,
+		invocationCountMatcher: invocationCountMatcher,
+		inOrderContext:         inOrderContext,
+	}
 }
 
-type VerifierCommander struct {
+func (mock *MockCommander) VerifyWasCalledEventually(invocationCountMatcher pegomock.Matcher, timeout time.Duration) *VerifierMockCommander {
+	return &VerifierMockCommander{
+		mock:                   mock,
+		invocationCountMatcher: invocationCountMatcher,
+		timeout:                timeout,
+	}
+}
+
+type VerifierMockCommander struct {
 	mock                   *MockCommander
 	invocationCountMatcher pegomock.Matcher
 	inOrderContext         *pegomock.InOrderContext
+	timeout                time.Duration
 }
 
-func (verifier *VerifierCommander) CurrentArgs() *Commander_CurrentArgs_OngoingVerification {
+func (verifier *VerifierMockCommander) CurrentArgs() *MockCommander_CurrentArgs_OngoingVerification {
 	params := []pegomock.Param{}
-	methodInvocations := pegomock.GetGenericMockFrom(verifier.mock).Verify(verifier.inOrderContext, verifier.invocationCountMatcher, "CurrentArgs", params)
-	return &Commander_CurrentArgs_OngoingVerification{mock: verifier.mock, methodInvocations: methodInvocations}
+	methodInvocations := pegomock.GetGenericMockFrom(verifier.mock).Verify(verifier.inOrderContext, verifier.invocationCountMatcher, "CurrentArgs", params, verifier.timeout)
+	return &MockCommander_CurrentArgs_OngoingVerification{mock: verifier.mock, methodInvocations: methodInvocations}
 }
 
-type Commander_CurrentArgs_OngoingVerification struct {
+type MockCommander_CurrentArgs_OngoingVerification struct {
 	mock              *MockCommander
 	methodInvocations []pegomock.MethodInvocation
 }
 
-func (c *Commander_CurrentArgs_OngoingVerification) GetCapturedArguments() {
+func (c *MockCommander_CurrentArgs_OngoingVerification) GetCapturedArguments() {
 }
 
-func (c *Commander_CurrentArgs_OngoingVerification) GetAllCapturedArguments() {
+func (c *MockCommander_CurrentArgs_OngoingVerification) GetAllCapturedArguments() {
 }
 
-func (verifier *VerifierCommander) CurrentDir() *Commander_CurrentDir_OngoingVerification {
+func (verifier *VerifierMockCommander) CurrentDir() *MockCommander_CurrentDir_OngoingVerification {
 	params := []pegomock.Param{}
-	methodInvocations := pegomock.GetGenericMockFrom(verifier.mock).Verify(verifier.inOrderContext, verifier.invocationCountMatcher, "CurrentDir", params)
-	return &Commander_CurrentDir_OngoingVerification{mock: verifier.mock, methodInvocations: methodInvocations}
+	methodInvocations := pegomock.GetGenericMockFrom(verifier.mock).Verify(verifier.inOrderContext, verifier.invocationCountMatcher, "CurrentDir", params, verifier.timeout)
+	return &MockCommander_CurrentDir_OngoingVerification{mock: verifier.mock, methodInvocations: methodInvocations}
 }
 
-type Commander_CurrentDir_OngoingVerification struct {
+type MockCommander_CurrentDir_OngoingVerification struct {
 	mock              *MockCommander
 	methodInvocations []pegomock.MethodInvocation
 }
 
-func (c *Commander_CurrentDir_OngoingVerification) GetCapturedArguments() {
+func (c *MockCommander_CurrentDir_OngoingVerification) GetCapturedArguments() {
 }
 
-func (c *Commander_CurrentDir_OngoingVerification) GetAllCapturedArguments() {
+func (c *MockCommander_CurrentDir_OngoingVerification) GetAllCapturedArguments() {
 }
 
-func (verifier *VerifierCommander) CurrentEnv() *Commander_CurrentEnv_OngoingVerification {
+func (verifier *VerifierMockCommander) CurrentEnv() *MockCommander_CurrentEnv_OngoingVerification {
 	params := []pegomock.Param{}
-	methodInvocations := pegomock.GetGenericMockFrom(verifier.mock).Verify(verifier.inOrderContext, verifier.invocationCountMatcher, "CurrentEnv", params)
-	return &Commander_CurrentEnv_OngoingVerification{mock: verifier.mock, methodInvocations: methodInvocations}
+	methodInvocations := pegomock.GetGenericMockFrom(verifier.mock).Verify(verifier.inOrderContext, verifier.invocationCountMatcher, "CurrentEnv", params, verifier.timeout)
+	return &MockCommander_CurrentEnv_OngoingVerification{mock: verifier.mock, methodInvocations: methodInvocations}
 }
 
-type Commander_CurrentEnv_OngoingVerification struct {
+type MockCommander_CurrentEnv_OngoingVerification struct {
 	mock              *MockCommander
 	methodInvocations []pegomock.MethodInvocation
 }
 
-func (c *Commander_CurrentEnv_OngoingVerification) GetCapturedArguments() {
+func (c *MockCommander_CurrentEnv_OngoingVerification) GetCapturedArguments() {
 }
 
-func (c *Commander_CurrentEnv_OngoingVerification) GetAllCapturedArguments() {
+func (c *MockCommander_CurrentEnv_OngoingVerification) GetAllCapturedArguments() {
 }
 
-func (verifier *VerifierCommander) CurrentName() *Commander_CurrentName_OngoingVerification {
+func (verifier *VerifierMockCommander) CurrentName() *MockCommander_CurrentName_OngoingVerification {
 	params := []pegomock.Param{}
-	methodInvocations := pegomock.GetGenericMockFrom(verifier.mock).Verify(verifier.inOrderContext, verifier.invocationCountMatcher, "CurrentName", params)
-	return &Commander_CurrentName_OngoingVerification{mock: verifier.mock, methodInvocations: methodInvocations}
+	methodInvocations := pegomock.GetGenericMockFrom(verifier.mock).Verify(verifier.inOrderContext, verifier.invocationCountMatcher, "CurrentName", params, verifier.timeout)
+	return &MockCommander_CurrentName_OngoingVerification{mock: verifier.mock, methodInvocations: methodInvocations}
 }
 
-type Commander_CurrentName_OngoingVerification struct {
+type MockCommander_CurrentName_OngoingVerification struct {
 	mock              *MockCommander
 	methodInvocations []pegomock.MethodInvocation
 }
 
-func (c *Commander_CurrentName_OngoingVerification) GetCapturedArguments() {
+func (c *MockCommander_CurrentName_OngoingVerification) GetCapturedArguments() {
 }
 
-func (c *Commander_CurrentName_OngoingVerification) GetAllCapturedArguments() {
+func (c *MockCommander_CurrentName_OngoingVerification) GetAllCapturedArguments() {
 }
 
-func (verifier *VerifierCommander) DidError() *Commander_DidError_OngoingVerification {
+func (verifier *VerifierMockCommander) DidError() *MockCommander_DidError_OngoingVerification {
 	params := []pegomock.Param{}
-	methodInvocations := pegomock.GetGenericMockFrom(verifier.mock).Verify(verifier.inOrderContext, verifier.invocationCountMatcher, "DidError", params)
-	return &Commander_DidError_OngoingVerification{mock: verifier.mock, methodInvocations: methodInvocations}
+	methodInvocations := pegomock.GetGenericMockFrom(verifier.mock).Verify(verifier.inOrderContext, verifier.invocationCountMatcher, "DidError", params, verifier.timeout)
+	return &MockCommander_DidError_OngoingVerification{mock: verifier.mock, methodInvocations: methodInvocations}
 }
 
-type Commander_DidError_OngoingVerification struct {
+type MockCommander_DidError_OngoingVerification struct {
 	mock              *MockCommander
 	methodInvocations []pegomock.MethodInvocation
 }
 
-func (c *Commander_DidError_OngoingVerification) GetCapturedArguments() {
+func (c *MockCommander_DidError_OngoingVerification) GetCapturedArguments() {
 }
 
-func (c *Commander_DidError_OngoingVerification) GetAllCapturedArguments() {
+func (c *MockCommander_DidError_OngoingVerification) GetAllCapturedArguments() {
 }
 
-func (verifier *VerifierCommander) DidFail() *Commander_DidFail_OngoingVerification {
+func (verifier *VerifierMockCommander) DidFail() *MockCommander_DidFail_OngoingVerification {
 	params := []pegomock.Param{}
-	methodInvocations := pegomock.GetGenericMockFrom(verifier.mock).Verify(verifier.inOrderContext, verifier.invocationCountMatcher, "DidFail", params)
-	return &Commander_DidFail_OngoingVerification{mock: verifier.mock, methodInvocations: methodInvocations}
+	methodInvocations := pegomock.GetGenericMockFrom(verifier.mock).Verify(verifier.inOrderContext, verifier.invocationCountMatcher, "DidFail", params, verifier.timeout)
+	return &MockCommander_DidFail_OngoingVerification{mock: verifier.mock, methodInvocations: methodInvocations}
 }
 
-type Commander_DidFail_OngoingVerification struct {
+type MockCommander_DidFail_OngoingVerification struct {
 	mock              *MockCommander
 	methodInvocations []pegomock.MethodInvocation
 }
 
-func (c *Commander_DidFail_OngoingVerification) GetCapturedArguments() {
+func (c *MockCommander_DidFail_OngoingVerification) GetCapturedArguments() {
 }
 
-func (c *Commander_DidFail_OngoingVerification) GetAllCapturedArguments() {
+func (c *MockCommander_DidFail_OngoingVerification) GetAllCapturedArguments() {
 }
 
-func (verifier *VerifierCommander) Error() *Commander_Error_OngoingVerification {
+func (verifier *VerifierMockCommander) Error() *MockCommander_Error_OngoingVerification {
 	params := []pegomock.Param{}
-	methodInvocations := pegomock.GetGenericMockFrom(verifier.mock).Verify(verifier.inOrderContext, verifier.invocationCountMatcher, "Error", params)
-	return &Commander_Error_OngoingVerification{mock: verifier.mock, methodInvocations: methodInvocations}
+	methodInvocations := pegomock.GetGenericMockFrom(verifier.mock).Verify(verifier.inOrderContext, verifier.invocationCountMatcher, "Error", params, verifier.timeout)
+	return &MockCommander_Error_OngoingVerification{mock: verifier.mock, methodInvocations: methodInvocations}
 }
 
-type Commander_Error_OngoingVerification struct {
+type MockCommander_Error_OngoingVerification struct {
 	mock              *MockCommander
 	methodInvocations []pegomock.MethodInvocation
 }
 
-func (c *Commander_Error_OngoingVerification) GetCapturedArguments() {
+func (c *MockCommander_Error_OngoingVerification) GetCapturedArguments() {
 }
 
-func (c *Commander_Error_OngoingVerification) GetAllCapturedArguments() {
+func (c *MockCommander_Error_OngoingVerification) GetAllCapturedArguments() {
 }
 
-func (verifier *VerifierCommander) Run() *Commander_Run_OngoingVerification {
+func (verifier *VerifierMockCommander) Run() *MockCommander_Run_OngoingVerification {
 	params := []pegomock.Param{}
-	methodInvocations := pegomock.GetGenericMockFrom(verifier.mock).Verify(verifier.inOrderContext, verifier.invocationCountMatcher, "Run", params)
-	return &Commander_Run_OngoingVerification{mock: verifier.mock, methodInvocations: methodInvocations}
+	methodInvocations := pegomock.GetGenericMockFrom(verifier.mock).Verify(verifier.inOrderContext, verifier.invocationCountMatcher, "Run", params, verifier.timeout)
+	return &MockCommander_Run_OngoingVerification{mock: verifier.mock, methodInvocations: methodInvocations}
 }
 
-type Commander_Run_OngoingVerification struct {
+type MockCommander_Run_OngoingVerification struct {
 	mock              *MockCommander
 	methodInvocations []pegomock.MethodInvocation
 }
 
-func (c *Commander_Run_OngoingVerification) GetCapturedArguments() {
+func (c *MockCommander_Run_OngoingVerification) GetCapturedArguments() {
 }
 
-func (c *Commander_Run_OngoingVerification) GetAllCapturedArguments() {
+func (c *MockCommander_Run_OngoingVerification) GetAllCapturedArguments() {
 }
 
-func (verifier *VerifierCommander) RunWithoutRetry() *Commander_RunWithoutRetry_OngoingVerification {
+func (verifier *VerifierMockCommander) RunWithoutRetry() *MockCommander_RunWithoutRetry_OngoingVerification {
 	params := []pegomock.Param{}
-	methodInvocations := pegomock.GetGenericMockFrom(verifier.mock).Verify(verifier.inOrderContext, verifier.invocationCountMatcher, "RunWithoutRetry", params)
-	return &Commander_RunWithoutRetry_OngoingVerification{mock: verifier.mock, methodInvocations: methodInvocations}
+	methodInvocations := pegomock.GetGenericMockFrom(verifier.mock).Verify(verifier.inOrderContext, verifier.invocationCountMatcher, "RunWithoutRetry", params, verifier.timeout)
+	return &MockCommander_RunWithoutRetry_OngoingVerification{mock: verifier.mock, methodInvocations: methodInvocations}
 }
 
-type Commander_RunWithoutRetry_OngoingVerification struct {
+type MockCommander_RunWithoutRetry_OngoingVerification struct {
 	mock              *MockCommander
 	methodInvocations []pegomock.MethodInvocation
 }
 
-func (c *Commander_RunWithoutRetry_OngoingVerification) GetCapturedArguments() {
+func (c *MockCommander_RunWithoutRetry_OngoingVerification) GetCapturedArguments() {
 }
 
-func (c *Commander_RunWithoutRetry_OngoingVerification) GetAllCapturedArguments() {
+func (c *MockCommander_RunWithoutRetry_OngoingVerification) GetAllCapturedArguments() {
 }
 
-func (verifier *VerifierCommander) SetArgs(_param0 []string) *Commander_SetArgs_OngoingVerification {
+func (verifier *VerifierMockCommander) SetArgs(_param0 []string) *MockCommander_SetArgs_OngoingVerification {
 	params := []pegomock.Param{_param0}
-	methodInvocations := pegomock.GetGenericMockFrom(verifier.mock).Verify(verifier.inOrderContext, verifier.invocationCountMatcher, "SetArgs", params)
-	return &Commander_SetArgs_OngoingVerification{mock: verifier.mock, methodInvocations: methodInvocations}
+	methodInvocations := pegomock.GetGenericMockFrom(verifier.mock).Verify(verifier.inOrderContext, verifier.invocationCountMatcher, "SetArgs", params, verifier.timeout)
+	return &MockCommander_SetArgs_OngoingVerification{mock: verifier.mock, methodInvocations: methodInvocations}
 }
 
-type Commander_SetArgs_OngoingVerification struct {
+type MockCommander_SetArgs_OngoingVerification struct {
 	mock              *MockCommander
 	methodInvocations []pegomock.MethodInvocation
 }
 
-func (c *Commander_SetArgs_OngoingVerification) GetCapturedArguments() []string {
+func (c *MockCommander_SetArgs_OngoingVerification) GetCapturedArguments() []string {
 	_param0 := c.GetAllCapturedArguments()
 	return _param0[len(_param0)-1]
 }
 
-func (c *Commander_SetArgs_OngoingVerification) GetAllCapturedArguments() (_param0 [][]string) {
+func (c *MockCommander_SetArgs_OngoingVerification) GetAllCapturedArguments() (_param0 [][]string) {
 	params := pegomock.GetGenericMockFrom(c.mock).GetInvocationParams(c.methodInvocations)
 	if len(params) > 0 {
-		_param0 = make([][]string, len(params[0]))
+		_param0 = make([][]string, len(c.methodInvocations))
 		for u, param := range params[0] {
 			_param0[u] = param.([]string)
 		}
@@ -415,26 +442,26 @@ func (c *Commander_SetArgs_OngoingVerification) GetAllCapturedArguments() (_para
 	return
 }
 
-func (verifier *VerifierCommander) SetDir(_param0 string) *Commander_SetDir_OngoingVerification {
+func (verifier *VerifierMockCommander) SetDir(_param0 string) *MockCommander_SetDir_OngoingVerification {
 	params := []pegomock.Param{_param0}
-	methodInvocations := pegomock.GetGenericMockFrom(verifier.mock).Verify(verifier.inOrderContext, verifier.invocationCountMatcher, "SetDir", params)
-	return &Commander_SetDir_OngoingVerification{mock: verifier.mock, methodInvocations: methodInvocations}
+	methodInvocations := pegomock.GetGenericMockFrom(verifier.mock).Verify(verifier.inOrderContext, verifier.invocationCountMatcher, "SetDir", params, verifier.timeout)
+	return &MockCommander_SetDir_OngoingVerification{mock: verifier.mock, methodInvocations: methodInvocations}
 }
 
-type Commander_SetDir_OngoingVerification struct {
+type MockCommander_SetDir_OngoingVerification struct {
 	mock              *MockCommander
 	methodInvocations []pegomock.MethodInvocation
 }
 
-func (c *Commander_SetDir_OngoingVerification) GetCapturedArguments() string {
+func (c *MockCommander_SetDir_OngoingVerification) GetCapturedArguments() string {
 	_param0 := c.GetAllCapturedArguments()
 	return _param0[len(_param0)-1]
 }
 
-func (c *Commander_SetDir_OngoingVerification) GetAllCapturedArguments() (_param0 []string) {
+func (c *MockCommander_SetDir_OngoingVerification) GetAllCapturedArguments() (_param0 []string) {
 	params := pegomock.GetGenericMockFrom(c.mock).GetInvocationParams(c.methodInvocations)
 	if len(params) > 0 {
-		_param0 = make([]string, len(params[0]))
+		_param0 = make([]string, len(c.methodInvocations))
 		for u, param := range params[0] {
 			_param0[u] = param.(string)
 		}
@@ -442,26 +469,26 @@ func (c *Commander_SetDir_OngoingVerification) GetAllCapturedArguments() (_param
 	return
 }
 
-func (verifier *VerifierCommander) SetEnv(_param0 map[string]string) *Commander_SetEnv_OngoingVerification {
+func (verifier *VerifierMockCommander) SetEnv(_param0 map[string]string) *MockCommander_SetEnv_OngoingVerification {
 	params := []pegomock.Param{_param0}
-	methodInvocations := pegomock.GetGenericMockFrom(verifier.mock).Verify(verifier.inOrderContext, verifier.invocationCountMatcher, "SetEnv", params)
-	return &Commander_SetEnv_OngoingVerification{mock: verifier.mock, methodInvocations: methodInvocations}
+	methodInvocations := pegomock.GetGenericMockFrom(verifier.mock).Verify(verifier.inOrderContext, verifier.invocationCountMatcher, "SetEnv", params, verifier.timeout)
+	return &MockCommander_SetEnv_OngoingVerification{mock: verifier.mock, methodInvocations: methodInvocations}
 }
 
-type Commander_SetEnv_OngoingVerification struct {
+type MockCommander_SetEnv_OngoingVerification struct {
 	mock              *MockCommander
 	methodInvocations []pegomock.MethodInvocation
 }
 
-func (c *Commander_SetEnv_OngoingVerification) GetCapturedArguments() map[string]string {
+func (c *MockCommander_SetEnv_OngoingVerification) GetCapturedArguments() map[string]string {
 	_param0 := c.GetAllCapturedArguments()
 	return _param0[len(_param0)-1]
 }
 
-func (c *Commander_SetEnv_OngoingVerification) GetAllCapturedArguments() (_param0 []map[string]string) {
+func (c *MockCommander_SetEnv_OngoingVerification) GetAllCapturedArguments() (_param0 []map[string]string) {
 	params := pegomock.GetGenericMockFrom(c.mock).GetInvocationParams(c.methodInvocations)
 	if len(params) > 0 {
-		_param0 = make([]map[string]string, len(params[0]))
+		_param0 = make([]map[string]string, len(c.methodInvocations))
 		for u, param := range params[0] {
 			_param0[u] = param.(map[string]string)
 		}
@@ -469,30 +496,30 @@ func (c *Commander_SetEnv_OngoingVerification) GetAllCapturedArguments() (_param
 	return
 }
 
-func (verifier *VerifierCommander) SetEnvVariable(_param0 string, _param1 string) *Commander_SetEnvVariable_OngoingVerification {
+func (verifier *VerifierMockCommander) SetEnvVariable(_param0 string, _param1 string) *MockCommander_SetEnvVariable_OngoingVerification {
 	params := []pegomock.Param{_param0, _param1}
-	methodInvocations := pegomock.GetGenericMockFrom(verifier.mock).Verify(verifier.inOrderContext, verifier.invocationCountMatcher, "SetEnvVariable", params)
-	return &Commander_SetEnvVariable_OngoingVerification{mock: verifier.mock, methodInvocations: methodInvocations}
+	methodInvocations := pegomock.GetGenericMockFrom(verifier.mock).Verify(verifier.inOrderContext, verifier.invocationCountMatcher, "SetEnvVariable", params, verifier.timeout)
+	return &MockCommander_SetEnvVariable_OngoingVerification{mock: verifier.mock, methodInvocations: methodInvocations}
 }
 
-type Commander_SetEnvVariable_OngoingVerification struct {
+type MockCommander_SetEnvVariable_OngoingVerification struct {
 	mock              *MockCommander
 	methodInvocations []pegomock.MethodInvocation
 }
 
-func (c *Commander_SetEnvVariable_OngoingVerification) GetCapturedArguments() (string, string) {
+func (c *MockCommander_SetEnvVariable_OngoingVerification) GetCapturedArguments() (string, string) {
 	_param0, _param1 := c.GetAllCapturedArguments()
 	return _param0[len(_param0)-1], _param1[len(_param1)-1]
 }
 
-func (c *Commander_SetEnvVariable_OngoingVerification) GetAllCapturedArguments() (_param0 []string, _param1 []string) {
+func (c *MockCommander_SetEnvVariable_OngoingVerification) GetAllCapturedArguments() (_param0 []string, _param1 []string) {
 	params := pegomock.GetGenericMockFrom(c.mock).GetInvocationParams(c.methodInvocations)
 	if len(params) > 0 {
-		_param0 = make([]string, len(params[0]))
+		_param0 = make([]string, len(c.methodInvocations))
 		for u, param := range params[0] {
 			_param0[u] = param.(string)
 		}
-		_param1 = make([]string, len(params[1]))
+		_param1 = make([]string, len(c.methodInvocations))
 		for u, param := range params[1] {
 			_param1[u] = param.(string)
 		}
@@ -500,26 +527,26 @@ func (c *Commander_SetEnvVariable_OngoingVerification) GetAllCapturedArguments()
 	return
 }
 
-func (verifier *VerifierCommander) SetExponentialBackOff(_param0 *backoff.ExponentialBackOff) *Commander_SetExponentialBackOff_OngoingVerification {
+func (verifier *VerifierMockCommander) SetExponentialBackOff(_param0 *backoff.ExponentialBackOff) *MockCommander_SetExponentialBackOff_OngoingVerification {
 	params := []pegomock.Param{_param0}
-	methodInvocations := pegomock.GetGenericMockFrom(verifier.mock).Verify(verifier.inOrderContext, verifier.invocationCountMatcher, "SetExponentialBackOff", params)
-	return &Commander_SetExponentialBackOff_OngoingVerification{mock: verifier.mock, methodInvocations: methodInvocations}
+	methodInvocations := pegomock.GetGenericMockFrom(verifier.mock).Verify(verifier.inOrderContext, verifier.invocationCountMatcher, "SetExponentialBackOff", params, verifier.timeout)
+	return &MockCommander_SetExponentialBackOff_OngoingVerification{mock: verifier.mock, methodInvocations: methodInvocations}
 }
 
-type Commander_SetExponentialBackOff_OngoingVerification struct {
+type MockCommander_SetExponentialBackOff_OngoingVerification struct {
 	mock              *MockCommander
 	methodInvocations []pegomock.MethodInvocation
 }
 
-func (c *Commander_SetExponentialBackOff_OngoingVerification) GetCapturedArguments() *backoff.ExponentialBackOff {
+func (c *MockCommander_SetExponentialBackOff_OngoingVerification) GetCapturedArguments() *backoff.ExponentialBackOff {
 	_param0 := c.GetAllCapturedArguments()
 	return _param0[len(_param0)-1]
 }
 
-func (c *Commander_SetExponentialBackOff_OngoingVerification) GetAllCapturedArguments() (_param0 []*backoff.ExponentialBackOff) {
+func (c *MockCommander_SetExponentialBackOff_OngoingVerification) GetAllCapturedArguments() (_param0 []*backoff.ExponentialBackOff) {
 	params := pegomock.GetGenericMockFrom(c.mock).GetInvocationParams(c.methodInvocations)
 	if len(params) > 0 {
-		_param0 = make([]*backoff.ExponentialBackOff, len(params[0]))
+		_param0 = make([]*backoff.ExponentialBackOff, len(c.methodInvocations))
 		for u, param := range params[0] {
 			_param0[u] = param.(*backoff.ExponentialBackOff)
 		}
@@ -527,26 +554,26 @@ func (c *Commander_SetExponentialBackOff_OngoingVerification) GetAllCapturedArgu
 	return
 }
 
-func (verifier *VerifierCommander) SetName(_param0 string) *Commander_SetName_OngoingVerification {
+func (verifier *VerifierMockCommander) SetName(_param0 string) *MockCommander_SetName_OngoingVerification {
 	params := []pegomock.Param{_param0}
-	methodInvocations := pegomock.GetGenericMockFrom(verifier.mock).Verify(verifier.inOrderContext, verifier.invocationCountMatcher, "SetName", params)
-	return &Commander_SetName_OngoingVerification{mock: verifier.mock, methodInvocations: methodInvocations}
+	methodInvocations := pegomock.GetGenericMockFrom(verifier.mock).Verify(verifier.inOrderContext, verifier.invocationCountMatcher, "SetName", params, verifier.timeout)
+	return &MockCommander_SetName_OngoingVerification{mock: verifier.mock, methodInvocations: methodInvocations}
 }
 
-type Commander_SetName_OngoingVerification struct {
+type MockCommander_SetName_OngoingVerification struct {
 	mock              *MockCommander
 	methodInvocations []pegomock.MethodInvocation
 }
 
-func (c *Commander_SetName_OngoingVerification) GetCapturedArguments() string {
+func (c *MockCommander_SetName_OngoingVerification) GetCapturedArguments() string {
 	_param0 := c.GetAllCapturedArguments()
 	return _param0[len(_param0)-1]
 }
 
-func (c *Commander_SetName_OngoingVerification) GetAllCapturedArguments() (_param0 []string) {
+func (c *MockCommander_SetName_OngoingVerification) GetAllCapturedArguments() (_param0 []string) {
 	params := pegomock.GetGenericMockFrom(c.mock).GetInvocationParams(c.methodInvocations)
 	if len(params) > 0 {
-		_param0 = make([]string, len(params[0]))
+		_param0 = make([]string, len(c.methodInvocations))
 		for u, param := range params[0] {
 			_param0[u] = param.(string)
 		}
@@ -554,26 +581,26 @@ func (c *Commander_SetName_OngoingVerification) GetAllCapturedArguments() (_para
 	return
 }
 
-func (verifier *VerifierCommander) SetTimeout(_param0 time.Duration) *Commander_SetTimeout_OngoingVerification {
+func (verifier *VerifierMockCommander) SetTimeout(_param0 time.Duration) *MockCommander_SetTimeout_OngoingVerification {
 	params := []pegomock.Param{_param0}
-	methodInvocations := pegomock.GetGenericMockFrom(verifier.mock).Verify(verifier.inOrderContext, verifier.invocationCountMatcher, "SetTimeout", params)
-	return &Commander_SetTimeout_OngoingVerification{mock: verifier.mock, methodInvocations: methodInvocations}
+	methodInvocations := pegomock.GetGenericMockFrom(verifier.mock).Verify(verifier.inOrderContext, verifier.invocationCountMatcher, "SetTimeout", params, verifier.timeout)
+	return &MockCommander_SetTimeout_OngoingVerification{mock: verifier.mock, methodInvocations: methodInvocations}
 }
 
-type Commander_SetTimeout_OngoingVerification struct {
+type MockCommander_SetTimeout_OngoingVerification struct {
 	mock              *MockCommander
 	methodInvocations []pegomock.MethodInvocation
 }
 
-func (c *Commander_SetTimeout_OngoingVerification) GetCapturedArguments() time.Duration {
+func (c *MockCommander_SetTimeout_OngoingVerification) GetCapturedArguments() time.Duration {
 	_param0 := c.GetAllCapturedArguments()
 	return _param0[len(_param0)-1]
 }
 
-func (c *Commander_SetTimeout_OngoingVerification) GetAllCapturedArguments() (_param0 []time.Duration) {
+func (c *MockCommander_SetTimeout_OngoingVerification) GetAllCapturedArguments() (_param0 []time.Duration) {
 	params := pegomock.GetGenericMockFrom(c.mock).GetInvocationParams(c.methodInvocations)
 	if len(params) > 0 {
-		_param0 = make([]time.Duration, len(params[0]))
+		_param0 = make([]time.Duration, len(c.methodInvocations))
 		for u, param := range params[0] {
 			_param0[u] = param.(time.Duration)
 		}

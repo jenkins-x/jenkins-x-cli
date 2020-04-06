@@ -1,3 +1,5 @@
+// +build unit
+
 package util_test
 
 import (
@@ -30,5 +32,25 @@ func TestUrlHostNameWithoutPort(t *testing.T) {
 		actual, err := util.UrlHostNameWithoutPort(rawURI)
 		assert.NoError(t, err, "for input: %s", rawURI)
 		assert.Equal(t, expected, actual, "for input: %s", rawURI)
+	}
+}
+
+func TestSanitizeURL(t *testing.T) {
+	t.Parallel()
+	tests := map[string]string{
+		"http://test.com":                 "http://test.com",
+		"http://user:test@github.com":     "http://github.com",
+		"https://user:test@github.com":    "https://github.com",
+		"https://user:@github.com":        "https://github.com",
+		"https://:pass@github.com":        "https://github.com",
+		"git@github.com:jenkins-x/jx.git": "git@github.com:jenkins-x/jx.git",
+		"invalid/url":                     "invalid/url",
+	}
+
+	for test, expected := range tests {
+		t.Run(test, func(t *testing.T) {
+			actual := util.SanitizeURL(test)
+			assert.Equal(t, expected, actual, "for url: %s", test)
+		})
 	}
 }

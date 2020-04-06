@@ -1,0 +1,15 @@
+metadata:
+  creationTimestamp: null
+  labels:
+    branch: fix-kaniko-special-casing
+    build: "1"
+    jenkins.io/pipelineType: build
+    owner: jenkins-x
+    repository: jx
+  name: jenkins-x-jx-fix-kaniko-special-6nl7g-1
+pipelineRef: null
+pipelineRunRef: null
+stages:
+- depth: 0
+  name: ci
+  taskRef: jenkins-x-jx-fix-kaniko-special-6nl7g-ci-1

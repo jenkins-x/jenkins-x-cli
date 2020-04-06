@@ -6,9 +6,11 @@ import (
 )
 
 const (
-	APPSERVER  = "appserver"
-	LIBERTY    = "liberty"
-	DROPWIZARD = "dropwizard"
+	MAVEN        = "maven"
+	MAVEN_JAVA11 = "maven-java11"
+	APPSERVER    = "appserver"
+	LIBERTY      = "liberty"
+	DROPWIZARD   = "dropwizard"
 )
 
 func PomFlavour(path string) (string, error) {
@@ -29,7 +31,9 @@ func PomFlavour(path string) (string, error) {
 	if strings.Contains(s, "<groupId>org.apache.tomcat") {
 		return APPSERVER, nil
 	}
+	if strings.Contains(s, "<java.version>11</java.version>") {
+		return MAVEN_JAVA11, nil
+	}
 
-	return "", nil
-
+	return MAVEN, nil
 }

@@ -16,6 +16,8 @@ const (
 	defaultCacheTimeoutHours = 24
 )
 
+// CacheLoader defines cache value population callback that should be executed if cache entry with given key is
+// not present.
 type CacheLoader func() ([]byte, error)
 
 // LoadCacheData loads cached data from the given cache file name and loader
@@ -35,7 +37,7 @@ func LoadCacheData(fileName string, loader CacheLoader) ([]byte, error) {
 	if err == nil {
 		err2 := ioutil.WriteFile(fileName, data, defaultFileWritePermisons)
 		if err2 != nil {
-			log.Warnf("Failed to update cache file %s due to %s", fileName, err2)
+			log.Logger().Warnf("Failed to update cache file %s due to %s", fileName, err2)
 		}
 		writeTimeToFile(timecheckFileName, time.Now())
 	}

@@ -1,9 +1,11 @@
 package util
 
 import (
-	"github.com/sirupsen/logrus"
 	"os"
 	"path/filepath"
+
+	"github.com/jenkins-x/jx/cmd/codegen/util"
+	"github.com/jenkins-x/jx/pkg/log"
 )
 
 func HomeDir() string {
@@ -15,6 +17,18 @@ func HomeDir() string {
 		h = "."
 	}
 	return h
+}
+
+// GitCredentialsFile returns the location of the git credentials file
+func GitCredentialsFile() string {
+	cfgHome := os.Getenv("XDG_CONFIG_HOME")
+	if cfgHome == "" {
+		cfgHome = util.HomeDir()
+	}
+	if cfgHome == "" {
+		cfgHome = "."
+	}
+	return filepath.Join(cfgHome, "git", "credentials")
 }
 
 func DraftDir() (string, error) {
@@ -38,6 +52,39 @@ func ConfigDir() (string, error) {
 	h := HomeDir()
 	path = filepath.Join(h, ".jx")
 	err := os.MkdirAll(path, DefaultWritePermissions)
+	if err != nil {
+		return "", err
+	}
+	return path, nil
+}
+
+// LocalFileSystemSecretsDir returns the default local file system secrets location for the file system alternative to vault
+func LocalFileSystemSecretsDir() (string, error) {
+	home, err := ConfigDir()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(home, "localSecrets"), nil
+}
+
+// KubeConfigFile gets the .kube/config file
+func KubeConfigFile() string {
+	path := os.Getenv("KUBECONFIG")
+	if path != "" {
+		return path
+	}
+	h := HomeDir()
+	return filepath.Join(h, ".kube", "config")
+}
+
+// PluginBinDir returns the plugin bin directory for the given ns
+func PluginBinDir(ns string) (string, error) {
+	configDir, err := ConfigDir()
+	if err != nil {
+		return "", err
+	}
+	path := filepath.Join(configDir, "plugins", ns, "bin")
+	err = os.MkdirAll(path, DefaultWritePermissions)
 	if err != nil {
 		return "", err
 	}
@@ -131,28 +178,28 @@ func JXBinaryLocation() (string, error) {
 func jXBinaryLocation(osExecutable func() (string, error)) (string, error) {
 	jxProcessBinary, err := osExecutable()
 	if err != nil {
-		logrus.Debugf("jxProcessBinary error %s", err)
+		log.Logger().Debugf("jxProcessBinary error %s", err)
 		return jxProcessBinary, err
 	}
-	logrus.Debugf("jxProcessBinary %s", jxProcessBinary)
+	log.Logger().Debugf("jxProcessBinary %s", jxProcessBinary)
 	// make it absolute
 	jxProcessBinary, err = filepath.Abs(jxProcessBinary)
 	if err != nil {
-		logrus.Debugf("jxProcessBinary error %s", err)
+		log.Logger().Debugf("jxProcessBinary error %s", err)
 		return jxProcessBinary, err
 	}
-	logrus.Debugf("jxProcessBinary %s", jxProcessBinary)
+	log.Logger().Debugf("jxProcessBinary %s", jxProcessBinary)
 
 	// if the process was started form a symlink go and get the absolute location.
 	jxProcessBinary, err = filepath.EvalSymlinks(jxProcessBinary)
 	if err != nil {
-		logrus.Debugf("jxProcessBinary error %s", err)
+		log.Logger().Debugf("jxProcessBinary error %s", err)
 		return jxProcessBinary, err
 	}
 
-	logrus.Debugf("jxProcessBinary %s", jxProcessBinary)
+	log.Logger().Debugf("jxProcessBinary %s", jxProcessBinary)
 	path := filepath.Dir(jxProcessBinary)
-	logrus.Debugf("dir from '%s' is '%s'", jxProcessBinary, path)
+	log.Logger().Debugf("dir from '%s' is '%s'", jxProcessBinary, path)
 	return path, nil
 }
 

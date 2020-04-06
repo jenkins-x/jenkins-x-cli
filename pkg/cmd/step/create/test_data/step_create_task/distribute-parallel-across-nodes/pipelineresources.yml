@@ -1,0 +1,15 @@
+items:
+- apiVersion: tekton.dev/v1alpha1
+  kind: PipelineResource
+  metadata:
+    creationTimestamp: null
+    name: abayer-js-test-repo-really-long-shnql
+  spec:
+    params:
+    - name: revision
+      value: really-long
+    - name: url
+      value: https://github.com/abayer/js-test-repo
+    type: git
+  status: {}
+metadata: {}

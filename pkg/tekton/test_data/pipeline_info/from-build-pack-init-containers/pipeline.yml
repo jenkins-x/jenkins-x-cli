@@ -1,0 +1,28 @@
+apiVersion: tekton.dev/v1alpha1
+kind: Pipeline
+metadata:
+  annotations:
+    jenkins.io/last-build-number: "1"
+  creationTimestamp: 2019-02-21T22:10:48Z
+  generation: 1
+  name: abayer-jx-demo-qs-master
+  namespace: jx
+  resourceVersion: "7708"
+  selfLink: /apis/tekton.dev/v1alpha1/namespaces/jx/pipelines/abayer-jx-demo-qs-master
+  uid: 8ac56b37-3625-11e9-b776-42010a8a00ac
+spec:
+  params: null
+  resources:
+  - name: abayer-jx-demo-qs-master
+    type: git
+  tasks:
+  - name: from-build-pack
+    resources:
+      inputs:
+      - name: source
+        resource: abayer-jx-demo-qs-master
+      outputs: null
+    taskRef:
+      apiVersion: tekton.dev/v1alpha1
+      kind: Task
+      name: abayer-jx-demo-qs-master

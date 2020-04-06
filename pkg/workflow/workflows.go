@@ -1,9 +1,10 @@
 package workflow
 
 import (
-	"github.com/jenkins-x/jx/pkg/apis/jenkins.io/v1"
+	v1 "github.com/jenkins-x/jx/pkg/apis/jenkins.io/v1"
 	"github.com/jenkins-x/jx/pkg/client/clientset/versioned"
 	"github.com/jenkins-x/jx/pkg/kube"
+	"github.com/jenkins-x/jx/pkg/kube/naming"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -20,7 +21,7 @@ func GetWorkflow(name string, jxClient versioned.Interface, ns string) (*v1.Work
 	return CreateDefaultWorkflow(jxClient, ns)
 }
 
-// CreateDefaultWorkflow creates the default workflow if none is provided by just chaining the Auto enviornments together
+// CreateDefaultWorkflow creates the default workflow if none is provided by just chaining the Auto environments together
 // sequentially
 func CreateDefaultWorkflow(jxClient versioned.Interface, ns string) (*v1.Workflow, error) {
 	m, names, err := kube.GetOrderedEnvironments(jxClient, ns)
@@ -56,7 +57,7 @@ func CreateDefaultWorkflow(jxClient versioned.Interface, ns string) (*v1.Workflo
 func CreateWorkflow(ns string, name string, steps ...v1.WorkflowStep) *v1.Workflow {
 	return &v1.Workflow{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      kube.ToValidName(name),
+			Name:      naming.ToValidName(name),
 			Namespace: ns,
 		},
 		Spec: v1.WorkflowSpec{

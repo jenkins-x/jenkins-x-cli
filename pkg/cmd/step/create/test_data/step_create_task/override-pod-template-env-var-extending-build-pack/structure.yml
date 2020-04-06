@@ -1,0 +1,15 @@
+metadata:
+  creationTimestamp: null
+  labels:
+    branch: master
+    build: "1"
+    jenkins.io/pipelineType: build
+    owner: abayer
+    repository: jx-demo-qs
+  name: abayer-jx-demo-qs-master-vmmrz-1
+pipelineRef: null
+pipelineRunRef: null
+stages:
+- depth: 0
+  name: from-build-pack
+  taskRef: abayer-jx-demo-qs-master-vmmrz-from-build-pack-1

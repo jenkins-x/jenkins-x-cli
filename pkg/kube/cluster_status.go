@@ -2,9 +2,12 @@ package kube
 
 import (
 	"fmt"
+	"strings"
+
+	"github.com/jenkins-x/jx/pkg/util"
 
 	"github.com/jenkins-x/jx/pkg/log"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -13,36 +16,37 @@ import (
 )
 
 type NodeStatus struct {
-	Name                      string
-	AllocatedMemory           *resource.Quantity
-	AllocatedCPU              *resource.Quantity
-	CpuReqs                   resource.Quantity
-	CpuLimits                 resource.Quantity
-	percentCpuReq             int64
-	percentCpuLimit           int64
-	MemReqs                   resource.Quantity
-	MemLimits                 resource.Quantity
-	percentMemReq             int64
-	percentMemLimit           int64
+	Name               string
+	AllocatableMemory  *resource.Quantity
+	AllocatableCPU     *resource.Quantity
+	AllocatableStorage *resource.Quantity
+
+	CpuRequests resource.Quantity
+	CpuLimits   resource.Quantity
+	MemRequests resource.Quantity
+	MemLimits   resource.Quantity
+
+	DiskRequests              resource.Quantity
+	DiskLimits                resource.Quantity
 	numberOfNonTerminatedPods int
 }
 
 type ClusterStatus struct {
-	Name                 string
-	nodeCount            int
-	totalCpuPercent      float64
-	totalMemPercent      float64
-	totalUsedMemory      int
-	totalUsedCpu         int
-	totalAllocatedMemory resource.Quantity
-	totalAllocatedCpu    resource.Quantity
+	Name                   string
+	nodeCount              int
+	totalUsedMemory        resource.Quantity
+	totalUsedCpu           resource.Quantity
+	totalAllocatableMemory resource.Quantity
+	totalAllocatableCpu    resource.Quantity
 }
 
-func GetClusterStatus(client kubernetes.Interface, namespace string) (ClusterStatus, error) {
+func GetClusterStatus(client kubernetes.Interface, namespace string, verbose bool) (ClusterStatus, error) {
 
 	clusterStatus := ClusterStatus{
-		totalAllocatedCpu:    resource.Quantity{},
-		totalAllocatedMemory: resource.Quantity{},
+		totalAllocatableCpu:    resource.Quantity{},
+		totalAllocatableMemory: resource.Quantity{},
+		totalUsedCpu:           resource.Quantity{},
+		totalUsedMemory:        resource.Quantity{},
 	}
 
 	kuber := NewKubeConfig()
@@ -65,24 +69,29 @@ func GetClusterStatus(client kubernetes.Interface, namespace string) (ClusterSta
 	}
 	clusterStatus.nodeCount = len(nodes.Items)
 	if clusterStatus.nodeCount < 1 {
-		msg := fmt.Sprintf("Number of nodes in cluster  = %d which is insufficent", clusterStatus.nodeCount)
-		log.Fatal(msg)
+		msg := fmt.Sprintf("Number of nodes in cluster  = %d which is not sufficient", clusterStatus.nodeCount)
+		log.Logger().Fatal(msg)
 		err = errors.NewServiceUnavailable(msg)
 		return clusterStatus, err
 	}
 	for _, node := range nodes.Items {
-		nodeStatus, err := Status(client, namespace, node)
+		if verbose {
+
+			log.Logger().Infof("\n-------------------------")
+			log.Logger().Infof("Node:\n%s\n", node.Name)
+		}
+
+		nodeStatus, err := Status(client, namespace, node, verbose)
 		if err != nil {
 			return clusterStatus, err
 		}
-		clusterStatus.totalCpuPercent += float64(nodeStatus.percentCpuReq)
-		clusterStatus.totalMemPercent += float64(nodeStatus.percentMemReq)
-		clusterStatus.totalAllocatedMemory.Add(*nodeStatus.AllocatedMemory)
-		clusterStatus.totalAllocatedCpu.Add(*nodeStatus.AllocatedCPU)
-		clusterStatus.totalUsedCpu += nodeStatus.CpuReqs.Size()
-		clusterStatus.totalUsedMemory += nodeStatus.MemReqs.Size()
+		clusterStatus.totalAllocatableMemory.Add(*nodeStatus.AllocatableMemory)
+		clusterStatus.totalAllocatableCpu.Add(*nodeStatus.AllocatableCPU)
 
+		clusterStatus.totalUsedMemory.Add(nodeStatus.MemRequests)
+		clusterStatus.totalUsedCpu.Add(nodeStatus.CpuRequests)
 	}
+
 	return clusterStatus, nil
 }
 
@@ -91,17 +100,11 @@ func (clusterStatus *ClusterStatus) MinimumResourceLimit() int {
 }
 
 func (clusterStatus *ClusterStatus) AverageCpuPercent() int {
-	if clusterStatus.nodeCount > 0 {
-		return int(clusterStatus.totalCpuPercent / float64(clusterStatus.nodeCount))
-	}
-	return int(clusterStatus.totalCpuPercent)
+	return int((clusterStatus.totalUsedCpu.Value() * 100) / clusterStatus.totalAllocatableCpu.Value())
 }
 
 func (clusterStatus *ClusterStatus) AverageMemPercent() int {
-	if clusterStatus.nodeCount > 0 {
-		return int(clusterStatus.totalMemPercent / float64(clusterStatus.nodeCount))
-	}
-	return int(clusterStatus.totalMemPercent)
+	return int((clusterStatus.totalUsedMemory.Value() * 100) / clusterStatus.totalAllocatableMemory.Value())
 }
 
 func (clusterStatus *ClusterStatus) NodeCount() int {
@@ -109,13 +112,14 @@ func (clusterStatus *ClusterStatus) NodeCount() int {
 }
 
 func (clusterStatus *ClusterStatus) CheckResource() string {
+	status := []string{}
 	if clusterStatus.AverageMemPercent() >= clusterStatus.MinimumResourceLimit() {
-		return "needs more free memory"
+		status = append(status, "needs more free memory")
 	}
 	if clusterStatus.AverageCpuPercent() >= clusterStatus.MinimumResourceLimit() {
-		return "needs more free compute"
+		status = append(status, "needs more free compute")
 	}
-	return ""
+	return strings.Join(status, ", ")
 }
 
 func (clusterStatus *ClusterStatus) Info() string {
@@ -123,13 +127,13 @@ func (clusterStatus *ClusterStatus) Info() string {
 		clusterStatus.Name,
 		clusterStatus.NodeCount(),
 		clusterStatus.AverageMemPercent(),
-		clusterStatus.totalAllocatedMemory.String(),
+		clusterStatus.totalAllocatableMemory.String(),
 		clusterStatus.AverageCpuPercent(),
-		clusterStatus.totalAllocatedCpu.String())
+		clusterStatus.totalAllocatableCpu.String())
 	return str
 }
 
-func Status(client kubernetes.Interface, namespace string, node v1.Node) (NodeStatus, error) {
+func Status(client kubernetes.Interface, namespace string, node v1.Node, verbose bool) (NodeStatus, error) {
 	nodeStatus := NodeStatus{}
 	fieldSelector, err := fields.ParseSelector("spec.nodeName=" + node.Name + ",status.phase!=" + string(v1.PodSucceeded) + ",status.phase!=" + string(v1.PodFailed))
 	if err != nil {
@@ -142,8 +146,10 @@ func Status(client kubernetes.Interface, namespace string, node v1.Node) (NodeSt
 	}
 
 	nodeStatus.Name = node.Name
-	nodeStatus.AllocatedCPU = allocatable.Cpu()
-	nodeStatus.AllocatedMemory = allocatable.Memory()
+
+	nodeStatus.AllocatableCPU = allocatable.Cpu()
+	nodeStatus.AllocatableMemory = allocatable.Memory()
+	nodeStatus.AllocatableStorage = allocatable.StorageEphemeral()
 
 	// in a policy aware setting, users may have access to a node, but not all pods
 	// in that case, we note that the user does not have access to the pods
@@ -157,38 +163,63 @@ func Status(client kubernetes.Interface, namespace string, node v1.Node) (NodeSt
 
 	nodeStatus.numberOfNonTerminatedPods = len(nodeNonTerminatedPodsList.Items)
 
-	reqs, limits := getPodsTotalRequestsAndLimits(nodeNonTerminatedPodsList)
-	cpuReqs, cpuLimits, memoryReqs, memoryLimits := reqs[v1.ResourceCPU], limits[v1.ResourceCPU], reqs[v1.ResourceMemory], limits[v1.ResourceMemory]
-	fractionCpuReqs := float64(0)
-	fractionCpuLimits := float64(0)
-	if allocatable.Cpu().MilliValue() != 0 {
-		fractionCpuReqs = float64(cpuReqs.MilliValue()) / float64(allocatable.Cpu().MilliValue()) * 100
-		fractionCpuLimits = float64(cpuLimits.MilliValue()) / float64(allocatable.Cpu().MilliValue()) * 100
-	}
-	fractionMemoryReqs := float64(0)
-	fractionMemoryLimits := float64(0)
-	if allocatable.Memory().Value() != 0 {
-		fractionMemoryReqs = float64(memoryReqs.Value()) / float64(allocatable.Memory().Value()) * 100
-		fractionMemoryLimits = float64(memoryLimits.Value()) / float64(allocatable.Memory().Value()) * 100
+	reqs, limits := getPodsTotalRequestsAndLimits(nodeNonTerminatedPodsList, verbose)
+
+	cpuReqs, cpuLimits, memoryReqs, memoryLimits, diskReqs, diskLimits := reqs[v1.ResourceCPU], limits[v1.ResourceCPU], reqs[v1.ResourceMemory], limits[v1.ResourceMemory], reqs[v1.ResourceEphemeralStorage], limits[v1.ResourceEphemeralStorage]
+
+	if verbose {
+		cpuPercent := (cpuReqs.Value() * 100) / allocatable.Cpu().Value()
+		cpuMessage := ""
+		if cpuReqs.Value() > allocatable.Cpu().Value() {
+			cpuMessage = " - Node appears to be overcommitted on CPU"
+		}
+
+		log.Logger().Infof("CPU usage %v%% %s", cpuPercent, util.ColorWarning(cpuMessage))
+
+		memoryPercent := (memoryReqs.Value() * 100) / allocatable.Memory().Value()
+		memoryMessage := ""
+		if memoryReqs.Value() > allocatable.Memory().Value() {
+			memoryMessage = " - Node appears to be overcommitted on Memory"
+		}
+
+		log.Logger().Infof("Memory usage %v%%%s", memoryPercent, util.ColorWarning(memoryMessage))
 	}
 
-	nodeStatus.CpuReqs = cpuReqs
-	nodeStatus.percentCpuReq = int64(fractionCpuReqs)
+	nodeStatus.CpuRequests = cpuReqs
 	nodeStatus.CpuLimits = cpuLimits
-	nodeStatus.percentCpuLimit = int64(fractionCpuLimits)
-	nodeStatus.MemReqs = memoryReqs
-	nodeStatus.percentMemReq = int64(fractionMemoryReqs)
+	nodeStatus.MemRequests = memoryReqs
 	nodeStatus.MemLimits = memoryLimits
-	nodeStatus.percentMemLimit = int64(fractionMemoryLimits)
+
+	nodeStatus.DiskRequests = diskReqs
+	nodeStatus.DiskLimits = diskLimits
 
 	return nodeStatus, nil
 }
 
-func getPodsTotalRequestsAndLimits(podList *v1.PodList) (reqs map[v1.ResourceName]resource.Quantity, limits map[v1.ResourceName]resource.Quantity) {
+func getPodsTotalRequestsAndLimits(podList *v1.PodList, verbose bool) (reqs map[v1.ResourceName]resource.Quantity, limits map[v1.ResourceName]resource.Quantity) {
 	reqs, limits = map[v1.ResourceName]resource.Quantity{}, map[v1.ResourceName]resource.Quantity{}
-	for _, pod := range podList.Items {
 
+	if verbose {
+		log.Logger().Infof("Pods:")
+	}
+
+	for _, pod := range podList.Items {
 		podReqs, podLimits := PodRequestsAndLimits(&pod)
+
+		if verbose {
+			messages := []string{}
+
+			if _, ok := podReqs[v1.ResourceCPU]; !ok {
+				messages = append(messages, "No CPU request set")
+			}
+
+			if _, ok := podReqs[v1.ResourceMemory]; !ok {
+				messages = append(messages, "No Memory request set")
+			}
+
+			log.Logger().Infof("%s - %s %s", pod.Name, pod.Status.Phase, util.ColorError(strings.Join(messages, ", ")))
+		}
+
 		for podReqName, podReqValue := range podReqs {
 			if value, ok := reqs[podReqName]; !ok {
 				reqs[podReqName] = *podReqValue.Copy()
@@ -206,6 +237,11 @@ func getPodsTotalRequestsAndLimits(podList *v1.PodList) (reqs map[v1.ResourceNam
 			}
 		}
 	}
+
+	if verbose {
+		log.Logger().Infof("")
+	}
+
 	return
 }
 

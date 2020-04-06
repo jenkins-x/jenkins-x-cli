@@ -1,0 +1,43 @@
+pipelineConfig:
+  pipelines:
+    release:
+      pipeline:
+        env:
+          - name: LANGUAGE
+            value: rust
+        agent:
+          image: some-image
+        stages:
+          - name: A Working Stage
+            env:
+              - name: DISTRO
+                value: gentoo
+            steps:
+              - loop:
+                  variable: LANGUAGE
+                  values:
+                    - maven
+                    - gradle
+                    - nodejs
+                  steps:
+                    - command: echo
+                      args:
+                        - hello
+                        - ${LANGUAGE}
+                    - loop:
+                        variable: DISTRO
+                        values:
+                          - fedora
+                          - ubuntu
+                          - debian
+                        steps:
+                          - command: echo
+                            args:
+                              - running
+                              - ${LANGUAGE}
+                              - "on"
+                              - ${DISTRO}
+              - command: echo
+                args:
+                  - hello
+                  - after

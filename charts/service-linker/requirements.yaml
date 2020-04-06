@@ -1,3 +1,0 @@
-dependencies:
-- name: service-linker
-  repository: file://../jx

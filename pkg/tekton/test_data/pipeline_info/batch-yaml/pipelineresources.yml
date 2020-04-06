@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: List
+metadata:
+  resourceVersion: ""
+  selfLink: ""
+items:
+- apiVersion: tekton.dev/v1alpha1
+  kind: PipelineResource
+  metadata:
+    creationTimestamp: "2019-09-06T04:56:04Z"
+    generation: 2
+    name: cb-kubecd-bdd-spring-1567745634
+    namespace: jx
+    resourceVersion: "11149"
+    selfLink: /apis/tekton.dev/v1alpha1/namespaces/jx/pipelineresources/cb-kubecd-bdd-spring-1567745634
+    uid: a1af083f-d062-11e9-8eea-42010a8400f6
+  spec:
+    params:
+    - name: revision
+      value: ""
+    - name: url
+      value: https://github.com/cb-kubecd/bdd-spring-1567745634.git
+    type: git

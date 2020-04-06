@@ -1,0 +1,24 @@
+
+lgtm:
+  reviewActsAsLgtm: true
+  storeTreeHash: true
+  trustedTeamForStickyLgtm: team2
+
+approve:
+  lgtmActsAsApprove: true
+  ignoreReviewState: false
+
+externalPlugins:
+  replace: true
+  entries:
+    - name: jx-app-cheese
+      endpoint: http://jx-app-cheese
+
+plugins:
+  replace: false
+  entries:
+    - cat
+    - help
+    - hold
+    - lgtm
+    - lifecycle

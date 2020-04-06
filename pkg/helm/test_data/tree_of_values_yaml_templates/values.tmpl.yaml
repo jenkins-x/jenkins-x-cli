@@ -1,0 +1,3 @@
+JenkinsXGitHub:
+  username: "{{ .Parameters.pipelineUser.github.username }}"
+  password: "{{ .Parameters.pipelineUser.github.password }}"

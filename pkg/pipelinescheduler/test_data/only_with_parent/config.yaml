@@ -1,0 +1,63 @@
+branch-protection:
+  orgs:
+    acme:
+      repos:
+        dummy:
+          protect: true
+          required_status_checks:
+            contexts:
+            - integration
+  protect-tested-repos: true
+# TODO reinstate this
+#deck:
+#  spyglass: {}
+#gerrit: {}
+#owners_dir_blacklist:
+#  default: null
+#  repos: null
+#plank: {}
+#pod_namespace: jx
+postsubmits:
+  acme/dummy:
+  - agent: tekton
+    branches:
+      - master
+    # TODO switch this to tekton
+    #build_spec:
+    #  serviceAccountName: knative-build-bot
+    #  template:
+    #    name: jenkins-base
+    context: ""
+    name: release
+presubmits:
+  acme/dummy:
+  - agent: tekton
+    always_run: true
+    #build_spec:
+    #  serviceAccountName: helm
+    #  template:
+    #    name: jenkins-base
+    context: integration
+    name: integration
+    rerun_command: /test this
+    trigger: (?m)^/test( all| this),?(\s+|$)
+#prowjob_namespace: jx
+#push_gateway: {}
+#sinker: {}
+tide:
+  context_options:
+    from-branch-protection: true
+    required-if-present-contexts: null
+    skip-unknown-contexts: false
+  queries:
+  - labels:
+    - approved
+    missingLabels:
+    - do-not-merge
+    - do-not-merge/hold
+    - do-not-merge/work-in-progress
+    - needs-ok-to-test
+    - needs-rebase
+    repos:
+    - acme/dummy
+  #target_url: https://tide.foo.bar

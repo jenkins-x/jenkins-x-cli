@@ -1,0 +1,37 @@
+{
+  "size": 1,
+  "limit": 25,
+  "isLastPage": true,
+  "values": [
+    {
+      "id": 123,
+      "name": "Jenkins X Web Hook",
+      "createdDate": 1550258395908,
+      "updatedDate": 1550258395908,
+      "events": [
+        "repo:modified",
+        "pr:reviewer:needs_work",
+        "pr:reviewer:unapproved",
+        "pr:comment:edited",
+        "repo:refs_changed",
+        "pr:declined",
+        "pr:comment:added",
+        "repo:forked",
+        "pr:deleted",
+        "repo:comment:added",
+        "pr:reviewer:approved",
+        "pr:merged",
+        "repo:comment:deleted",
+        "pr:opened",
+        "pr:comment:deleted",
+        "repo:comment:edited"
+      ],
+      "configuration": {
+        "secret": "abc123"
+      },
+      "url": "http://jenkins.example.com/bitbucket-scmsource-hook/notify",
+      "active": true
+    }
+  ],
+  "start": 0
+}

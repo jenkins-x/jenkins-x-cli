@@ -1,0 +1,279 @@
+buildPack: none
+pipelineConfig:
+  pipelines:
+    pullRequest:
+      pipeline:
+        agent:
+          image: gcr.io/jenkinsxio/builder-go:0.1.760
+        environment:
+          - name: DEPLOY_NAMESPACE
+            value: jx
+        stages:
+          - name: release
+            steps:
+              - name: validate-git
+                dir: /workspace/source/env
+                command: jx
+                args: ['step','git','validate']
+              - name: verify-preinstall
+                dir: /workspace/source/env
+                command: jx
+                args: ['step','verify','preinstall']
+              - name: install-jx-crds
+                command: jx
+                args: ['upgrade','crd']
+              - name: install-nginx
+                dir: /workspace/source/systems/jxing
+                command: jx
+                args: ['step','helm','apply', '--boot', '--remote', '--no-vault', '--name', 'jxing']
+                env:
+                  - name: DEPLOY_NAMESPACE
+                    value: kube-system
+              - name: create-install-values
+                dir: /workspace/source/env
+                command: jx
+                args: ['step','create','install', 'values', '-b']
+              - name: install-external-dns
+                dir: /workspace/source/systems/external-dns
+                command: jx
+                args: ['step','helm','apply', '--boot', '--remote', '--no-vault', '--name', 'jx']
+              - name: install-cert-manager-crds
+                dir: /workspace/source
+                command: kubectl
+                args: ['apply', '--wait', '--validate=true', '-f', 'https://raw.githubusercontent.com/jetstack/cert-manager/release-0.8/deploy/manifests/00-crds.yaml']
+                env:
+                  - name: DEPLOY_NAMESPACE
+                    value: cert-manager
+              - name: install-cert-manager
+                dir: /workspace/source/systems/cm
+                command: jx
+                args: ['step','helm','apply', '--boot', '--remote', '--no-vault', '--name', 'jx']
+                env:
+                  - name: DEPLOY_NAMESPACE
+                    value: cert-manager
+              - name: install-acme-issuer-and-certificate
+                dir: /workspace/source/systems/acme
+                command: jx
+                args: ['step','helm','apply', '--boot', '--remote', '--no-vault', '--name', 'jx']
+              - name: install-vault
+                dir: /workspace/source/systems/vault
+                command: jx
+                args: ['step', 'boot','vault']
+              - name: helm-populate-params
+                dir: /workspace/source/env
+                command: jx
+                args: ['step', 'create', 'values', '--name', 'parameters']
+              - name: install-env
+                dir: /workspace/source/env
+                command: jx
+                args: ['step','helm','apply', '--boot', '--remote', '--name', 'jenkins-x', '--provider-values-dir', '../kubeProviders']
+              - name: verify-env
+                dir: /workspace/source
+                command: if kubectl config current-context; then $(jx step verify env); else echo "Running in cluster, skipping"; fi
+              - name: log-repos
+                dir: /workspace/source/repositories
+                command: echo
+                args:
+                  - ""
+                  - ""
+                  - "now populating projects...."
+                  - ""
+                  - ""
+              - name: apply-repositories
+                dir: /workspace/source/repositories
+                command: jx
+                args: ['step','helm','apply', '--boot', '--name', 'repos']
+              - name: apply-pipeline-schedulers
+                dir: /workspace/source/prowConfig
+                command: jx
+                args: ['step','scheduler','config', 'apply', '--direct=true']
+              - name: update-webhooks
+                dir: /workspace/source/repositories
+                command: jx
+                args: ['update','webhooks','--verbose', '--warn-on-fail']
+              - name: verify-install
+                dir: /workspace/source/env
+                command: jx
+                args: ['step','verify','install', '--pod-wait-time', '30m']
+    pullRequest:
+      pipeline:
+        agent:
+          image: gcr.io/jenkinsxio/builder-go:0.1.760
+        stages:
+          - name: release
+            steps:
+              - args:
+                  - step
+                  - git
+                  - validate
+                command: jx
+                dir: /workspace/source/env
+                name: validate-git
+              - args:
+                  - step
+                  - verify
+                  - preinstall
+                command: jx
+                dir: /workspace/source/env
+                name: verify-preinstall
+              - args:
+                  - upgrade
+                  - crd
+                command: jx
+                name: install-jx-crds
+              - args:
+                  - step
+                  - helm
+                  - apply
+                  - --boot
+                  - --remote
+                  - --no-vault
+                  - --name
+                  - jxing
+                command: jx
+                dir: /workspace/source/systems/jxing
+                env:
+                  - name: DEPLOY_NAMESPACE
+                    value: kube-system
+                name: install-nginx
+              - args:
+                  - step
+                  - create
+                  - install
+                  - values
+                  - -b
+                command: jx
+                dir: /workspace/source/env
+                name: create-install-values
+              - args:
+                  - step
+                  - helm
+                  - apply
+                  - --boot
+                  - --remote
+                  - --no-vault
+                  - --name
+                  - jx
+                command: jx
+                dir: /workspace/source/systems/external-dns
+                name: install-external-dns
+              - args:
+                  - apply
+                  - --wait
+                  - --validate=true
+                  - -f
+                  - https://raw.githubusercontent.com/jetstack/cert-manager/release-0.8/deploy/manifests/00-crds.yaml
+                command: kubectl
+                dir: /workspace/source
+                env:
+                  - name: DEPLOY_NAMESPACE
+                    value: cert-manager
+                name: install-cert-manager-crds
+              - args:
+                  - step
+                  - helm
+                  - apply
+                  - --boot
+                  - --remote
+                  - --no-vault
+                  - --name
+                  - jx
+                command: jx
+                dir: /workspace/source/systems/cm
+                env:
+                  - name: DEPLOY_NAMESPACE
+                    value: cert-manager
+                name: install-cert-manager
+              - args:
+                  - step
+                  - helm
+                  - apply
+                  - --boot
+                  - --remote
+                  - --no-vault
+                  - --name
+                  - jx
+                command: jx
+                dir: /workspace/source/systems/acme
+                name: install-acme-issuer-and-certificate
+              - args:
+                  - step
+                  - boot
+                  - vault
+                command: jx
+                dir: /workspace/source/systems/vault
+                name: install-vault
+              - args:
+                  - step
+                  - create
+                  - values
+                  - --name
+                  - parameters
+                command: jx
+                dir: /workspace/source/env
+                name: helm-populate-params
+              - args:
+                  - step
+                  - helm
+                  - apply
+                  - --boot
+                  - --remote
+                  - --name
+                  - jenkins-x
+                  - --provider-values-dir
+                  - ../kubeProviders
+                command: jx
+                dir: /workspace/source/env
+                name: install-env
+              - args:
+                  - step
+                  - verify
+                  - env
+                command: jx
+                dir: /workspace/source
+                name: verify-env
+              - args:
+                  - ""
+                  - ""
+                  - now populating projects....
+                  - ""
+                  - ""
+                command: echo
+                dir: /workspace/source/repositories
+                name: log-repos
+              - args:
+                  - step
+                  - helm
+                  - apply
+                  - --boot
+                  - --name
+                  - repos
+                command: jx
+                dir: /workspace/source/repositories
+                name: apply-repositories
+              - args:
+                  - step
+                  - scheduler
+                  - config
+                  - apply
+                  - --direct=true
+                command: jx
+                dir: /workspace/source/prowConfig
+                name: apply-pipeline-schedulers
+              - args:
+                  - update
+                  - webhooks
+                  - --verbose
+                  - --warn-on-fail
+                command: jx
+                dir: /workspace/source/repositories
+                name: update-webhooks
+              - args:
+                  - step
+                  - verify
+                  - install
+                  - --pod-wait-time
+                  - 30m
+                command: jx
+                dir: /workspace/source/env
+                name: verify-install

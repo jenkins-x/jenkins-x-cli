@@ -1,0 +1,69 @@
+apiVersion: jenkins.io/v1
+kind: PipelineActivity
+metadata:
+  creationTimestamp: "2020-01-15T09:55:11Z"
+  generation: 10
+  labels:
+    branch: PR-2
+    build: "1"
+    context: fakecontext
+    lastCommitSha: dad79b3e2fa702742b8342a0a6e34990ff4497ec
+    owner: myself
+    provider: github
+    repository: My-Awesome-Project.org
+  name: myself-my-awesome-project-org-pr-2-1
+  namespace: jx
+  resourceVersion: "30291961"
+  selfLink: /apis/jenkins.io/v1/namespaces/jx/pipelineactivities/myself-my-awesome-project-org-pr-2-1
+  uid: 1ea74216-377d-11ea-a7cc-42010a94005e
+spec:
+  author: myself
+  batchPipelineActivity: {}
+  build: "1"
+  context: fakecontext
+  gitBranch: PR-2
+  gitOwner: myself
+  gitRepository: My_Awesome_Project.org
+  gitUrl: https://github.com/myself/My_Awesome_Project.org.git
+  lastCommitSHA: dad79b3e2fa702742b8342a0a6e34990ff4497ec
+  pipeline: myself/My_Awesome_Project.org/PR-2
+  pullTitle: test
+  startedTimestamp: "2020-01-15T09:55:12Z"
+  status: Running
+  steps:
+  - kind: Stage
+    stage:
+      name: meta pipeline
+      startedTimestamp: "2020-01-15T09:55:12Z"
+      status: Running
+      steps:
+      - completedTimestamp: "2020-01-15T09:55:12Z"
+        name: Credential Initializer 7n9f7
+        startedTimestamp: "2020-01-15T09:55:12Z"
+        status: Succeeded
+      - completedTimestamp: "2020-01-15T09:55:13Z"
+        name: Working Dir Initializer Ckdff
+        startedTimestamp: "2020-01-15T09:55:12Z"
+        status: Succeeded
+      - completedTimestamp: "2020-01-15T09:55:14Z"
+        name: Place Tools
+        startedTimestamp: "2020-01-15T09:55:13Z"
+        status: Succeeded
+      - completedTimestamp: "2020-01-15T09:55:21Z"
+        description: https://github.com/myself/My_Awesome_Project.org.git
+        name: Git Source Meta Olli Ai My Awesome Project 9lttp
+        startedTimestamp: "2020-01-15T09:55:14Z"
+        status: Succeeded
+      - completedTimestamp: "2020-01-15T09:55:24Z"
+        name: Git Merge
+        startedTimestamp: "2020-01-15T09:55:21Z"
+        status: Succeeded
+      - completedTimestamp: "2020-01-15T09:55:26Z"
+        name: Merge Pull Refs
+        startedTimestamp: "2020-01-15T09:55:24Z"
+        status: Succeeded
+      - name: Create Effective Pipeline
+        startedTimestamp: "2020-01-15T09:55:26Z"
+        status: Running
+      - name: Create Tekton Crds
+        status: Pending

@@ -1,0 +1,34 @@
+apiVersion: tekton.dev/v1alpha1
+kind: Pipeline
+metadata:
+  creationTimestamp: null
+  labels:
+    branch: master
+    build: "1"
+    jenkins.io/pipelineType: build
+    owner: abayer
+    repository: jx-demo-qs
+  name: abayer-jx-demo-qs-master-cmg46-1
+  namespace: jx
+spec:
+  params:
+  - default: 0.0.1
+    description: the version number for this pipeline which is used as a tag on docker
+      images and helm charts
+    name: version
+    type: string
+  resources:
+  - name: abayer-jx-demo-qs-master-cmg46
+    type: git
+  tasks:
+  - name: from-build-pack
+    params:
+    - name: version
+      value: $(params.version)
+    resources:
+      inputs:
+      - name: workspace
+        resource: abayer-jx-demo-qs-master-cmg46
+    taskRef:
+      name: abayer-jx-demo-qs-master-cmg46-from-build-pack-1
+status: {}

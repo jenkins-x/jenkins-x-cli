@@ -1,0 +1,7 @@
+buildPack: maven
+pipelineConfig:
+  pipelines:
+    pullRequest:
+      build:
+        steps:
+        - command: echo hello world

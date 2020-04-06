@@ -5,8 +5,8 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 )
 
-// CreateClient creates a new Kubernetes client
-func CreateClient(kubeconfig *string) (kubernetes.Interface, error) {
+// CreateKubeClient creates a new Kubernetes client
+func CreateKubeClient(kubeconfig *string) (kubernetes.Interface, error) {
 	// use the current context in kubeconfig
 	config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
 	if err != nil {

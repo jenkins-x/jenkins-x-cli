@@ -18,10 +18,10 @@ import (
 // copied from draft so we can change the $DRAFT_HOME to ~/.jx/draft and lookup jx draft packs
 // credit original from: https://github.com/Azure/draft/blob/8e1a459/cmd/draft/create.go#L163
 
-// doPackDetection performs pack detection across all the packs available in $(draft home)/packs in
+// DoPackDetection performs pack detection across all the packs available in $(draft home)/packs in
 // alphabetical order, returning the pack dirpath and any errors that occurred during the pack detection.
 func DoPackDetection(home draftpath.Home, out io.Writer, dir string) (string, error) {
-	log.Infof("performing pack detection in folder %s\n", dir)
+	log.Logger().Infof("performing pack detection in folder %s", dir)
 	langs, err := linguist.ProcessDir(dir)
 	if err != nil {
 		return "", fmt.Errorf("there was an error detecting the language: %s", err)
@@ -54,7 +54,7 @@ func DoPackDetection(home draftpath.Home, out io.Writer, dir string) (string, er
 
 // DoPackDetectionForBuildPack performs detection of the language based on a sepcific build pack
 func DoPackDetectionForBuildPack(out io.Writer, dir string, packDir string) (string, error) {
-	log.Infof("performing pack detection in folder %s\n", dir)
+	log.Logger().Infof("performing pack detection in folder %s", dir)
 	langs, err := linguist.ProcessDir(dir)
 	if err != nil {
 		return "", fmt.Errorf("there was an error detecting the language: %s", err)

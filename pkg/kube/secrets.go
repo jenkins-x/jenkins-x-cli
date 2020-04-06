@@ -1,13 +1,15 @@
 package kube
 
 import (
+	"fmt"
+	"sort"
+
 	"github.com/jenkins-x/jx/pkg/log"
 	"github.com/jenkins-x/jx/pkg/util"
 	"github.com/pkg/errors"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
-	"sort"
 )
 
 // GetSecrets returns a map of the Secrets along with a sorted list of names
@@ -57,17 +59,30 @@ func DefaultModifySecret(kubeClient kubernetes.Interface, ns string, name string
 		return secret, err
 	}
 	if create {
-		log.Infof("Creating Secret %s in namespace %s\n", util.ColorInfo(name), util.ColorInfo(ns))
+		log.Logger().Debugf("Creating Secret %s in namespace %s", util.ColorInfo(name), util.ColorInfo(ns))
 		_, err = secretInterface.Create(secret)
 		if err != nil {
 			return secret, errors.Wrapf(err, "Failed to create Secret %s in namespace %s", name, ns)
 		}
 		return secret, err
 	}
-	log.Infof("Updating Secret %s in namespace %s\n", util.ColorInfo(name), util.ColorInfo(ns))
+	log.Logger().Infof("Updating Secret %s in namespace %s", util.ColorInfo(name), util.ColorInfo(ns))
 	_, err = secretInterface.Update(secret)
 	if err != nil {
 		return secret, errors.Wrapf(err, "Failed to update Secret %s in namespace %s", name, ns)
 	}
 	return secret, nil
+}
+
+// ValidateSecret checks a given secret and key exists in the provided namespace
+func ValidateSecret(kubeClient kubernetes.Interface, secretName, key, ns string) error {
+	secret, err := kubeClient.CoreV1().Secrets(ns).Get(secretName, metav1.GetOptions{})
+	if err != nil {
+		return errors.Wrapf(err, "could not find the Secret %s in the namespace: %s", secretName, ns)
+	}
+	if secret.Data == nil || len(secret.Data[key]) == 0 {
+		return fmt.Errorf("the Secret %s in the namespace: %s does not have a key: %s", secretName, ns, key)
+	}
+	log.Logger().Debugf("valid: there is a Secret: %s in namespace: %s\n", util.ColorInfo(secretName), util.ColorInfo(ns))
+	return nil
 }

@@ -1,0 +1,52 @@
+buildPack: none
+pipelineConfig:
+  pipelines:
+    pullRequest:
+      pipeline:
+        agent:
+          image: gcr.io/kaniko-project/executor:9912ccbf8d22bbafbf971124600fbb0b13b9cbd6
+        stages:
+          - name: ci
+            environment:
+              - name: GIT_COMMITTER_EMAIL
+                value: jenkins-x@googlegroups.com
+              - name: GIT_AUTHOR_EMAIL
+                value: jenkins-x@googlegroups.com
+              - name: GIT_AUTHOR_NAME
+                value: jenkins-x-bot
+              - name: GIT_COMMITTER_NAME
+                value: jenkins-x-bot
+              - name: BASE_WORKSPACE
+                value: /workspace/source
+              - name: GOPROXY
+                value: http://jenkins-x-athens-proxy:80
+              - name: JUNIT_REPORT
+                value: "true"
+              - name: PARALLEL_BUILDS
+                value: "2"
+              - name: DISABLE_TEST_CACHING
+                value: "true"
+            options:
+              containerOptions:
+                resources:
+                  limits:
+                    cpu: 4
+                    memory: 8Gi
+                  requests:
+                    cpu: 3
+                    memory: 3072Mi
+            steps:
+              - name: init-jx
+                image: gcr.io/jenkinsxio/builder-jx:0.1.639
+                command: jx
+                args: ['create','git','token','-n','fake','-t','1234','-u','https://github.com','fake']
+
+              - name: build
+                image: docker.io/golang:1.12.13
+                command: make
+                args: ['build']
+
+              - name: unit-test
+                image: docker.io/golang:1.12.13
+                command: make
+                args: ['test']

@@ -2,10 +2,6 @@ package tests
 
 import (
 	"bytes"
-	"github.com/acarl005/stripansi"
-	"github.com/jenkins-x/jx/pkg/auth/mocks"
-	. "github.com/petergtz/pegomock"
-	"github.com/stretchr/testify/assert"
 	"io"
 	"os"
 	"runtime"
@@ -14,13 +10,22 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Netflix/go-expect"
+	"github.com/petergtz/pegomock"
+
+	expect "github.com/Netflix/go-expect"
+	"github.com/acarl005/stripansi"
 	"github.com/hinshun/vt10x"
 	"github.com/jenkins-x/jx/pkg/auth"
+	auth_test "github.com/jenkins-x/jx/pkg/auth/mocks"
 	"github.com/jenkins-x/jx/pkg/gits"
 	"github.com/jenkins-x/jx/pkg/log"
 	"github.com/jenkins-x/jx/pkg/util"
+	"github.com/stretchr/testify/assert"
 	"gopkg.in/AlecAivazis/survey.v1/terminal"
+)
+
+var (
+	defaultConsoleTimeout = 1 * time.Second
 )
 
 // IsDebugLog debug log?
@@ -31,7 +36,7 @@ func IsDebugLog() bool {
 // Debugf debug format
 func Debugf(message string, args ...interface{}) {
 	if IsDebugLog() {
-		log.Infof(message, args...)
+		log.Logger().Infof(message, args...)
 	}
 }
 
@@ -69,13 +74,15 @@ func CreateAuthConfigService() auth.ConfigService {
 		Name:        "jx-testing-server",
 	}
 	authConfig := auth.AuthConfig{
-		Servers:         []*auth.AuthServer{&authServer},
-		DefaultUsername: userAuth.Username,
-		CurrentServer:   authServer.URL,
+		Servers:          []*auth.AuthServer{&authServer},
+		DefaultUsername:  userAuth.Username,
+		CurrentServer:    authServer.URL,
+		PipeLineUsername: "jx-pipeline-user",
+		PipeLineServer:   "https://github.com",
 	}
-	saver := auth_test.NewMockConfigSaver()
-	When(saver.LoadConfig()).ThenReturn(&authConfig, nil)
-	authConfigSvc := auth.NewAuthConfigService(saver)
+	handler := auth_test.NewMockConfigHandler()
+	pegomock.When(handler.LoadConfig()).ThenReturn(&authConfig, nil)
+	authConfigSvc := auth.NewAuthConfigService(handler)
 	authConfigSvc.SetConfig(&authConfig)
 	return authConfigSvc
 }
@@ -90,13 +97,15 @@ func newTerminal(c *expect.Console) *terminal.Stdio {
 }
 
 // NewTerminal mock terminal to control stdin and stdout
-func NewTerminal(t *testing.T) *ConsoleWrapper {
+func NewTerminal(t assert.TestingT, timeout *time.Duration) *ConsoleWrapper {
 	buf := new(bytes.Buffer)
-	timeout := time.Second * 1
+	if timeout == nil {
+		timeout = &defaultConsoleTimeout
+	}
 	opts := []expect.ConsoleOpt{
 		sendNoError(t),
 		expect.WithStdout(buf),
-		expect.WithDefaultTimeout(timeout),
+		expect.WithDefaultTimeout(*timeout),
 	}
 
 	c, state, err := vt10x.NewVT10XConsole(opts...)
@@ -119,14 +128,14 @@ func TestCloser(t *testing.T, closer io.Closer) {
 	}
 }
 
-func sendNoError(t *testing.T) expect.ConsoleOpt {
+func sendNoError(t assert.TestingT) expect.ConsoleOpt {
 	return expect.WithSendObserver(
 		func(msg string, n int, err error) {
 			if err != nil {
-				t.Fatalf("Failed to send %q: %s\n%s", msg, err, string(debug.Stack()))
+				t.Errorf("Failed to send %q: %s\n%s", msg, err, string(debug.Stack()))
 			}
 			if len(msg) != n {
-				t.Fatalf("Only sent %d of %d bytes for %q\n%s", n, len(msg), msg, string(debug.Stack()))
+				t.Errorf("Only sent %d of %d bytes for %q\n%s", n, len(msg), msg, string(debug.Stack()))
 			}
 		},
 	)

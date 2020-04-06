@@ -46,7 +46,45 @@ func UrlHostNameWithoutPort(rawUri string) (string, error) {
 	return rawUri, nil
 }
 
-// URLEqual verifies if URLs are equal
-func URLEqual(url1, url2 string) bool {
+// UrlEqual verifies if URLs are equal
+func UrlEqual(url1, url2 string) bool {
 	return url1 == url2 || strings.TrimSuffix(url1, "/") == strings.TrimSuffix(url2, "/")
+}
+
+// SanitizeURL sanitizes by stripping the user and password
+func SanitizeURL(unsanitizedUrl string) string {
+	u, err := url.Parse(unsanitizedUrl)
+	if err != nil {
+		return unsanitizedUrl
+	}
+	return stripCredentialsFromURL(u)
+}
+
+// stripCredentialsFromURL strip credentials from URL
+func stripCredentialsFromURL(u *url.URL) string {
+	pass, hasPassword := u.User.Password()
+	userName := u.User.Username()
+	if hasPassword {
+		textToReplace := pass + "@"
+		textToReplace = ":" + textToReplace
+		if userName != "" {
+			textToReplace = userName + textToReplace
+		}
+		return strings.Replace(u.String(), textToReplace, "", 1)
+	}
+	return u.String()
+}
+
+// URLToHostName converts the given URL to a host name returning the error string if its not a URL
+func URLToHostName(svcURL string) string {
+	host := ""
+	if svcURL != "" {
+		u, err := url.Parse(svcURL)
+		if err != nil {
+			host = err.Error()
+		} else {
+			host = u.Host
+		}
+	}
+	return host
 }

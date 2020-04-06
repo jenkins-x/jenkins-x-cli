@@ -1,0 +1,131 @@
+apiVersion: v1
+items:
+  - apiVersion: jenkins.io/v1
+    kind: PipelineActivity
+    metadata:
+      creationTimestamp: "2019-10-23T07:44:15Z"
+      generation: 25
+      labels:
+        branch: master
+        build: "308"
+        context: release
+        owner: jenkins-x
+        provider: github
+        repository: jx
+      name: jenkins-x-jx-master-308
+      namespace: jx
+      resourceVersion: "37492250"
+      selfLink: /apis/jenkins.io/v1/namespaces/jx/pipelineactivities/jenkins-x-jx-master-308
+      uid: e9b98219-f568-11e9-9480-42010a840121
+    spec:
+      author: abayer
+      batchPipelineActivity: {}
+      build: "308"
+      buildLogsUrl: gs://jx-prod-logs/jenkins-x/logs/jenkins-x/jx/master/308.log
+      completedTimestamp: "2019-10-23T08:33:36Z"
+      context: release
+      gitBranch: master
+      gitOwner: jenkins-x
+      gitRepository: jx
+      gitUrl: https://github.com/jenkins-x/jx.git
+      lastCommitMessage: |-
+        chore: Switch calls passing "o.In, o.Out, o.Err" to using a struct instead
+
+        fixes #5901
+
+        Signed-off-by: Andrew Bayer <andrew.bayer@gmail.com>
+      lastCommitSHA: 6b5d29ba137b03a16693f8f1059c4f2da4278015
+      pipeline: jenkins-x/jx/master
+      startedTimestamp: "2019-10-23T07:44:17Z"
+      status: Succeeded
+      steps: []
+      version: 2.0.902
+    status: {}
+  - apiVersion: jenkins.io/v1
+    kind: PipelineActivity
+    metadata:
+      creationTimestamp: "2019-10-23T00:30:18Z"
+      generation: 23
+      labels:
+        branch: master
+        build: "307"
+        context: release
+        owner: jenkins-x
+        provider: github
+        repository: jx
+      name: jenkins-x-jx-master-307
+      namespace: jx
+      resourceVersion: "37327384"
+      selfLink: /apis/jenkins.io/v1/namespaces/jx/pipelineactivities/jenkins-x-jx-master-307
+      uid: 49fc8f9f-f52c-11e9-9480-42010a840121
+    spec:
+      author: rawlingsj
+      batchPipelineActivity: {}
+      build: "307"
+      buildLogsUrl: gs://jx-prod-logs/jenkins-x/logs/jenkins-x/jx/master/307.log
+      completedTimestamp: "2019-10-23T01:20:56Z"
+      context: release
+      gitBranch: master
+      gitOwner: jenkins-x
+      gitRepository: jx
+      gitUrl: https://github.com/jenkins-x/jx.git
+      lastCommitMessage: |-
+        feat: lets add a specific wait-for-chart step so that pipelines can wait until a helm index has been updated to contain the newly released chart
+
+        Signed-off-by: James Rawlings <rawlingsj80@gmail.com>
+      lastCommitSHA: 7ae01e5e215861023bbd64d2d523c3e72903a512
+      pipeline: jenkins-x/jx/master
+      startedTimestamp: "2019-10-23T00:30:19Z"
+      status: Succeeded
+      steps: []
+      version: 2.0.901
+    status: {}
+  - apiVersion: jenkins.io/v1
+    kind: PipelineActivity
+    metadata:
+      creationTimestamp: "2019-10-22T20:05:33Z"
+      generation: 28
+      labels:
+        branch: master
+        build: "306"
+        context: release
+        owner: jenkins-x
+        provider: github
+        repository: jx
+      name: jenkins-x-jx-master-306
+      namespace: jx
+      resourceVersion: "37217195"
+      selfLink: /apis/jenkins.io/v1/namespaces/jx/pipelineactivities/jenkins-x-jx-master-306
+      uid: 4e2a72e6-f507-11e9-9480-42010a840121
+    spec:
+      author: abayer
+      batchPipelineActivity: {}
+      build: "306"
+      buildLogsUrl: gs://jx-prod-logs/jenkins-x/logs/jenkins-x/jx/master/306.log
+      completedTimestamp: "2019-10-22T20:53:58Z"
+      context: release
+      gitBranch: master
+      gitOwner: jenkins-x
+      gitRepository: jx
+      gitUrl: https://github.com/jenkins-x/jx.git
+      lastCommitMessage: |-
+        fix(pipeline): Use standard version stream cloning logic in metapipeline
+
+        Now that the standard version stream cloning logic has merged, let's
+        use that in metapipeline rather than its own logic.
+
+        fixes #5075
+
+        Signed-off-by: Andrew Bayer <andrew.bayer@gmail.com>
+      lastCommitSHA: 67f0a3f82559731cb4369fa5b5aec1246c74e684
+      pipeline: jenkins-x/jx/master
+      startedTimestamp: "2019-10-22T20:05:35Z"
+      status: Succeeded
+      steps: []
+      version: 2.0.900
+    status: {}
+kind: List
+metadata:
+  resourceVersion: ""
+  selfLink: ""
+

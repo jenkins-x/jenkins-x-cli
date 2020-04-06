@@ -76,8 +76,8 @@ func GetKubeVersions(versions containerv1.KubeVersions) ([]string, string, error
 	return strversions, def, nil
 }
 
-func GetMachineTypes(zone Zone, machinetypes MachineTypes) ([]string, error) {
-	machinetypesarr, err := machinetypes.GetMachineTypes(zone)
+func GetMachineTypes(zone Zone, region Region, machinetypes MachineTypes) ([]string, error) {
+	machinetypesarr, err := machinetypes.GetMachineTypes(zone, region)
 
 	if err != nil {
 		return nil, err
@@ -91,8 +91,8 @@ func GetMachineTypes(zone Zone, machinetypes MachineTypes) ([]string, error) {
 	return strmachinetype, nil
 }
 
-func GetPrivateVLANs(zone Zone, vlans VLANs) ([]string, error) {
-	vlansarr, err := vlans.GetVLANs(zone)
+func GetPrivateVLANs(zone Zone, region Region, vlans VLANs) ([]string, error) {
+	vlansarr, err := vlans.GetVLANs(zone, region)
 
 	if err != nil {
 		return nil, err
@@ -110,8 +110,8 @@ func GetPrivateVLANs(zone Zone, vlans VLANs) ([]string, error) {
 	return strvlans[0:i], nil
 }
 
-func GetPublicVLANs(zone Zone, vlans VLANs) ([]string, error) {
-	vlansarr, err := vlans.GetVLANs(zone)
+func GetPublicVLANs(zone Zone, region Region, vlans VLANs) ([]string, error) {
+	vlansarr, err := vlans.GetVLANs(zone, region)
 
 	if err != nil {
 		return nil, err

@@ -2,7 +2,6 @@ package gits
 
 import (
 	"fmt"
-	"io"
 	"net/url"
 	"sort"
 	"strconv"
@@ -10,8 +9,9 @@ import (
 	"time"
 
 	"github.com/jenkins-x/jx/pkg/auth"
+	"github.com/jenkins-x/jx/pkg/util"
+	"github.com/pkg/errors"
 	"gopkg.in/AlecAivazis/survey.v1"
-	"gopkg.in/AlecAivazis/survey.v1/terminal"
 )
 
 type GitOrganisation struct {
@@ -19,6 +19,7 @@ type GitOrganisation struct {
 }
 
 type GitRepository struct {
+	ID               int64
 	Name             string
 	AllowMergeCommit bool
 	HTMLURL          string
@@ -27,27 +28,53 @@ type GitRepository struct {
 	Language         string
 	Fork             bool
 	Stars            int
+	URL              string
+	Scheme           string
+	Host             string
+	Organisation     string
+	Project          string
+	Private          bool
+	HasIssues        bool
+	OpenIssueCount   int
+	HasWiki          bool
+	HasProjects      bool
+	Archived         bool
 }
 
 type GitPullRequest struct {
-	URL            string
-	Author         *GitUser
-	Owner          string
-	Repo           string
-	Number         *int
-	Mergeable      *bool
-	Merged         *bool
-	HeadRef        *string
-	State          *string
-	StatusesURL    *string
-	IssueURL       *string
-	DiffURL        *string
-	MergeCommitSHA *string
-	ClosedAt       *time.Time
-	MergedAt       *time.Time
-	LastCommitSha  string
-	Title          string
-	Body           string
+	URL                string
+	Author             *GitUser
+	Owner              string
+	Repo               string
+	Number             *int
+	Mergeable          *bool
+	Merged             *bool
+	HeadRef            *string
+	State              *string
+	StatusesURL        *string
+	IssueURL           *string
+	DiffURL            *string
+	MergeCommitSHA     *string
+	ClosedAt           *time.Time
+	MergedAt           *time.Time
+	LastCommitSha      string
+	Title              string
+	Body               string
+	Assignees          []*GitUser
+	RequestedReviewers []*GitUser
+	Labels             []*Label
+	UpdatedAt          *time.Time
+	HeadOwner          *string // HeadOwner is the string the PR is created from
+}
+
+// Label represents a label on an Issue
+type Label struct {
+	ID          *int64
+	URL         *string
+	Name        *string
+	Color       *string
+	Description *string
+	Default     *bool
 }
 
 type GitCommit struct {
@@ -57,6 +84,16 @@ type GitCommit struct {
 	URL       string
 	Branch    string
 	Committer *GitUser
+}
+
+type ListCommitsArguments struct {
+	SHA     string
+	Path    string
+	Author  string
+	Since   time.Time
+	Until   time.Time
+	Page    int
+	PerPage int
 }
 
 type GitIssue struct {
@@ -89,12 +126,23 @@ type GitUser struct {
 }
 
 type GitRelease struct {
+	ID            int64
 	Name          string
 	TagName       string
 	Body          string
+	PreRelease    bool
 	URL           string
 	HTMLURL       string
 	DownloadCount int
+	Assets        *[]GitReleaseAsset
+}
+
+// GitReleaseAsset represents a release stored in Git
+type GitReleaseAsset struct {
+	ID                 int64
+	BrowserDownloadURL string
+	Name               string
+	ContentType        string
 }
 
 type GitLabel struct {
@@ -120,19 +168,26 @@ type GitRepoStatus struct {
 }
 
 type GitPullRequestArguments struct {
-	Title             string
-	Body              string
-	Head              string
-	Base              string
-	GitRepositoryInfo *GitRepositoryInfo
+	Title         string
+	Body          string
+	Head          string
+	Base          string
+	GitRepository *GitRepository
+	Labels        []string
+}
+
+func (a *GitPullRequestArguments) String() string {
+	return fmt.Sprintf("Title: %s; Body: %s; Head: %s; Base: %s; Labels: %s; Git Repo: %s", a.Title, a.Body, a.Head, a.Base, strings.Join(a.Labels, ", "), a.GitRepository.URL)
 }
 
 type GitWebHookArguments struct {
-	ID     int64
-	Owner  string
-	Repo   *GitRepositoryInfo
-	URL    string
-	Secret string
+	ID          int64
+	Owner       string
+	Repo        *GitRepository
+	URL         string
+	ExistingURL string
+	Secret      string
+	InsecureSSL bool
 }
 
 type GitFileContent struct {
@@ -149,11 +204,26 @@ type GitFileContent struct {
 	DownloadUrl string
 }
 
+// GitBranch is info on a git branch including the commit at the tip
+type GitBranch struct {
+	Name      string
+	Commit    *GitCommit
+	Protected bool
+}
+
 // PullRequestInfo describes a pull request that has been created
 type PullRequestInfo struct {
 	GitProvider          GitProvider
 	PullRequest          *GitPullRequest
 	PullRequestArguments *GitPullRequestArguments
+}
+
+// GitProject is a project for managing issues
+type GitProject struct {
+	Name        string
+	Description string
+	Number      int
+	State       string
 }
 
 // IsClosed returns true if the PullRequest has been closed
@@ -170,6 +240,27 @@ func (pr *GitPullRequest) NumberString() string {
 	return "#" + strconv.Itoa(*n)
 }
 
+// ShortSha returns short SHA of the commit.
+func (c *GitCommit) ShortSha() string {
+	shortLen := 9
+	if len(c.SHA) < shortLen+1 {
+		return c.SHA
+	}
+	return c.SHA[:shortLen]
+}
+
+// Subject returns the subject line of the commit message.
+func (c *GitCommit) Subject() string {
+	lines := strings.Split(c.Message, "\n")
+	return lines[0]
+}
+
+// OneLine returns the commit in the Oneline format
+func (c *GitCommit) OneLine() string {
+	return fmt.Sprintf("%s %s", c.ShortSha(), c.Subject())
+}
+
+// CreateProvider creates a git provider for the given auth details
 func CreateProvider(server *auth.AuthServer, user *auth.UserAuth, git Gitter) (GitProvider, error) {
 	if server.Kind == "" {
 		server.Kind = SaasGitKind(server.URL)
@@ -183,7 +274,7 @@ func CreateProvider(server *auth.AuthServer, user *auth.UserAuth, git Gitter) (G
 	} else if server.Kind == KindGitlab {
 		return NewGitlabProvider(server, user, git)
 	} else if server.Kind == KindGitFake {
-		return NewFakeGitProvider(server, user, git)
+		return NewFakeProvider(), nil
 	} else {
 		return NewGitHubProvider(server, user, git)
 	}
@@ -221,16 +312,27 @@ func ProviderAccessTokenURL(kind string, url string, username string) string {
 	}
 }
 
+// PickOwner allows to select a potential owner of a repository
+func PickOwner(orgLister OrganisationLister, userName string, handles util.IOFileHandles) (string, error) {
+	msg := "Who should be the owner of the repository?"
+	return pickOwner(orgLister, userName, msg, handles)
+}
+
 // PickOrganisation picks an organisations login if there is one available
-func PickOrganisation(orgLister OrganisationLister, userName string, in terminal.FileReader, out terminal.FileWriter, errOut io.Writer) (string, error) {
+func PickOrganisation(orgLister OrganisationLister, userName string, handles util.IOFileHandles) (string, error) {
+	msg := "Which organisation do you want to use?"
+	return pickOwner(orgLister, userName, msg, handles)
+}
+
+func pickOwner(orgLister OrganisationLister, userName string, message string, handles util.IOFileHandles) (string, error) {
 	prompt := &survey.Select{
-		Message: "Which organisation do you want to use?",
+		Message: message,
 		Options: GetOrganizations(orgLister, userName),
 		Default: userName,
 	}
 
 	orgName := ""
-	surveyOpts := survey.WithStdio(in, out, errOut)
+	surveyOpts := survey.WithStdio(handles.In, handles.Out, handles.Err)
 	err := survey.AskOne(prompt, &orgName, nil, surveyOpts)
 	if err != nil {
 		return "", err
@@ -243,8 +345,11 @@ func PickOrganisation(orgLister OrganisationLister, userName string, in terminal
 
 // GetOrganizations gets the organisation
 func GetOrganizations(orgLister OrganisationLister, userName string) []string {
+	var orgNames []string
 	// Always include the username as a pseudo organization
-	orgNames := []string{userName}
+	if userName != "" {
+		orgNames = append(orgNames, userName)
+	}
 
 	orgs, _ := orgLister.ListOrganisations()
 	for _, o := range orgs {
@@ -256,7 +361,7 @@ func GetOrganizations(orgLister OrganisationLister, userName string) []string {
 	return orgNames
 }
 
-func PickRepositories(provider GitProvider, owner string, message string, selectAll bool, filter string, in terminal.FileReader, out terminal.FileWriter, errOut io.Writer) ([]*GitRepository, error) {
+func PickRepositories(provider GitProvider, owner string, message string, selectAll bool, filter string, handles util.IOFileHandles) ([]*GitRepository, error) {
 	answer := []*GitRepository{}
 	repos, err := provider.ListRepositories(owner)
 	if err != nil {
@@ -285,7 +390,7 @@ func PickRepositories(provider GitProvider, owner string, message string, select
 		prompt.Default = allRepoNames
 	}
 	repoNames := []string{}
-	surveyOpts := survey.WithStdio(in, out, errOut)
+	surveyOpts := survey.WithStdio(handles.In, handles.Out, handles.Err)
 	err = survey.AskOne(prompt, &repoNames, nil, surveyOpts)
 
 	for _, n := range repoNames {
@@ -325,24 +430,38 @@ func (s *GitRepoStatus) IsFailed() bool {
 	return s.State == "error" || s.State == "failure"
 }
 
-func (i *GitRepositoryInfo) PickOrCreateProvider(authConfigSvc auth.ConfigService, message string, batchMode bool, gitKind string, git Gitter, in terminal.FileReader, out terminal.FileWriter, errOut io.Writer) (GitProvider, error) {
+// PickOrCreateProvider picks an existing server and auth or creates a new one if required
+// then create a GitProvider for it
+func (i *GitRepository) PickOrCreateProvider(authConfigSvc auth.ConfigService, message string, batchMode bool, gitKind string, githubAppMode bool, git Gitter, handles util.IOFileHandles) (GitProvider, error) {
 	config := authConfigSvc.Config()
 	hostUrl := i.HostURLWithoutUser()
 	server := config.GetOrCreateServer(hostUrl)
 	if server.Kind == "" {
 		server.Kind = gitKind
 	}
-	userAuth, err := config.PickServerUserAuth(server, message, batchMode, "", in, out, errOut)
-	if err != nil {
-		return nil, err
+	var userAuth *auth.UserAuth
+	var err error
+	if githubAppMode && i.Organisation != "" {
+		for _, u := range server.Users {
+			if i.Organisation == u.GithubAppOwner {
+				userAuth = u
+				break
+			}
+		}
+	}
+	if userAuth == nil {
+		userAuth, err = config.PickServerUserAuth(server, message, batchMode, i.Organisation, handles)
+		if err != nil {
+			return nil, err
+		}
 	}
 	if userAuth.IsInvalid() {
-		userAuth, err = createUserForServer(batchMode, userAuth, authConfigSvc, server, git, in, out, errOut)
+		userAuth, err = createUserForServer(batchMode, userAuth, authConfigSvc, server, git, handles)
 	}
 	return i.CreateProviderForUser(server, userAuth, gitKind, git)
 }
 
-func (i *GitRepositoryInfo) CreateProviderForUser(server *auth.AuthServer, user *auth.UserAuth, gitKind string, git Gitter) (GitProvider, error) {
+func (i *GitRepository) CreateProviderForUser(server *auth.AuthServer, user *auth.UserAuth, gitKind string, git Gitter) (GitProvider, error) {
 	if i.Host == GitHubHost {
 		return NewGitHubProvider(server, user, git)
 	}
@@ -352,55 +471,79 @@ func (i *GitRepositoryInfo) CreateProviderForUser(server *auth.AuthServer, user 
 	return CreateProvider(server, user, git)
 }
 
-func (i *GitRepositoryInfo) CreateProvider(inCluster bool, authConfigSvc auth.ConfigService, gitKind string, git Gitter, batchMode bool, in terminal.FileReader, out terminal.FileWriter, errOut io.Writer) (GitProvider, error) {
+func (i *GitRepository) CreateProvider(inCluster bool, authConfigSvc auth.ConfigService, gitKind string, ghOwner string, git Gitter, batchMode bool, handles util.IOFileHandles) (GitProvider, error) {
 	hostUrl := i.HostURLWithoutUser()
-	return CreateProviderForURL(inCluster, authConfigSvc, gitKind, hostUrl, git, batchMode, in, out, errOut)
+	return CreateProviderForURL(inCluster, authConfigSvc, gitKind, hostUrl, ghOwner, git, batchMode, handles)
+}
+
+// ProviderURL returns the git provider URL
+func (i *GitRepository) ProviderURL() string {
+	scheme := i.Scheme
+	if !strings.HasPrefix(scheme, "http") {
+		scheme = "https"
+	}
+	return scheme + "://" + i.Host
 }
 
 // CreateProviderForURL creates the Git provider for the given git kind and host URL
-func CreateProviderForURL(inCluster bool, authConfigSvc auth.ConfigService, gitKind string, hostUrl string, git Gitter, batchMode bool,
-	in terminal.FileReader, out terminal.FileWriter, errOut io.Writer) (GitProvider, error) {
+func CreateProviderForURL(inCluster bool, authConfigSvc auth.ConfigService, gitKind string, hostURL string, ghOwner string, git Gitter, batchMode bool,
+	handles util.IOFileHandles) (GitProvider, error) {
 	config := authConfigSvc.Config()
-	server := config.GetOrCreateServer(hostUrl)
+	server := config.GetOrCreateServer(hostURL)
 	if gitKind != "" {
 		server.Kind = gitKind
 	}
 
-	userAuth := config.CurrentUser(server, inCluster)
+	var userAuth *auth.UserAuth
+	if ghOwner != "" {
+		for _, u := range server.Users {
+			if ghOwner == u.GithubAppOwner {
+				userAuth = u
+				break
+			}
+		}
+	} else {
+		userAuth = config.CurrentUser(server, inCluster)
+	}
 	if userAuth != nil && !userAuth.IsInvalid() {
 		return CreateProvider(server, userAuth, git)
 	}
 
-	kind := server.Kind
-	if kind == "" {
-		kind = "GIT"
+	if ghOwner == "" {
+		kind := server.Kind
+		if kind == "" {
+			kind = "GIT"
+		}
+		userAuthVar := auth.CreateAuthUserFromEnvironment(strings.ToUpper(kind))
+		if !userAuthVar.IsInvalid() {
+			return CreateProvider(server, &userAuthVar, git)
+		}
+
+		var err error
+		userAuth, err = createUserForServer(batchMode, &auth.UserAuth{}, authConfigSvc, server, git, handles)
+		if err != nil {
+			return nil, errors.Wrapf(err, "creating user for server %q", server.URL)
+		}
 	}
-	userAuthVar := auth.CreateAuthUserFromEnvironment(strings.ToUpper(kind))
-	if !userAuthVar.IsInvalid() {
-		return CreateProvider(server, &userAuthVar, git)
+	if userAuth != nil && !userAuth.IsInvalid() {
+		return CreateProvider(server, userAuth, git)
 	}
-	userAuth, err := createUserForServer(batchMode, &userAuthVar, authConfigSvc, server, git, in, out, errOut)
-	if err != nil {
-		return nil, err
-	}
-	return CreateProvider(server, userAuth, git)
+	return nil, fmt.Errorf("no valid git user found for kind %s host %s %s", gitKind, hostURL, ghOwner)
 }
 
 func createUserForServer(batchMode bool, userAuth *auth.UserAuth, authConfigSvc auth.ConfigService, server *auth.AuthServer,
-	git Gitter, in terminal.FileReader, out terminal.FileWriter, errOut io.Writer) (*auth.UserAuth, error) {
+	git Gitter, handles util.IOFileHandles) (*auth.UserAuth, error) {
 
 	f := func(username string) error {
-		git.PrintCreateRepositoryGenerateAccessToken(server, username, out)
+		git.PrintCreateRepositoryGenerateAccessToken(server, username, handles.Out)
 		return nil
 	}
 
 	defaultUserName := ""
-	err := authConfigSvc.Config().EditUserAuth(server.Label(), userAuth, defaultUserName, false, batchMode, f, in, out, errOut)
+	err := authConfigSvc.Config().EditUserAuth(server.Label(), userAuth, defaultUserName, false, batchMode, f, handles)
 	if err != nil {
 		return userAuth, err
 	}
-
-	// TODO lets verify the auth works
 
 	err = authConfigSvc.SaveUserAuth(server.URL, userAuth)
 	if err != nil {
@@ -410,4 +553,32 @@ func createUserForServer(batchMode bool, userAuth *auth.UserAuth, authConfigSvc 
 		return userAuth, fmt.Errorf("you did not properly define the user authentication")
 	}
 	return userAuth, nil
+}
+
+// ToGitLabels converts the list of label names into an array of GitLabels
+func ToGitLabels(names []string) []GitLabel {
+	answer := []GitLabel{}
+	for _, n := range names {
+		answer = append(answer, GitLabel{Name: n})
+	}
+	return answer
+}
+
+// IsRepoStatusUpToDate takes a provider, an owner, repo, sha, and GitRepoStatus, and checks if there's an existing commit
+// status for the owner/repo/sha/context (from the GitRepoStatus) with the GitRepoStatus's status, target URL, and description
+func IsRepoStatusUpToDate(provider GitProvider, owner string, repo string, sha string, commitStatus *GitRepoStatus) (bool, error) {
+	statuses, err := provider.ListCommitStatus(owner, repo, sha)
+	if err != nil {
+		return false, errors.Wrapf(err, "fetching commit statuses for %s/%s, sha %s", owner, repo, sha)
+	}
+	for _, existingStatus := range statuses {
+		if existingStatus != nil && existingStatus.Context == commitStatus.Context {
+			if existingStatus.State == commitStatus.State &&
+				existingStatus.TargetURL == commitStatus.TargetURL &&
+				existingStatus.Description == commitStatus.Description {
+				return true, nil
+			}
+		}
+	}
+	return false, nil
 }

@@ -1,0 +1,15 @@
+items:
+- apiVersion: tekton.dev/v1alpha1
+  kind: PipelineResource
+  metadata:
+    creationTimestamp: null
+    name: abayer-golang-qs-test-master-dfq8f
+  spec:
+    params:
+    - name: revision
+      value: v0.0.1
+    - name: url
+      value: https://github.com/abayer/golang-qs-test
+    type: git
+  status: {}
+metadata: {}

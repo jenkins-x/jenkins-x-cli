@@ -1,0 +1,26 @@
+apiVersion: v1
+items:
+  - apiVersion: jenkins.io/v1
+    kind: SourceRepository
+    metadata:
+      name: jx-scheduler-test-repo
+      namespace: jx
+    spec:
+      description: Test Repo
+      org: cb-kubecd
+      provider: https://github.com
+      repo: jx-scheduler-test-repo
+  - apiVersion: jenkins.io/v1
+    kind: SourceRepository
+    metadata:
+      name: jx-scheduler-group-test-repo
+      namespace: jx
+    spec:
+      description: Test Group Repo
+      org: cb-kubecd
+      provider: https://github.com
+      repo: jx-scheduler-test-group-repo
+kind: List
+metadata:
+  resourceVersion: ""
+  selfLink: ""

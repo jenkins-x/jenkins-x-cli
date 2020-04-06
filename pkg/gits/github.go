@@ -3,10 +3,16 @@ package gits
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
+	"net/http"
 	"os"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/jenkins-x/jx/pkg/util/trace"
+
+	"github.com/pkg/errors"
 
 	"github.com/google/go-github/github"
 	"github.com/jenkins-x/jx/pkg/auth"
@@ -45,8 +51,31 @@ func NewGitHubProvider(server *auth.AuthServer, user *auth.UserAuth, git Gitter)
 	)
 	tc := oauth2.NewClient(ctx, ts)
 
+	traceGitHubAPI := os.Getenv("TRACE_GITHUB_API")
+	if traceGitHubAPI == "1" || traceGitHubAPI == "on" {
+		tc.Transport = &trace.Tracer{tc.Transport}
+	}
+
+	return newGitHubProviderFromOauthClient(tc, provider)
+}
+
+// NewAnonymousGitHubProvider returns a new GitHubProvider without any authentication
+func NewAnonymousGitHubProvider(server *auth.AuthServer, git Gitter) (GitProvider, error) {
+	ctx := context.Background()
+
+	provider := GitHubProvider{
+		Server:  *server,
+		User:    auth.UserAuth{},
+		Context: ctx,
+		Git:     git,
+	}
+
+	return newGitHubProviderFromOauthClient(nil, provider)
+}
+
+func newGitHubProviderFromOauthClient(tc *http.Client, provider GitHubProvider) (GitProvider, error) {
 	var err error
-	u := server.URL
+	u := provider.Server.URL
 	if IsGitHubServerURL(u) {
 		provider.Client = github.NewClient(tc)
 	} else {
@@ -122,17 +151,18 @@ func (p *GitHubProvider) IsUserInOrganisation(user string, org string) (bool, er
 	return false, nil
 }
 
-func (p *GitHubProvider) ListRepositories(org string) ([]*GitRepository, error) {
-	owner := org
+func (p *GitHubProvider) ListRepositoriesForUser(user string) ([]*GitRepository, error) {
+	owner := user
 	answer := []*GitRepository{}
-	options := &github.RepositoryListByOrgOptions{
+	options := &github.RepositoryListOptions{
 		ListOptions: github.ListOptions{
 			Page:    0,
 			PerPage: pageSize,
 		},
 	}
+
 	for {
-		repos, _, err := p.Client.Repositories.ListByOrg(p.Context, owner, options)
+		repos, _, err := p.Client.Repositories.List(p.Context, owner, options)
 		if err != nil {
 			options := &github.RepositoryListOptions{
 				ListOptions: github.ListOptions{
@@ -147,7 +177,53 @@ func (p *GitHubProvider) ListRepositories(org string) ([]*GitRepository, error) 
 
 		}
 		for _, repo := range repos {
-			answer = append(answer, toGitHubRepo(asText(repo.Name), repo))
+			answer = append(answer, toGitHubRepo(asText(repo.Name), owner, repo))
+		}
+		if len(repos) < pageSize || len(repos) == 0 {
+			break
+		}
+		options.ListOptions.Page += 1
+	}
+	return answer, nil
+}
+
+// IsOwnerGitHubUser checks to see if the owner is the GitHub User
+func IsOwnerGitHubUser(owner string, gitHubUser string) bool {
+	return owner == gitHubUser && gitHubUser != ""
+}
+
+func (p *GitHubProvider) ListRepositories(org string) ([]*GitRepository, error) {
+	owner := org
+	answer := []*GitRepository{}
+	options := &github.RepositoryListByOrgOptions{
+		ListOptions: github.ListOptions{
+			Page:    0,
+			PerPage: pageSize,
+		},
+	}
+
+	if IsOwnerGitHubUser(owner, p.Username) {
+		log.Logger().Infof("Owner of repo is same as username, using GitHub API for Users")
+		return p.ListRepositoriesForUser(p.Username)
+	}
+
+	for {
+		repos, _, err := p.Client.Repositories.ListByOrg(p.Context, owner, options)
+		if err != nil {
+			options := &github.RepositoryListOptions{
+				ListOptions: github.ListOptions{
+					Page:    0,
+					PerPage: pageSize,
+				},
+			}
+			repos, _, err = p.Client.Repositories.List(p.Context, org, options)
+			if err != nil {
+				return answer, err
+			}
+
+		}
+		for _, repo := range repos {
+			answer = append(answer, toGitHubRepo(asText(repo.Name), org, repo))
 		}
 		if len(repos) < pageSize || len(repos) == 0 {
 			break
@@ -183,13 +259,28 @@ func (p *GitHubProvider) ListReleases(org string, name string) ([]*GitRelease, e
 	return answer, nil
 }
 
+// GetRelease gets the release info for org, repo name and tag
+func (p *GitHubProvider) GetRelease(org string, name string, tag string) (*GitRelease, error) {
+	owner := org
+	if owner == "" {
+		owner = p.Username
+	}
+	repo, _, err := p.Client.Repositories.GetReleaseByTag(p.Context, owner, name, tag)
+	if err != nil {
+		return nil, err
+	}
+	return toGitHubRelease(owner, name, repo), nil
+}
+
 func toGitHubRelease(org string, name string, release *github.RepositoryRelease) *GitRelease {
 	totalDownloadCount := 0
+	assets := make([]GitReleaseAsset, 0)
 	for _, asset := range release.Assets {
 		p := asset.DownloadCount
 		if p != nil {
 			totalDownloadCount = totalDownloadCount + *p
 		}
+		assets = append(assets, toGitHubAsset(asset))
 	}
 	return &GitRelease{
 		Name:          asText(release.Name),
@@ -198,30 +289,61 @@ func toGitHubRelease(org string, name string, release *github.RepositoryRelease)
 		URL:           asText(release.URL),
 		HTMLURL:       asText(release.HTMLURL),
 		DownloadCount: totalDownloadCount,
+		Assets:        &assets,
+	}
+}
+
+func toGitHubAsset(asset github.ReleaseAsset) GitReleaseAsset {
+	return GitReleaseAsset{
+		ID:                 util.DereferenceInt64(asset.ID),
+		Name:               asText(asset.Name),
+		BrowserDownloadURL: asText(asset.BrowserDownloadURL),
+		ContentType:        asText(asset.ContentType),
 	}
 }
 
 func (p *GitHubProvider) GetRepository(org string, name string) (*GitRepository, error) {
 	repo, _, err := p.Client.Repositories.Get(p.Context, org, name)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to get repository %s/%s due to: %s", org, name, err)
+		return nil, fmt.Errorf("failed to get repository %s/%s due to: %s", org, name, err)
 	}
-	return toGitHubRepo(name, repo), nil
+	return toGitHubRepo(name, org, repo), nil
 }
 
-func (p *GitHubProvider) CreateRepository(org string, name string, private bool) (*GitRepository, error) {
+// CreateRepository creates a new repository under owner/name, optionally private
+func (p *GitHubProvider) CreateRepository(owner string, name string, private bool) (*GitRepository, error) {
 	repoConfig := &github.Repository{
 		Name:    github.String(name),
 		Private: github.Bool(private),
 	}
-	if org == p.Username {
-		org = ""
+
+	visibility := "public"
+	if private {
+		visibility = "private"
 	}
-	repo, _, err := p.Client.Repositories.Create(p.Context, org, repoConfig)
+
+	orgName := owner
+	isOrg := true
+	org, _, err := p.Client.Organizations.Get(p.Context, orgName)
+	if err != nil || org == nil {
+		isOrg = false
+	}
+
+	if !isOrg {
+		log.Logger().Debugf("repository owner for %s is the authenticated user %s, setting orgName to the empty string '%s'", name, p.Username, orgName)
+		orgName = ""
+	}
+
+	log.Logger().Debugf("creating %s repository %s with orgName '%s'", visibility, name, orgName)
+	repo, _, err := p.Client.Repositories.Create(p.Context, orgName, repoConfig)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to create repository %s/%s due to: %s", org, name, err)
+		msg := fmt.Sprintf("failed to create %s repository %s/%s due to: %s", visibility, owner, name, err)
+		if strings.Contains(err.Error(), "Visibility can't be private") {
+			msg = msg + "\ntip: free GitHub organization accounts do not allow private repositories"
+		}
+		return nil, errors.New(msg)
 	}
-	return toGitHubRepo(name, repo), nil
+	return toGitHubRepo(name, owner, repo), nil
 }
 
 func (p *GitHubProvider) DeleteRepository(org string, name string) error {
@@ -231,21 +353,34 @@ func (p *GitHubProvider) DeleteRepository(org string, name string) error {
 	}
 	_, err := p.Client.Repositories.Delete(p.Context, owner, name)
 	if err != nil {
-		return fmt.Errorf("Failed to delete repository %s/%s due to: %s", owner, name, err)
+		return fmt.Errorf("failed to delete repository %s/%s due to: %s", owner, name, err)
 	}
 	return err
 }
 
-func toGitHubRepo(name string, repo *github.Repository) *GitRepository {
+func toGitHubRepo(name string, org string, repo *github.Repository) *GitRepository {
+	var id int64
+	if repo.ID != nil {
+		id = *repo.ID
+	}
 	return &GitRepository{
+		ID:               id,
 		Name:             name,
-		AllowMergeCommit: asBool(repo.AllowMergeCommit),
+		AllowMergeCommit: util.DereferenceBool(repo.AllowMergeCommit),
 		CloneURL:         asText(repo.CloneURL),
 		HTMLURL:          asText(repo.HTMLURL),
 		SSHURL:           asText(repo.SSHURL),
-		Fork:             asBool(repo.Fork),
+		URL:              util.DereferenceString(repo.URL),
+		Fork:             util.DereferenceBool(repo.Fork),
 		Language:         asText(repo.Language),
 		Stars:            asInt(repo.StargazersCount),
+		Private:          util.DereferenceBool(repo.Private),
+		Organisation:     org,
+		HasIssues:        util.DereferenceBool(repo.HasIssues),
+		OpenIssueCount:   util.DereferenceInt(repo.OpenIssuesCount),
+		HasWiki:          repo.GetHasWiki(),
+		HasProjects:      repo.GetHasProjects(),
+		Archived:         repo.GetArchived(),
 	}
 }
 
@@ -260,36 +395,38 @@ func (p *GitHubProvider) ForkRepository(originalOrg string, name string, destina
 		if destinationOrg != "" {
 			msg = fmt.Sprintf(" to %s", destinationOrg)
 		}
-		owner := destinationOrg
-		if owner == "" {
-			owner = p.Username
+		if destinationOrg == "" {
+			destinationOrg = p.Username
 		}
 		if strings.Contains(err.Error(), "try again later") {
-			log.Warnf("Waiting for the fork of %s/%s to appear...\n", owner, name)
+			log.Logger().Warnf("Waiting for the fork of %s/%s to appear...", destinationOrg, name)
 			// lets wait for the fork to occur...
 			start := time.Now()
 			deadline := start.Add(time.Minute)
 			for {
 				time.Sleep(5 * time.Second)
-				repo, _, err = p.Client.Repositories.Get(p.Context, owner, name)
+				repo, _, err = p.Client.Repositories.Get(p.Context, destinationOrg, name)
 				if repo != nil && err == nil {
 					break
 				}
 				t := time.Now()
 				if t.After(deadline) {
-					return nil, fmt.Errorf("Gave up waiting for Repository %s/%s to appear: %s", owner, name, err)
+					return nil, fmt.Errorf("gave up waiting for Repository %s/%s to appear: %s", destinationOrg, name, err)
 				}
 			}
 		} else {
-			return nil, fmt.Errorf("Failed to fork repository %s/%s%s due to: %s", originalOrg, name, msg, err)
+			return nil, fmt.Errorf("failed to fork repository %s/%s%s due to: %s", originalOrg, name, msg, err)
 		}
 	}
 	answer := &GitRepository{
 		Name:             name,
-		AllowMergeCommit: asBool(repo.AllowMergeCommit),
+		AllowMergeCommit: util.DereferenceBool(repo.AllowMergeCommit),
 		CloneURL:         asText(repo.CloneURL),
 		HTMLURL:          asText(repo.HTMLURL),
+		URL:              util.DereferenceString(repo.URL),
 		SSHURL:           asText(repo.SSHURL),
+		Organisation:     destinationOrg,
+		Fork:             true,
 	}
 	return answer, nil
 }
@@ -304,24 +441,44 @@ func (p *GitHubProvider) CreateWebHook(data *GitWebHookArguments) error {
 		return fmt.Errorf("Missing property Repo")
 	}
 	webhookUrl := data.URL
-	if repo == "" {
+	if webhookUrl == "" {
 		return fmt.Errorf("Missing property URL")
 	}
 	hooks, _, err := p.Client.Repositories.ListHooks(p.Context, owner, repo, nil)
 	if err != nil {
-		log.Errorf("Error querying webhooks on %s/%s: %s\n", owner, repo, err)
+		log.Logger().Warnf("Querying webhooks on %s/%s: %s", owner, repo, err)
 	}
 	for _, hook := range hooks {
 		c := hook.Config["url"]
-		s, ok := c.(string)
-		if ok && s == webhookUrl {
-			log.Warnf("Already has a webhook registered for %s\n", webhookUrl)
-			return nil
+		u, ok := c.(string)
+		if ok && u == webhookUrl {
+			s, ok := hook.Config["secret"]
+			if ok && s != data.Secret {
+				// lets remove this hook as its using an old secret
+				if hook.ID == nil {
+					return fmt.Errorf("webook at %s for %s/%s has no ID", asText(hook.URL), owner, repo)
+				}
+				id := *hook.ID
+				_, err = p.Client.Repositories.DeleteHook(p.Context, owner, repo, id)
+				if err != nil {
+					return errors.Wrapf(err, "failed to remove old webhook on %s/%s with ID %v with old secret", owner, repo, id)
+				}
+			} else {
+				log.Logger().Warnf("Already has a webhook registered for %s", webhookUrl)
+				return nil
+			}
 		}
+	}
+	// 0 makes insecure SSL not enabled
+	insecureSSL := "0"
+	if data.InsecureSSL {
+		// this is insecure and should only be used in test scenarios
+		insecureSSL = "1"
 	}
 	config := map[string]interface{}{
 		"url":          webhookUrl,
 		"content_type": "json",
+		"insecure_ssl": insecureSSL,
 	}
 	if data.Secret != "" {
 		config["secret"] = data.Secret
@@ -331,8 +488,14 @@ func (p *GitHubProvider) CreateWebHook(data *GitWebHookArguments) error {
 		Config: config,
 		Events: []string{"*"},
 	}
-	log.Infof("Creating GitHub webhook for %s/%s for url %s\n", util.ColorInfo(owner), util.ColorInfo(repo), util.ColorInfo(webhookUrl))
-	_, _, err = p.Client.Repositories.CreateHook(p.Context, owner, repo, hook)
+
+	log.Logger().Infof("Creating GitHub webhook for %s/%s for url %s", util.ColorInfo(owner), util.ColorInfo(repo), util.ColorInfo(webhookUrl))
+	_, resp, err := p.Client.Repositories.CreateHook(p.Context, owner, repo, hook)
+	if err != nil {
+		if resp.StatusCode == 404 || resp.StatusCode == 403 {
+			return errors.Wrapf(err, "unable to create webhook for %s/%s - permission denied", owner, repo)
+		}
+	}
 	return err
 }
 
@@ -348,7 +511,7 @@ func (p *GitHubProvider) ListWebHooks(owner string, repo string) ([]*GitWebHookA
 
 	hooks, _, err := p.Client.Repositories.ListHooks(p.Context, owner, repo, nil)
 	if err != nil {
-		log.Errorf("Error querying webhooks on %s/%s: %s\n", owner, repo, err)
+		return webHooks, nil
 	}
 
 	for _, hook := range hooks {
@@ -383,7 +546,7 @@ func (p *GitHubProvider) UpdateWebHook(data *GitWebHookArguments) error {
 	}
 	hooks, _, err := p.Client.Repositories.ListHooks(p.Context, owner, repo, nil)
 	if err != nil {
-		log.Errorf("Error querying webhooks on %s/%s: %s\n", owner, repo, err)
+		log.Logger().Warnf("Querying webhooks on %s/%s: %s", owner, repo, err)
 	}
 
 	dataId := data.ID
@@ -391,8 +554,8 @@ func (p *GitHubProvider) UpdateWebHook(data *GitWebHookArguments) error {
 		for _, hook := range hooks {
 			c := hook.Config["url"]
 			s, ok := c.(string)
-			if ok && s == webhookUrl {
-				log.Warnf("Found existing webhook for url %s\n", webhookUrl)
+			if ok && s == data.ExistingURL {
+				log.Logger().Warnf("Found existing webhook for url %s", data.ExistingURL)
 				dataId = hook.GetID()
 			}
 		}
@@ -414,15 +577,17 @@ func (p *GitHubProvider) UpdateWebHook(data *GitWebHookArguments) error {
 			Events: []string{"*"},
 		}
 
-		log.Infof("Updating GitHub webhook for %s/%s for url %s\n", util.ColorInfo(owner), util.ColorInfo(repo), util.ColorInfo(webhookUrl))
+		log.Logger().Infof("Updating GitHub webhook for %s/%s for url %s", util.ColorInfo(owner), util.ColorInfo(repo), util.ColorInfo(webhookUrl))
 		_, _, err = p.Client.Repositories.EditHook(p.Context, owner, repo, dataId, hook)
+	} else {
+		log.Logger().Warn("No webhooks found to update")
 	}
 	return err
 }
 
 func (p *GitHubProvider) CreatePullRequest(data *GitPullRequestArguments) (*GitPullRequest, error) {
-	owner := data.GitRepositoryInfo.Organisation
-	repo := data.GitRepositoryInfo.Name
+	owner := data.GitRepository.Organisation
+	repo := data.GitRepository.Name
 	title := data.Title
 	body := data.Body
 	head := data.Head
@@ -440,8 +605,56 @@ func (p *GitHubProvider) CreatePullRequest(data *GitPullRequestArguments) (*GitP
 	if base != "" {
 		config.Base = github.String(base)
 	}
-	pr, _, err := p.Client.PullRequests.Create(p.Context, owner, repo, config)
+	pr, resp, err := p.Client.PullRequests.Create(p.Context, owner, repo, config)
 	if err != nil {
+		if resp != nil && resp.Body != nil {
+			data, err2 := ioutil.ReadAll(resp.Body)
+			if err2 == nil && len(data) > 0 {
+				return nil, errors.Wrapf(err, "response: %s", string(data))
+			}
+		}
+		return nil, err
+	}
+	return &GitPullRequest{
+		URL:    notNullString(pr.HTMLURL),
+		Owner:  owner,
+		Repo:   repo,
+		Number: pr.Number,
+	}, nil
+}
+
+// UpdatePullRequest updates pull request with number using data
+func (p *GitHubProvider) UpdatePullRequest(data *GitPullRequestArguments, number int) (*GitPullRequest, error) {
+	owner := data.GitRepository.Organisation
+	repo := data.GitRepository.Name
+	title := data.Title
+	body := data.Body
+	head := data.Head
+	base := data.Base
+	config := &github.PullRequest{
+		Head: &github.PullRequestBranch{},
+		Base: &github.PullRequestBranch{},
+	}
+	if title != "" {
+		config.Title = github.String(title)
+	}
+	if body != "" {
+		config.Body = github.String(body)
+	}
+	if head != "" {
+		config.Head.Ref = github.String(head)
+	}
+	if base != "" {
+		config.Base.Ref = github.String(base)
+	}
+	pr, resp, err := p.Client.PullRequests.Edit(p.Context, owner, repo, number, config)
+	if err != nil {
+		if resp != nil && resp.Body != nil {
+			data, err2 := ioutil.ReadAll(resp.Body)
+			if err2 == nil && len(data) > 0 {
+				return nil, errors.Wrapf(err, "response: %s", string(data))
+			}
+		}
 		return nil, err
 	}
 	return &GitPullRequest{
@@ -461,78 +674,192 @@ func (p *GitHubProvider) UpdatePullRequestStatus(pr *GitPullRequest) error {
 	if err != nil {
 		return err
 	}
-	head := result.Head
+	p.updatePullRequest(pr, result)
+	return nil
+}
+
+// AddLabelsToIssue adds labels to an issue
+func (p *GitHubProvider) AddLabelsToIssue(owner string, repo string, number int, labels []string) error {
+	_, result, err := p.Client.Issues.AddLabelsToIssue(p.Context, owner, repo, number, labels)
+	if err != nil {
+		return err
+	}
+	if result.StatusCode > 201 {
+		return errors.Wrapf(err, "failed to add labels to issue on %s/%s with ID %v", owner, repo, number)
+	}
+	return nil
+}
+
+// updatePullRequest updates the pr with the data from GitHub
+func (p *GitHubProvider) updatePullRequest(pr *GitPullRequest, source *github.PullRequest) {
+	head := source.Head
 	if head != nil {
 		pr.LastCommitSha = notNullString(head.SHA)
 	} else {
 		pr.LastCommitSha = ""
 	}
-	if pr.Author == nil && result.User != nil && result.User.Login != nil {
+	if pr.Author == nil && source.User != nil && source.User.Login != nil {
 		pr.Author = &GitUser{
-			Login: *result.User.Login,
+			Login: *source.User.Login,
 		}
 	}
-	if result.Mergeable != nil {
-		pr.Mergeable = result.Mergeable
+	pr.Assignees = make([]*GitUser, 0)
+	for _, u := range source.Assignees {
+		if u != nil {
+			pr.Assignees = append(pr.Assignees, &GitUser{
+				Login: *u.Login,
+			})
+		}
 	}
-	pr.MergeCommitSHA = result.MergeCommitSHA
-	if result.Merged != nil {
-		pr.Merged = result.Merged
+	pr.RequestedReviewers = make([]*GitUser, 0)
+	for _, u := range source.RequestedReviewers {
+		if u != nil {
+			pr.RequestedReviewers = append(pr.RequestedReviewers, &GitUser{
+				Login: *u.Login,
+			})
+		}
 	}
-	if result.ClosedAt != nil {
-		pr.ClosedAt = result.ClosedAt
+	pr.Labels = make([]*Label, 0)
+	for _, l := range source.Labels {
+		if l != nil {
+			pr.Labels = append(pr.Labels, &Label{
+				Name:        l.Name,
+				URL:         l.URL,
+				ID:          l.ID,
+				Color:       l.Color,
+				Default:     l.Default,
+				Description: l.Description,
+			})
+		}
 	}
-	if result.MergedAt != nil {
-		pr.MergedAt = result.MergedAt
+	if source.Mergeable != nil {
+		pr.Mergeable = source.Mergeable
 	}
-	if result.State != nil {
-		pr.State = result.State
+	pr.MergeCommitSHA = source.MergeCommitSHA
+	if source.Merged != nil {
+		pr.Merged = source.Merged
 	}
-	if result.Head != nil {
-		pr.HeadRef = result.Head.Ref
+	if source.ClosedAt != nil {
+		pr.ClosedAt = source.ClosedAt
 	}
-	if result.StatusesURL != nil {
-		pr.StatusesURL = result.StatusesURL
+	if source.MergedAt != nil {
+		pr.MergedAt = source.MergedAt
 	}
-	if result.IssueURL != nil {
-		pr.IssueURL = result.IssueURL
+	if source.State != nil {
+		pr.State = source.State
 	}
-	if result.DiffURL != nil {
-		pr.IssueURL = result.DiffURL
+	if source.Head != nil {
+		pr.HeadRef = source.Head.Ref
+		if source.Head.Repo != nil {
+			pr.HeadOwner = source.Head.Repo.Owner.Login
+		}
 	}
-	if result.Title != nil {
-		pr.Title = *result.Title
+	if source.StatusesURL != nil {
+		pr.StatusesURL = source.StatusesURL
 	}
-	if result.Body != nil {
-		pr.Body = *result.Body
+	if source.IssueURL != nil {
+		pr.IssueURL = source.IssueURL
 	}
-	return nil
+	if source.DiffURL != nil {
+		pr.IssueURL = source.DiffURL
+	}
+	if source.Title != nil {
+		pr.Title = *source.Title
+	}
+	if source.Body != nil {
+		pr.Body = *source.Body
+	}
+	if source.HTMLURL != nil {
+		pr.URL = *source.HTMLURL
+	}
+	if source.UpdatedAt != nil {
+		pr.UpdatedAt = source.UpdatedAt
+	}
 }
 
-func (p *GitHubProvider) GetPullRequest(owner string, repo *GitRepositoryInfo, number int) (*GitPullRequest, error) {
+func (p *GitHubProvider) toPullRequest(owner string, repo string, pr *github.PullRequest) *GitPullRequest {
+	answer := &GitPullRequest{
+		URL:    asText(pr.URL),
+		Owner:  owner,
+		Repo:   repo,
+		Number: pr.Number,
+	}
+	p.updatePullRequest(answer, pr)
+	return answer
+}
+
+func (p *GitHubProvider) GetPullRequest(owner string, repo *GitRepository, number int) (*GitPullRequest, error) {
 	pr := &GitPullRequest{
 		Owner:  owner,
 		Repo:   repo.Name,
 		Number: &number,
 	}
 	err := p.UpdatePullRequestStatus(pr)
-
-	if pr.Author != nil {
-		if pr.Author.Email == "" {
-			existing := p.UserInfo(pr.Author.Login)
-
-			if existing != nil {
-				if existing.Email != "" {
-					pr.Author = existing
-				}
-			}
-		}
-	}
-
 	return pr, err
 }
 
-func (p *GitHubProvider) GetPullRequestCommits(owner string, repository *GitRepositoryInfo, number int) ([]*GitCommit, error) {
+// ListOpenPullRequests lists the open pull requests
+func (p *GitHubProvider) ListOpenPullRequests(owner string, repo string) ([]*GitPullRequest, error) {
+	opt := &github.PullRequestListOptions{
+		State: "open",
+		ListOptions: github.ListOptions{
+			Page:    0,
+			PerPage: pageSize,
+		},
+	}
+	answer := []*GitPullRequest{}
+	for {
+		prs, _, err := p.Client.PullRequests.List(p.Context, owner, repo, opt)
+		if err != nil {
+			return answer, err
+		}
+		for _, pr := range prs {
+			answer = append(answer, p.toPullRequest(owner, repo, pr))
+		}
+		if len(prs) < pageSize || len(prs) == 0 {
+			break
+		}
+		opt.Page++
+	}
+	return answer, nil
+}
+
+func extractRepositoryCommitAuthor(rc *github.RepositoryCommit) (gu *GitUser) {
+	gu = &GitUser{}
+
+	if rc.Commit.Author != nil {
+		gu.Email = rc.Commit.Author.GetEmail()
+		gu.Name = rc.Commit.Author.GetName()
+
+		if rc.Author != nil {
+			gu.Login = rc.Author.GetLogin()
+			gu.URL = rc.Author.GetURL()
+			gu.AvatarURL = rc.Author.GetAvatarURL()
+		}
+	}
+
+	return
+}
+
+func (p *GitHubProvider) asGitHubCommit(commit *github.RepositoryCommit) GitCommit {
+	message := ""
+	if commit.Commit != nil {
+		message = util.DereferenceString(commit.Commit.Message)
+	} else {
+		log.Logger().Warnf("No Commit object for for commit: %s", commit.GetSHA())
+	}
+	author := extractRepositoryCommitAuthor(commit)
+
+	return GitCommit{
+		Message: message,
+		URL:     commit.GetURL(),
+		SHA:     commit.GetSHA(),
+		Author:  author,
+	}
+
+}
+
+func (p *GitHubProvider) GetPullRequestCommits(owner string, repository *GitRepository, number int) ([]*GitCommit, error) {
 	repo := repository.Name
 	commits, _, err := p.Client.PullRequests.ListCommits(p.Context, owner, repo, number, nil)
 
@@ -543,51 +870,8 @@ func (p *GitHubProvider) GetPullRequestCommits(owner string, repository *GitRepo
 	answer := []*GitCommit{}
 
 	for _, commit := range commits {
-		message := ""
-		if commit.Commit != nil {
-			message = commit.Commit.GetMessage()
-			if commit.Author != nil {
-				author := commit.Author
-
-				summary := &GitCommit{
-					Message: message,
-					URL:     commit.GetURL(),
-					SHA:     commit.GetSHA(),
-					Author: &GitUser{
-						Login:     author.GetLogin(),
-						Email:     author.GetEmail(),
-						Name:      author.GetName(),
-						URL:       author.GetURL(),
-						AvatarURL: author.GetAvatarURL(),
-					},
-				}
-
-				if summary.Author.Email == "" {
-					log.Info("Commit author email is empty for: " + commit.GetSHA() + "\n")
-					dir, err := os.Getwd()
-					if err != nil {
-						return answer, err
-					}
-					gitDir, _, err := p.Git.FindGitConfigDir(dir)
-					if err != nil {
-						return answer, err
-					}
-					log.Info("Looking for commits in: " + gitDir + "\n")
-					email, err := p.Git.GetAuthorEmailForCommit(gitDir, commit.GetSHA())
-					if err != nil {
-						log.Warn("Commit not found: " + commit.GetSHA() + "\n")
-						continue
-					}
-					summary.Author.Email = email
-				}
-
-				answer = append(answer, summary)
-			} else {
-				log.Warn("No author for commit: " + commit.GetSHA() + "\n")
-			}
-		} else {
-			log.Warn("No Commit object for for commit: " + commit.GetSHA() + "\n")
-		}
+		summary := p.asGitHubCommit(commit)
+		answer = append(answer, &summary)
 	}
 	return answer, nil
 }
@@ -648,7 +932,7 @@ func (p *GitHubProvider) PullRequestLastCommitStatus(pr *GitPullRequest) (string
 		return "", err
 	}
 	for _, result := range results {
-		if result.State != nil {
+		if result.State != nil && notNullString(result.Context) != "tide" {
 			return *result.State, nil
 		}
 	}
@@ -767,10 +1051,11 @@ func (p *GitHubProvider) RenameRepository(org string, name string, newName strin
 	}
 	answer := &GitRepository{
 		Name:             name,
-		AllowMergeCommit: asBool(repo.AllowMergeCommit),
+		AllowMergeCommit: util.DereferenceBool(repo.AllowMergeCommit),
 		CloneURL:         asText(repo.CloneURL),
 		HTMLURL:          asText(repo.HTMLURL),
 		SSHURL:           asText(repo.SSHURL),
+		Organisation:     org,
 	}
 	return answer, nil
 }
@@ -814,23 +1099,65 @@ func (p *GitHubProvider) UpdateRelease(owner string, repo string, tag string, re
 	if release.TagName == nil && releaseInfo.TagName != "" {
 		release.TagName = &releaseInfo.TagName
 	}
-	if release.Body == nil && releaseInfo.Body != "" {
+	if (release.Body == nil || *release.Body == "") && releaseInfo.Body != "" {
 		release.Body = &releaseInfo.Body
 	}
+
 	if r != nil && r.StatusCode == 404 {
-		log.Warnf("No release found for %s/%s and tag %s so creating a new release\n", owner, repo, tag)
-		_, _, err = p.Client.Repositories.CreateRelease(p.Context, owner, repo, release)
+		log.Logger().Warnf("No release found for %s/%s and tag %s so creating a new release", owner, repo, tag)
+		rel, _, err := p.Client.Repositories.CreateRelease(p.Context, owner, repo, release)
+		if rel != nil {
+			releaseInfo.ID = util.DereferenceInt64(rel.ID)
+		}
 		return err
 	}
 	id := release.ID
 	if id == nil {
-		return fmt.Errorf("The release for %s/%s tag %s has no ID!", owner, repo, tag)
+		return fmt.Errorf("the release for %s/%s tag %s has no ID", owner, repo, tag)
 	}
+	releaseInfo.ID = util.DereferenceInt64(id)
 	r2, _, err := p.Client.Repositories.EditRelease(p.Context, owner, repo, *id, release)
 	if r != nil {
 		releaseInfo.URL = asText(r2.URL)
 		releaseInfo.HTMLURL = asText(r2.HTMLURL)
 	}
+	return err
+}
+
+// UpdateReleaseStatus updates the state (release/prerelease) of a release
+func (p *GitHubProvider) UpdateReleaseStatus(owner string, repo string, tag string, releaseInfo *GitRelease) error {
+	release := &github.RepositoryRelease{}
+	rel, r, err := p.Client.Repositories.GetReleaseByTag(p.Context, owner, repo, tag)
+
+	if r != nil && r.StatusCode == 404 && !strings.HasPrefix(tag, "v") {
+		// sometimes we prepend a v for example when using gh-release
+		// so lets make sure we don't create a double release
+		vtag := "v" + tag
+
+		rel2, r2, err2 := p.Client.Repositories.GetReleaseByTag(p.Context, owner, repo, vtag)
+		if r2.StatusCode != 405 {
+			rel = rel2
+			r = r2
+			err = err2
+			tag = vtag
+		}
+	}
+
+	if r != nil && err == nil {
+		release = rel
+	}
+	if r != nil && r.StatusCode == 404 {
+		log.Logger().Warnf("No release found for %s/%s and tag %s", owner, repo, tag)
+		return err
+	}
+	if release.Prerelease != &releaseInfo.PreRelease {
+		release.Prerelease = &releaseInfo.PreRelease
+	}
+	id := release.ID
+	if id == nil {
+		return fmt.Errorf("the release for %s/%s tag %s has no ID!", owner, repo, tag)
+	}
+	_, _, err = p.Client.Repositories.EditRelease(p.Context, owner, repo, *id, release)
 	return err
 }
 
@@ -846,7 +1173,9 @@ func (p *GitHubProvider) GetIssue(org string, name string, number int) (*GitIssu
 }
 
 func (p *GitHubProvider) SearchIssues(org string, name string, filter string) ([]*GitIssue, error) {
-	opts := &github.IssueListByRepoOptions{}
+	opts := &github.IssueListByRepoOptions{
+		State: filter,
+	}
 	return p.searchIssuesWithOptions(org, name, opts)
 }
 
@@ -1028,7 +1357,7 @@ func (p *GitHubProvider) ServerURL() string {
 }
 
 func (p *GitHubProvider) BranchArchiveURL(org string, name string, branch string) string {
-	return util.UrlJoin(p.ServerURL(), org, name, "archive", branch+".zip")
+	return util.UrlJoin("https://codeload.github.com", org, name, "zip", branch)
 }
 
 func (p *GitHubProvider) CurrentUsername() string {
@@ -1042,7 +1371,7 @@ func (p *GitHubProvider) UserAuth() auth.UserAuth {
 func (p *GitHubProvider) UserInfo(username string) *GitUser {
 	user, _, err := p.Client.Users.Get(p.Context, username)
 	if user == nil || err != nil {
-		log.Error("Unable to fetch user info for " + username + "\n")
+		log.Logger().Errorf("Unable to fetch user info for %s", username)
 		return nil
 	}
 
@@ -1056,7 +1385,7 @@ func (p *GitHubProvider) UserInfo(username string) *GitUser {
 }
 
 func (p *GitHubProvider) AddCollaborator(user string, organisation string, repo string) error {
-	log.Infof("Automatically adding the pipeline user: %v as a collaborator.\n", user)
+	log.Logger().Infof("Automatically adding the pipeline user: %v as a collaborator.", user)
 	_, err := p.Client.Repositories.AddCollaborator(p.Context, organisation, repo, user, &github.RepositoryAddCollaboratorOptions{})
 	if err != nil {
 		return err
@@ -1069,15 +1398,26 @@ func (p *GitHubProvider) ListInvitations() ([]*github.RepositoryInvitation, *git
 }
 
 func (p *GitHubProvider) AcceptInvitation(ID int64) (*github.Response, error) {
-	log.Infof("Automatically accepted invitation: %v for the pipeline user.\n", ID)
+	log.Logger().Infof("Automatically accepted invitation: %v for the pipeline user.", ID)
 	return p.Client.Users.AcceptInvitation(p.Context, ID)
 }
 
-func asBool(b *bool) bool {
-	if b != nil {
-		return *b
+// ShouldForkForPullRequest returns true if we should create a personal fork of this repository
+// before creating a pull request
+func (p *GitHubProvider) ShouldForkForPullRequest(originalOwner string, repoName string, username string) bool {
+	if strings.HasSuffix(username, "[bot]") || originalOwner == username {
+		return false
 	}
-	return false
+
+	// lets check if the repo is private as that disables forking on github
+	repo, err := p.GetRepository(originalOwner, repoName)
+	if err != nil {
+		return false
+	}
+	if repo.Private {
+		return false
+	}
+	return true
 }
 
 func asInt(i *int) int {
@@ -1092,4 +1432,151 @@ func asText(text *string) string {
 		return *text
 	}
 	return ""
+}
+func (p *GitHubProvider) ListCommits(owner, repo string, opt *ListCommitsArguments) ([]*GitCommit, error) {
+	githubOpt := &github.CommitsListOptions{
+		SHA:  opt.SHA,
+		Path: opt.Path,
+		ListOptions: github.ListOptions{
+			Page:    opt.Page,
+			PerPage: opt.PerPage,
+		},
+	}
+	githubCommits, _, err := p.Client.Repositories.ListCommits(p.Context, owner, repo, githubOpt)
+	if err != nil {
+		log.Logger().Errorf("%s", err)
+		return nil, fmt.Errorf("Could not find commits for repository %s/%s", owner, repo)
+	}
+	var commits []*GitCommit
+
+	for _, commit := range githubCommits {
+		if commit.Commit != nil {
+			var author *GitUser
+			if commit.Author != nil && commit.Author.Login != nil {
+				author = &GitUser{
+					Login: *commit.Author.Login,
+				}
+			}
+			commits = append(commits, &GitCommit{
+				SHA:     asText(commit.SHA),
+				Message: asText(commit.Commit.Message),
+				URL:     asText(commit.Commit.URL),
+				Author:  author,
+			})
+		}
+	}
+	return commits, nil
+}
+
+// GetLatestRelease fetches the latest release from the git provider for org and name
+func (p *GitHubProvider) GetLatestRelease(org string, name string) (*GitRelease, error) {
+	repoRelease, _, err := p.Client.Repositories.GetLatestRelease(p.Context, org, name)
+	if err != nil {
+		return nil, errors.Wrapf(err, "getting latest release for %s/%s", org, name)
+	}
+	return toGitHubRelease(org, name, repoRelease), nil
+}
+
+// UploadReleaseAsset will upload an asset to org/repo to a release with id, giving it a name, it will return the release asset from the git provider
+func (p *GitHubProvider) UploadReleaseAsset(org string, repo string, id int64, name string, asset *os.File) (*GitReleaseAsset, error) {
+	answer, _, err := p.Client.Repositories.UploadReleaseAsset(p.Context, org, repo, id, &github.UploadOptions{
+		Name: name,
+	}, asset)
+	if err != nil {
+		return nil, errors.Wrapf(err, "uploading asset %s to release %d in %s/%s", asset.Name(), id, org, repo)
+	}
+	if answer != nil {
+		a := toGitHubAsset(*answer)
+		return &a, nil
+	}
+	return nil, nil
+}
+
+// GetBranch returns the branch information for an owner/repo, including the commit at the tip
+func (p *GitHubProvider) GetBranch(owner string, repo string, branch string) (*GitBranch, error) {
+	b, _, err := p.Client.Repositories.GetBranch(p.Context, owner, repo, branch)
+	if err != nil {
+		return nil, errors.Wrapf(err, "getting branch %s on %s/%s", branch, owner, repo)
+	}
+	commit := p.asGitHubCommit(b.Commit)
+	answer := GitBranch{
+		Name:      util.DereferenceString(b.Name),
+		Protected: util.DereferenceBool(b.Protected),
+		Commit:    &commit,
+	}
+	return &answer, nil
+}
+
+// GetProjects returns all the git projects in owner/repo
+func (p *GitHubProvider) GetProjects(owner string, repo string) ([]GitProject, error) {
+	answer := make([]GitProject, 0)
+	projects, _, err := p.Client.Repositories.ListProjects(p.Context, owner, repo, &github.ProjectListOptions{State: "open"})
+	if err != nil {
+		return nil, errors.Wrapf(err, "listing projects for %s/%s", owner, repo)
+	}
+	for _, project := range projects {
+		answer = append(answer, p.toProject(project, ProjectOpen))
+	}
+	projects, _, err = p.Client.Repositories.ListProjects(p.Context, owner, repo, &github.ProjectListOptions{State: "closed"})
+	if err != nil {
+		return nil, errors.Wrapf(err, "listing projects for %s/%s", owner, repo)
+	}
+	for _, project := range projects {
+		answer = append(answer, p.toProject(project, ProjectClosed))
+	}
+	return answer, nil
+}
+
+func (p *GitHubProvider) toProject(project *github.Project, state string) GitProject {
+	return GitProject{
+		Name:        project.GetName(),
+		Description: project.GetBody(),
+		Number:      project.GetNumber(),
+		State:       state,
+	}
+}
+
+//ConfigureFeatures sets specific features as enabled or disabled for owner/repo
+func (p *GitHubProvider) ConfigureFeatures(owner string, repo string, issues *bool, projects *bool, wikis *bool) (*GitRepository, error) {
+	r, _, err := p.Client.Repositories.Get(p.Context, owner, repo)
+	if err != nil {
+		return nil, errors.Wrapf(err, "Failed to get repository %s/%s", owner, repo)
+	}
+	if projects != nil {
+		r.HasProjects = projects
+	}
+	if wikis != nil {
+		r.HasWiki = wikis
+	}
+	if issues != nil {
+		r.HasIssues = issues
+	}
+	r, _, err = p.Client.Repositories.Edit(p.Context, owner, repo, r)
+	if err != nil {
+		return nil, errors.Wrapf(err, "Failed to edit repository %s/%s", owner, repo)
+	}
+	return toGitHubRepo(repo, owner, r), nil
+}
+
+// IsWikiEnabled returns true if a wiki is enabled for owner/repo
+func (p *GitHubProvider) IsWikiEnabled(owner string, repo string) (bool, error) {
+	gitURL := fmt.Sprintf("%s/%s/%s.wiki.git", p.Server.URL, owner, repo)
+	dir, err := ioutil.TempDir("", "")
+	defer func() {
+		err := os.RemoveAll(dir)
+		if err != nil {
+			log.Logger().Warnf("unable to delete temp dir %s", dir)
+		}
+	}()
+	if err != nil {
+		return false, errors.Wrapf(err, "creating temp dir")
+	}
+	err = p.Git.Clone(gitURL, dir)
+	if err != nil {
+		if IsRepositoryNotExportedError(err) {
+			return false, nil
+		}
+		return false, errors.Wrapf(err, "cloning %s", gitURL)
+	}
+	return true, nil
 }

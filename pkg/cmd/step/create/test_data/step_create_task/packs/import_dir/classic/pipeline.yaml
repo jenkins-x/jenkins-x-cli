@@ -1,0 +1,19 @@
+pipelines:
+  release:
+    setup:
+      steps:
+        - groovy: git 'https://REPLACE_ME_GIT_PROVIDER/REPLACE_ME_ORG/REPLACE_ME_APP_NAME.git'
+          when: "prow"
+        - sh: git checkout master
+          comment: ensure we're not on a detached head
+          when: "!prow"
+        - sh: git config --global credential.helper store
+          when: "!prow"
+        - sh: jx step git credentials
+          when: "!prow"
+  post:
+    steps:
+      - groovy: always
+        when: "!prow"
+        steps:
+          - groovy: "cleanWs()"

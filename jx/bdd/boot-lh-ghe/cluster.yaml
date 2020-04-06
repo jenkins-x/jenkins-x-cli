@@ -1,0 +1,18 @@
+clusters:
+  - name: boot-lh-ghe
+    args:
+      - create
+      - cluster
+      - gke
+      - --project-id=jenkins-x-bdd3
+      - -m=n1-standard-2
+      - --min-num-nodes=3
+      - --max-num-nodes=5
+      - -z=europe-west1-c
+      - --skip-login
+      - --skip-installation
+    commands:
+      - command: jx
+        args:
+          - boot
+          - -b

@@ -2,13 +2,19 @@ package util
 
 import (
 	"encoding/hex"
+	"fmt"
 	"math/rand"
 	"regexp"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/pkg/errors"
 )
+
+//DisallowedLabelCharacters regex of chars not allowed in lables
+var DisallowedLabelCharacters = regexp.MustCompile("[^a-z0-9-]")
 
 // RegexpSplit splits a string into an array using the regexSep as a separator
 func RegexpSplit(text string, regexSeperator string) []string {
@@ -42,9 +48,20 @@ func StringIndexes(text string, value string) []int {
 	return answer
 }
 
+// StringArrayIndex returns the index in the slice which equals the given value
 func StringArrayIndex(array []string, value string) int {
 	for i, v := range array {
 		if v == value {
+			return i
+		}
+	}
+	return -1
+}
+
+// StringArrayHasPrefixIndex returns the index in the slice which the value has the given prefix
+func StringArrayHasPrefixIndex(array []string, prefix string) int {
+	for i, v := range array {
+		if strings.HasPrefix(v, prefix) {
 			return i
 		}
 	}
@@ -79,7 +96,7 @@ func FirstNotEmptyString(values ...string) string {
 // SortedMapKeys returns the sorted keys of the given map
 func SortedMapKeys(m map[string]string) []string {
 	answer := []string{}
-	for k, _ := range m {
+	for k := range m {
 		answer = append(answer, k)
 	}
 	sort.Strings(answer)
@@ -101,7 +118,25 @@ func StringArrayToLower(values []string) []string {
 	return answer
 }
 
-// StringMatches returns true if the given text matches the includes/excludes lists
+// StringContainsAny returns true if the given text contains the includes/excludes lists
+func StringContainsAny(text string, includes []string, excludes []string) bool {
+	for _, x := range excludes {
+		if strings.Index(text, x) >= 0 {
+			return false
+		}
+	}
+	if len(includes) == 0 {
+		return true
+	}
+	for _, inc := range includes {
+		if strings.Index(text, inc) >= 0 {
+			return true
+		}
+	}
+	return false
+}
+
+// StringMatchesAny returns true if the given text matches the includes/excludes lists
 func StringMatchesAny(text string, includes []string, excludes []string) bool {
 	for _, x := range excludes {
 		if StringMatchesPattern(text, x) {
@@ -131,6 +166,20 @@ func StringMatchesPattern(text string, pattern string) bool {
 	return text == pattern
 }
 
+// StringsContaining if the filter is not empty return all the strings which contain the text
+func StringsContaining(slice []string, filter string) []string {
+	if filter == "" {
+		return slice
+	}
+	answer := []string{}
+	for _, text := range slice {
+		if strings.Contains(text, filter) {
+			answer = append(answer, text)
+		}
+	}
+	return answer
+}
+
 // RandStringBytesMaskImprSrc returns a random hexadecimal string of length n.
 func RandStringBytesMaskImprSrc(n int) (string, error) {
 	src := rand.New(rand.NewSource(time.Now().UnixNano()))
@@ -151,7 +200,7 @@ func DiffSlices(oldSlice []string, newSlice []string) ([]string, []string) {
 
 	for _, name := range oldSlice {
 		if StringArrayIndex(newSlice, name) < 0 {
-			toDelete = append(toInsert, name)
+			toDelete = append(toDelete, name)
 		}
 	}
 	for _, name := range newSlice {
@@ -174,4 +223,66 @@ func ParseBool(text string) (bool, error) {
 // We could configure this to use no color or avoid unicode using platform,  env vars or config?
 func CheckMark() string {
 	return "\u2705"
+}
+
+// RemoveStringFromSlice removes the first occurrence of the specified string from a slice, if it exists and returns the result
+func RemoveStringFromSlice(strings []string, toRemove string) []string {
+	for i, str := range strings {
+		if str == toRemove {
+			return append(strings[:i], strings[i+1:]...)
+		}
+	}
+	return strings
+}
+
+// YesNo returns a Yes/No conversion for a boolean parameter
+func YesNo(t bool) string {
+	if t {
+		return "Yes"
+	}
+	return "No"
+}
+
+// ExtractKeyValuePairs creates a map of an string array assuming that each array element is of the form <key><sep><value>.
+// An error is returned is a array element cannot be split into a key/value pair using the specified separator.
+func ExtractKeyValuePairs(values []string, sep string) (map[string]string, error) {
+	pairs := make(map[string]string)
+	for _, value := range values {
+		parts := strings.Split(value, sep)
+		if len(parts) != 2 {
+			return map[string]string{}, errors.Errorf("expected 2 parts for key value pair '%s', but got %v", value, len(parts))
+		}
+		pairs[parts[0]] = parts[1]
+	}
+	return pairs, nil
+}
+
+// QuestionAnswer returns strings like Cobra question/answers for default cli options
+func QuestionAnswer(question string, answer string) string {
+	return fmt.Sprintf("%s %s: %s", ColorBold(ColorInfo("?")), ColorBold(question), ColorAnswer(answer))
+}
+
+//SanitizeLabel returns a label with disallowed characters removed
+func SanitizeLabel(label string) string {
+	sanitized := strings.ToLower(label)
+	return DisallowedLabelCharacters.ReplaceAllString(sanitized, "-")
+}
+
+// StripTrailingSlash removes any trailing forward slashes on the URL
+func StripTrailingSlash(url string) string {
+	if url[len(url)-1:] == "/" {
+		return url[0 : len(url)-1]
+	}
+	return url
+}
+
+// StartsWith returns true if the string starts with the given substring
+func StartsWith(s, substr string) bool {
+	return strings.Index(s, substr) == 0
+}
+
+// ToCamelCase turn "my-super-name" into "MySuperName"
+// Usefule for creating valid go-template variable names
+func ToCamelCase(s string) string {
+	return strings.Replace(strings.Title(s), "-", "", -1)
 }

@@ -1,0 +1,22 @@
+pipelineConfig:
+  env:
+    - name: FRUIT
+      value: BANANA
+    - name: GIT_AUTHOR_NAME
+      value: somebodyelse
+  pipelines:
+    overrides:
+      # Prepend to the build lifecycle/stage's steps
+      - pipeline: release
+        stage: build
+        type: before
+        steps:
+          - sh: echo hi there
+      # Append to the build lifecycle/stage's steps
+      - pipeline: release
+        stage: build
+        type: after
+        steps:
+          - sh: echo goodbye
+          - sh: echo wait why am i here
+

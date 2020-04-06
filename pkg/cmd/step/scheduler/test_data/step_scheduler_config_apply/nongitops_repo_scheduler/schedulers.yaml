@@ -1,0 +1,73 @@
+apiVersion: v1
+items:
+  - apiVersion: jenkins.io/v1
+    kind: Scheduler
+    metadata:
+      name: default-scheduler
+      namespace: jx
+      labels:
+        broken: "true"
+    spec:
+      schedulerAgent:
+        agent: prow
+      policy:
+        protectTested: true
+      postsubmits:
+        entries:
+          - name: release
+            context: ""
+            branches:
+              entries:
+                - master
+            agent: tekton
+      presubmits:
+        entries:
+          - agent: tekton
+            alwaysRun: true
+            context: integration
+            name: integration
+            rerunCommand: /test this
+            trigger: (?m)^/test( all| this),?(\s+|$)
+            queries:
+              - labels:
+                  entries:
+                    - approved
+                missingLabels:
+                  entries:
+                    - do-not-merge
+                    - do-not-merge/hold
+                    - do-not-merge/work-in-progress
+                    - needs-ok-to-test
+                    - needs-rebase
+            policy:
+              protect: true
+              requiredStatusChecks:
+                contexts:
+                  entries:
+                    - integration
+      merger:
+        policy:
+          fromBranchProtection: true
+          skipUnknownContexts: false
+  - apiVersion: jenkins.io/v1
+    kind: Scheduler
+    metadata:
+      name: jx-repo-scheduler
+      namespace: jx
+    spec:
+      schedulerAgent:
+        agent: prow
+      policy:
+        protectTested: true
+      postsubmits:
+        entries:
+          - name: bdd
+            context: ""
+            branches:
+              entries:
+                - master
+            agent: tekton
+kind: List
+metadata:
+  resourceVersion: ""
+  selfLink: ""

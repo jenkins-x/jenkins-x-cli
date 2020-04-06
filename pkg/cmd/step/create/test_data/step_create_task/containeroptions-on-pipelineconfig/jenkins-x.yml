@@ -1,0 +1,11 @@
+pipelineConfig:
+  env:
+    - name: FRUIT
+      value: BANANA
+    - name: GIT_AUTHOR_NAME
+      value: somebodyelse
+  containerOptions:
+    resources:
+      limits:
+        cpu: 0.1
+        memory: 64Mi

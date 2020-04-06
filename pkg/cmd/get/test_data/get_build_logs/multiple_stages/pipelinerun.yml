@@ -1,0 +1,78 @@
+apiVersion: tekton.dev/v1alpha1
+kind: PipelineRun
+metadata:
+  creationTimestamp: 2019-03-05T20:06:13Z
+  generation: 1
+  labels:
+    branch: master
+    build: "1"
+    owner: abayer
+    jenkins.io/pipelineType: build
+    repository: js-test-repo
+    tekton.dev/pipeline: abayer-js-test-repo-master-1
+  name: abayer-js-test-repo-master-1
+  namespace: jx
+  ownerReferences:
+  - apiVersion: tekton.dev/v1alpha1
+    kind: Pipeline
+    name: abayer-js-test-repo-master-1
+    uid: 208e0fad-3f82-11e9-bd41-42010a8a00a2
+  resourceVersion: "1421344"
+  selfLink: /apis/tekton.dev/v1alpha1/namespaces/jx/pipelineruns/abayer-js-test-repo-master-1
+  uid: 209c34f9-3f82-11e9-bd41-42010a8a00a2
+spec:
+  Status: ""
+  params: null
+  pipelineRef:
+    apiVersion: tekton.dev/v1alpha1
+    name: abayer-js-test-repo-master-1
+  resources:
+  - name: abayer-js-test-repo-master
+    resourceRef:
+      apiVersion: tekton.dev/v1alpha1
+      name: abayer-js-test-repo-master
+  serviceAccount: tekton-bot
+  trigger:
+    type: manual
+status:
+  conditions:
+  - lastTransitionTime: 2019-03-05T20:06:13Z
+    message: Not all Tasks in the Pipeline have finished executing
+    reason: Running
+    status: Unknown
+    type: Succeeded
+  startTime: 2019-03-05T20:06:13Z
+  taskRuns:
+    abayer-js-test-repo-master-1-build-jmcbd:
+      pipelineTaskName: build
+      status:
+        conditions:
+        - lastTransitionTime: 2019-03-05T20:07:04Z
+          status: "True"
+          type: Succeeded
+        podName: abayer-js-test-repo-master-1-build-jmcbd-pod-a726d6
+        startTime: 2019-03-05T20:06:13Z
+        steps:
+        - terminated:
+            containerID: docker://cd8f631f053e6d7de0e32a943c4084518590537984ce2f551a23af8e3a236e3c
+            exitCode: 0
+            finishedAt: 2019-03-05T20:06:36Z
+            reason: Completed
+            startedAt: 2019-03-05T20:06:36Z
+    abayer-js-test-repo-master-1-second-wglk8:
+      pipelineTaskName: second
+      status:
+        conditions:
+          - lastTransitionTime: 2019-03-05T20:07:18Z
+            status: "True"
+            type: Succeeded
+            startTime: 2019-03-05T20:07:05Z
+        podName: abayer-js-test-repo-master-1-second-wglk8-pod-762f8d
+        steps:
+        - terminated:
+            containerID: docker://4b3d1bced38bc320eece3cbd87d4be386d6ea1d1cfd2b3639dd0fdff81a04820
+            exitCode: 0
+            finishedAt: 2019-03-05T20:07:18Z
+            reason: Completed
+            startedAt: 2019-03-05T20:07:17Z
+

@@ -1,122 +1,222 @@
 package log
 
 import (
+	"bytes"
 	"fmt"
-	"github.com/sirupsen/logrus"
+	"io"
 	"os"
+	"strings"
 
+	"github.com/rickar/props"
+
+	"github.com/pkg/errors"
+
+	stackdriver "github.com/TV4/logrus-stackdriver-formatter"
 	"github.com/fatih/color"
-	"gopkg.in/AlecAivazis/survey.v1/terminal"
+	"github.com/sirupsen/logrus"
 )
 
-func Infof(msg string, args ...interface{}) {
-	Info(fmt.Sprintf(msg, args...))
+var (
+	// colorStatus returns a new function that returns status-colorized (cyan) strings for the
+	// given arguments with fmt.Sprint().
+	colorStatus = color.New(color.FgCyan).SprintFunc()
+
+	// colorWarn returns a new function that returns status-colorized (yellow) strings for the
+	// given arguments with fmt.Sprint().
+	colorWarn = color.New(color.FgYellow).SprintFunc()
+
+	// colorError returns a new function that returns error-colorized (red) strings for the
+	// given arguments with fmt.Sprint().
+	colorError = color.New(color.FgRed).SprintFunc()
+
+	logger *logrus.Entry
+
+	labelsPath = "/etc/labels"
+)
+
+// FormatLayoutType the layout kind
+type FormatLayoutType string
+
+const (
+	// FormatLayoutJSON uses JSON layout
+	FormatLayoutJSON FormatLayoutType = "json"
+
+	// FormatLayoutText uses classic colorful Jenkins X layout
+	FormatLayoutText FormatLayoutType = "text"
+
+	// FormatLayoutStackdriver uses a custom formatter for stackdriver
+	FormatLayoutStackdriver FormatLayoutType = "stackdriver"
+)
+
+func initializeLogger() error {
+	if logger == nil {
+
+		// if we are inside a pod, record some useful info
+		var fields logrus.Fields
+		if exists, err := fileExists(labelsPath); err != nil {
+			return errors.Wrapf(err, "checking if %s exists", labelsPath)
+		} else if exists {
+			f, err := os.Open(labelsPath)
+			if err != nil {
+				return errors.Wrapf(err, "opening %s", labelsPath)
+			}
+			labels, err := props.Read(f)
+			if err != nil {
+				return errors.Wrapf(err, "reading %s as properties", labelsPath)
+			}
+			app := labels.Get("app")
+			if app != "" {
+				fields["app"] = app
+			}
+			chart := labels.Get("chart")
+			if chart != "" {
+				fields["chart"] = labels.Get("chart")
+			}
+		}
+		logger = logrus.WithFields(fields)
+
+		format := os.Getenv("JX_LOG_FORMAT")
+		if format == "json" {
+			setFormatter(FormatLayoutJSON)
+		} else if format == "stackdriver" {
+			setFormatter(FormatLayoutStackdriver)
+		} else {
+			setFormatter(FormatLayoutText)
+		}
+	}
+	return nil
 }
 
-func Info(msg string) {
-	fmt.Fprint(terminal.NewAnsiStdout(os.Stdout), msg)
+// Logger obtains the logger for use in the jx codebase
+// This is the only way you should obtain a logger
+func Logger() *logrus.Entry {
+	err := initializeLogger()
+	if err != nil {
+		logrus.Warnf("error initializing logrus %v", err)
+	}
+	return logger
 }
 
-func Infoln(msg string) {
-	fmt.Fprintln(terminal.NewAnsiStdout(os.Stdout), msg)
+// SetLevel sets the logging level
+func SetLevel(s string) error {
+	level, err := logrus.ParseLevel(s)
+	if err != nil {
+		return errors.Errorf("Invalid log level '%s'", s)
+	}
+	Logger().Debugf("logging set to level: %s", level)
+	logrus.SetLevel(level)
+	return nil
 }
 
+// GetLevel gets the current log level
+func GetLevel() string {
+	return logrus.GetLevel().String()
+}
+
+// GetLevels returns the list of valid log levels
+func GetLevels() []string {
+	var levels []string
+	for _, level := range logrus.AllLevels {
+		levels = append(levels, level.String())
+	}
+	return levels
+}
+
+// setFormatter sets the logrus format to use either text or JSON formatting
+func setFormatter(layout FormatLayoutType) {
+	switch layout {
+	case FormatLayoutJSON:
+		logrus.SetFormatter(&logrus.JSONFormatter{})
+	case FormatLayoutStackdriver:
+		logrus.SetFormatter(stackdriver.NewFormatter())
+	default:
+		logrus.SetFormatter(NewJenkinsXTextFormat())
+	}
+}
+
+// JenkinsXTextFormat lets use a custom text format
+type JenkinsXTextFormat struct {
+	ShowInfoLevel   bool
+	ShowTimestamp   bool
+	TimestampFormat string
+}
+
+// NewJenkinsXTextFormat creates the default Jenkins X text formatter
+func NewJenkinsXTextFormat() *JenkinsXTextFormat {
+	return &JenkinsXTextFormat{
+		ShowInfoLevel:   false,
+		ShowTimestamp:   false,
+		TimestampFormat: "2006-01-02 15:04:05",
+	}
+}
+
+// Format formats the log statement
+func (f *JenkinsXTextFormat) Format(entry *logrus.Entry) ([]byte, error) {
+	var b *bytes.Buffer
+
+	if entry.Buffer != nil {
+		b = entry.Buffer
+	} else {
+		b = &bytes.Buffer{}
+	}
+
+	level := strings.ToUpper(entry.Level.String())
+	switch level {
+	case "INFO":
+		if f.ShowInfoLevel {
+			b.WriteString(colorStatus(level))
+			b.WriteString(": ")
+		}
+	case "WARNING":
+		b.WriteString(colorWarn(level))
+		b.WriteString(": ")
+	case "DEBUG":
+		b.WriteString(colorStatus(level))
+		b.WriteString(": ")
+	default:
+		b.WriteString(colorError(level))
+		b.WriteString(": ")
+	}
+	if f.ShowTimestamp {
+		b.WriteString(entry.Time.Format(f.TimestampFormat))
+		b.WriteString(" - ")
+	}
+
+	b.WriteString(entry.Message)
+
+	if !strings.HasSuffix(entry.Message, "\n") {
+		b.WriteByte('\n')
+	}
+	return b.Bytes(), nil
+}
+
+// Blank prints a blank line
 func Blank() {
 	fmt.Println()
 }
 
-func Warnf(msg string, args ...interface{}) {
-	Warn(fmt.Sprintf(msg, args...))
+// CaptureOutput calls the specified function capturing and returning all logged messages.
+func CaptureOutput(f func()) string {
+	var buf bytes.Buffer
+	logrus.SetOutput(&buf)
+	f()
+	logrus.SetOutput(os.Stderr)
+	return buf.String()
 }
 
-func Warn(msg string) {
-	color.Yellow(msg)
+// SetOutput sets the outputs for the default logger.
+func SetOutput(out io.Writer) {
+	logrus.SetOutput(out)
 }
 
-func Errorf(msg string, args ...interface{}) {
-	Error(fmt.Sprintf(msg, args...))
-}
-
-func Error(msg string) {
-	color.Red(msg)
-}
-
-func Fatalf(msg string, args ...interface{}) {
-	Fatal(fmt.Sprintf(msg, args...))
-}
-
-func Fatal(msg string) {
-	color.Red(msg)
-}
-
-func Success(msg string) {
-	color.Green(msg)
-}
-
-func Successf(msg string, args ...interface{}) {
-	Success(fmt.Sprintf(msg, args...))
-}
-
-func Failure(msg string) {
-	color.Red(msg)
-}
-
-func Failuref(msg string, args ...interface{}) {
-	Failure(fmt.Sprintf(msg, args...))
-}
-
-// AskForConfirmation uses Scanln to parse user input. A user must type in "yes" or "no" and
-// then press enter. It has fuzzy matching, so "y", "Y", "yes", "YES", and "Yes" all count as
-// confirmations. If the input is not recognized, it will ask again. The function does not return
-// until it gets a valid response from the user. Typically, you should use fmt to print out a question
-// before calling askForConfirmation. E.g. fmt.Println("WARNING: Are you sure? (yes/no)")
-func AskForConfirmation(def bool) bool {
-	var response string
-	fmt.Scanln(&response)
-	if len(response) == 0 {
-		return def
+// copied from utils to avoid circular import
+func fileExists(path string) (bool, error) {
+	_, err := os.Stat(path)
+	if err == nil {
+		return true, nil
 	}
-	okayResponses := []string{"y", "Y", "yes", "Yes", "YES"}
-	nokayResponses := []string{"n", "N", "no", "No", "NO"}
-	if containsString(okayResponses, response) {
-		return true
-	} else if containsString(nokayResponses, response) {
-		return false
-	} else {
-		Warn("Please type y or n & press enter: ")
-		return AskForConfirmation(def)
+	if os.IsNotExist(err) {
+		return false, nil
 	}
-}
-
-// posString returns the first index of element in slice.
-// If slice does not contain element, returns -1.
-func posString(slice []string, element string) int {
-	for index, elem := range slice {
-		if elem == element {
-			return index
-		}
-	}
-	return -1
-}
-
-// containsString returns true iff slice contains element
-func containsString(slice []string, element string) bool {
-	return !(posString(slice, element) == -1)
-}
-
-type SimpleLogFormatter struct {
-}
-
-func (f *SimpleLogFormatter) Format(entry *logrus.Entry) ([]byte, error) {
-	return []byte(fmt.Sprintf(entry.Message) + "\n"), nil
-}
-
-func ConfigureLog(level string) {
-	logrus.SetFormatter(&SimpleLogFormatter{})
-	lvl, err := logrus.ParseLevel(level)
-	if err != nil {
-		fmt.Println(err.Error())
-		os.Exit(-1)
-	}
-	logrus.SetLevel(lvl)
+	return true, errors.Wrapf(err, "failed to check if file exists %s", path)
 }

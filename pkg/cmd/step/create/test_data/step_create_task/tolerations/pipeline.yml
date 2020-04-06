@@ -1,0 +1,51 @@
+apiVersion: tekton.dev/v1alpha1
+kind: Pipeline
+metadata:
+  creationTimestamp: null
+  labels:
+    branch: really-long
+    build: "1"
+    jenkins.io/pipelineType: build
+    owner: abayer
+    repository: js-test-repo
+  name: abayer-js-test-repo-really-long-xw5r5-1
+  namespace: jx
+spec:
+  params:
+  - default: 0.0.1
+    description: the version number for this pipeline which is used as a tag on docker
+      images and helm charts
+    name: version
+    type: string
+  resources:
+  - name: abayer-js-test-repo-really-long-xw5r5
+    type: git
+  tasks:
+  - name: build-a-really-long-stage-name-please-but-not-too-long-thanks
+    params:
+    - name: version
+      value: $(params.version)
+    resources:
+      inputs:
+      - name: workspace
+        resource: abayer-js-test-repo-really-long-xw5r5
+      outputs:
+      - name: workspace
+        resource: abayer-js-test-repo-really-long-xw5r5
+    taskRef:
+      name: abayer-js-test-repo-really-long-xw5r5-build-a-really-long-sta-1
+  - name: second
+    params:
+    - name: version
+      value: $(params.version)
+    resources:
+      inputs:
+      - from:
+        - build-a-really-long-stage-name-please-but-not-too-long-thanks
+        name: workspace
+        resource: abayer-js-test-repo-really-long-xw5r5
+    runAfter:
+    - build-a-really-long-stage-name-please-but-not-too-long-thanks
+    taskRef:
+      name: abayer-js-test-repo-really-long-xw5r5-second-1
+status: {}

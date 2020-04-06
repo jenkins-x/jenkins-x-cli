@@ -9,7 +9,7 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	metricsv1beta1 "k8s.io/metrics/pkg/apis/metrics/v1beta1"
-	metricsclient "k8s.io/metrics/pkg/client/clientset_generated/clientset"
+	metricsclient "k8s.io/metrics/pkg/client/clientset/versioned"
 )
 
 type HeapterConfig struct {
@@ -81,7 +81,7 @@ func (q *HeapterConfig) GetPodMetrics(ns string, pod string, selector string, me
 	if end != "" {
 		params["end"] = end
 	}
-	log.Infof("Querying %s using query parameters: %#v\n", path, params)
+	log.Logger().Infof("Querying %s using query parameters: %#v", path, params)
 	resp := kubeClient.CoreV1().Services(heapsterNamespace).ProxyGet(heapsterScheme, heapsterService, heapsterPort, path, params)
 	return resp.DoRaw()
 }

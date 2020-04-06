@@ -1,0 +1,20 @@
+extends:
+  import: classic
+  file: pipeline.yaml
+
+pipelines:
+  release:
+    build:
+      steps:
+        - dir: env
+          steps:
+            - sh: jx step helm apply
+              name: helm-apply
+
+  pullRequest:
+    build:
+      steps:
+        - dir: env
+          steps:
+            - sh: jx step helm build
+              name: helm-build

@@ -1,21 +1,21 @@
 package jenkins
 
 import (
-	"crypto/tls"
 	"errors"
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
+	"strings"
 
-	"github.com/jenkins-x/golang-jenkins"
+	gojenkins "github.com/jenkins-x/golang-jenkins"
 	jenkauth "github.com/jenkins-x/jx/pkg/auth"
 	"github.com/jenkins-x/jx/pkg/log"
 	"github.com/jenkins-x/jx/pkg/util"
-	"gopkg.in/AlecAivazis/survey.v1/terminal"
 )
 
-func GetJenkinsClient(url string, batch bool, configService jenkauth.ConfigService, in terminal.FileReader, out terminal.FileWriter, outErr io.Writer) (gojenkins.JenkinsClient, error) {
+func GetJenkinsClient(url string, batch bool, configService jenkauth.ConfigService, handles util.IOFileHandles) (gojenkins.JenkinsClient, error) {
 	if url == "" {
 		return nil, errors.New("no external Jenkins URL found in the development namespace!\nAre you sure you installed Jenkins X? Try: https://jenkins-x.io/getting-started/")
 	}
@@ -34,25 +34,37 @@ func GetJenkinsClient(url string, batch bool, configService jenkauth.ConfigServi
 			return nil, err
 		}
 		auths := config.FindUserAuths(url)
-		if len(auths) > 1 {
-			// TODO choose an auth
-		}
-		showForm = true
-		a := config.FindUserAuth(url, username)
-		if a != nil {
-			if a.IsInvalid() {
-				auth, err = EditUserAuth(url, configService, config, a, tokenUrl, batch, in, out, outErr)
+		if batch {
+			if len(auths) > 0 {
+				auth = *auths[0]
+			} else {
+				urls := []string{}
+				for _, svr := range config.Servers {
+					urls = append(urls, svr.URL)
+				}
+				return nil, fmt.Errorf("Could not find any user auths for jenkins server %s has server URLs %s", url, strings.Join(urls, ", "))
+			}
+		} else {
+			if len(auths) > 1 {
+				// TODO choose an auth
+			}
+			showForm = true
+			a := config.FindUserAuth(url, username)
+			if a != nil {
+				if a.IsInvalid() {
+					auth, err = EditUserAuth(url, configService, config, a, tokenUrl, batch, handles)
+					if err != nil {
+						return nil, err
+					}
+				} else {
+					auth = *a
+				}
+			} else {
+				// lets create a new Auth
+				auth, err = EditUserAuth(url, configService, config, &auth, tokenUrl, batch, handles)
 				if err != nil {
 					return nil, err
 				}
-			} else {
-				auth = *a
-			}
-		} else {
-			// lets create a new Auth
-			auth, err = EditUserAuth(url, configService, config, &auth, tokenUrl, batch, in, out, outErr)
-			if err != nil {
-				return nil, err
 			}
 		}
 	}
@@ -61,11 +73,11 @@ func GetJenkinsClient(url string, batch bool, configService jenkauth.ConfigServi
 		if showForm {
 			return nil, fmt.Errorf("No valid Username and API Token specified for Jenkins server: %s\n", url)
 		} else {
-			log.Warnf("No $JENKINS_USERNAME and $JENKINS_TOKEN environment variables defined!\n")
+			log.Logger().Warnf("No $JENKINS_USERNAME and $JENKINS_TOKEN environment variables defined!")
 			PrintGetTokenFromURL(os.Stdout, tokenUrl)
 			if batch {
-				log.Infof("Then run this command on your terminal and try again:\n\n")
-				log.Infof("export JENKINS_TOKEN=myApiToken\n\n")
+				log.Logger().Infof("Then run this command on your terminal and try again:\n")
+				log.Logger().Infof("export JENKINS_TOKEN=myApiToken\n")
 				return nil, errors.New("No environment variables (JENKINS_USERNAME and JENKINS_TOKEN) or JENKINS_BEARER_TOKEN defined")
 			}
 		}
@@ -78,11 +90,7 @@ func GetJenkinsClient(url string, batch bool, configService jenkauth.ConfigServi
 	}
 	jenkins := gojenkins.NewJenkins(jauth, url)
 
-	// handle insecure TLS for minishift
 	httpClient := &http.Client{
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		},
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			return http.ErrUseLastResponse
 		}}
@@ -99,27 +107,28 @@ func JenkinsTokenURL(url string) string {
 	return tokenUrl
 }
 
-func JenkinsNewTokenURL(url string) string {
-	return util.UrlJoin(url, "/me/descriptorByName/jenkins.security.ApiTokenProperty/generateNewToken")
-}
-
 func JenkinsApiURL(url string) string {
 	return util.UrlJoin(url, "/api")
 }
 
-func EditUserAuth(url string, configService jenkauth.ConfigService, config *jenkauth.AuthConfig, auth *jenkauth.UserAuth, tokenUrl string, batchMode bool, in terminal.FileReader, out terminal.FileWriter, outErr io.Writer) (jenkauth.UserAuth, error) {
+// JenkinsLoginURL returns the Jenkins login URL
+func JenkinsLoginURL(url string) string {
+	return util.UrlJoin(url, "/login")
+}
 
-	log.Infof("\nTo be able to connect to the Jenkins server we need a username and API Token\n\n")
+func EditUserAuth(url string, configService jenkauth.ConfigService, config *jenkauth.AuthConfig, auth *jenkauth.UserAuth, tokenUrl string, batchMode bool, handles util.IOFileHandles) (jenkauth.UserAuth, error) {
+
+	log.Logger().Infof("\nTo be able to connect to the Jenkins server we need a username and API Token\n")
 
 	f := func(username string) error {
-		log.Infof("\nPlease go to %s and click %s to get your API Token\n", util.ColorInfo(tokenUrl), util.ColorInfo("Show API Token"))
-		log.Infof("Then COPY the API token so that you can paste it into the form below:\n\n")
+		log.Logger().Infof("\nPlease go to %s and click %s to get your API Token", util.ColorInfo(tokenUrl), util.ColorInfo("Show API Token"))
+		log.Logger().Infof("Then COPY the API token so that you can paste it into the form below:\n")
 		return nil
 	}
 
 	defaultUsername := "admin"
 
-	err := config.EditUserAuth("Jenkins", auth, defaultUsername, true, batchMode, f, in, out, outErr)
+	err := config.EditUserAuth("Jenkins", auth, defaultUsername, true, batchMode, f, handles)
 	if err != nil {
 		return *auth, err
 	}
@@ -168,4 +177,46 @@ func loadChildJobs(jenkinsClient gojenkins.JenkinsClient, name string) ([]*gojen
 		}
 	}
 	return answer, nil
+}
+
+// JobName returns the Jenkins job name starting with the given prefix
+func JobName(prefix string, j *gojenkins.Job) string {
+	name := j.FullName
+	if name == "" {
+		name = j.Name
+	}
+	if prefix != "" {
+		name = prefix + "/" + name
+	}
+	return name
+}
+
+// IsPipeline checks if the job is a pipeline job
+func IsPipeline(j *gojenkins.Job) bool {
+	return strings.Contains(j.Class, "Job")
+}
+
+// SwitchJenkinsBaseURL sometimes a Jenkins server does not know its external URL so lets switch the base URL of the job
+// URL to use the known working baseURL of the jenkins server
+func SwitchJenkinsBaseURL(jobURL string, baseURL string) string {
+	if jobURL == "" {
+		return baseURL
+	}
+	if baseURL == "" {
+		return jobURL
+	}
+	u, err := url.Parse(jobURL)
+	if err != nil {
+		log.Logger().Warnf("failed to parse Jenkins Job URL %s due to: %s", jobURL, err)
+		return jobURL
+	}
+
+	u2, err := url.Parse(baseURL)
+	if err != nil {
+		log.Logger().Warnf("failed to parse Jenkins base URL %s due to: %s", baseURL, err)
+		return jobURL
+	}
+	u.Host = u2.Host
+	u.Scheme = u2.Scheme
+	return u.String()
 }

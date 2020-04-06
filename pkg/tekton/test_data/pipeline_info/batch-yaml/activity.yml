@@ -1,0 +1,135 @@
+apiVersion: jenkins.io/v1
+kind: PipelineActivity
+metadata:
+  creationTimestamp: "2019-09-06T05:23:54Z"
+  generation: 25
+  labels:
+    branch: PR-1
+    build: "1"
+    context: pr-build
+    owner: cb-kubecd
+    provider: github
+    repository: bdd-spring-1567745634
+    sourcerepository: cb-kubecd-bdd-spring-1567745634
+  name: cb-kubecd-bdd-spring-1567745634-pr-1-1
+  namespace: jx
+  resourceVersion: "11995"
+  selfLink: /apis/jenkins.io/v1/namespaces/jx/pipelineactivities/cb-kubecd-bdd-spring-1567745634-pr-1-1
+  uid: 84f23b66-d066-11e9-8eea-42010a8400f6
+spec:
+  author: jstrachan
+  batchPipelineActivity: {}
+  build: "1"
+  completedTimestamp: "2019-09-06T05:26:56Z"
+  context: pr-build
+  gitBranch: PR-1
+  gitOwner: cb-kubecd
+  gitRepository: bdd-spring-1567745634
+  gitUrl: https://github.com/cb-kubecd/bdd-spring-1567745634.git
+  pipeline: cb-kubecd/bdd-spring-1567745634/PR-1
+  pullTitle: 'fix: home page'
+  startedTimestamp: "2019-09-06T05:23:56Z"
+  status: Succeeded
+  steps:
+  - kind: Stage
+    stage:
+      completedTimestamp: "2019-09-06T05:24:17Z"
+      name: meta pipeline
+      startedTimestamp: "2019-09-06T05:23:56Z"
+      status: Succeeded
+      steps:
+      - completedTimestamp: "2019-09-06T05:23:56Z"
+        name: Credential Initializer 9bhcp
+        startedTimestamp: "2019-09-06T05:23:56Z"
+        status: Succeeded
+      - completedTimestamp: "2019-09-06T05:23:57Z"
+        name: Working Dir Initializer Sd6d5
+        startedTimestamp: "2019-09-06T05:23:56Z"
+        status: Succeeded
+      - completedTimestamp: "2019-09-06T05:23:58Z"
+        name: Place Tools
+        startedTimestamp: "2019-09-06T05:23:57Z"
+        status: Succeeded
+      - completedTimestamp: "2019-09-06T05:24:05Z"
+        description: https://github.com/cb-kubecd/bdd-spring-1567745634.git
+        name: Git Source Meta Cb Kubecd Bdd Spring 15677 Bwckt
+        startedTimestamp: "2019-09-06T05:23:58Z"
+        status: Succeeded
+      - completedTimestamp: "2019-09-06T05:24:06Z"
+        name: Git Merge
+        startedTimestamp: "2019-09-06T05:24:05Z"
+        status: Succeeded
+      - completedTimestamp: "2019-09-06T05:24:08Z"
+        name: Merge Pull Refs
+        startedTimestamp: "2019-09-06T05:24:06Z"
+        status: Succeeded
+      - completedTimestamp: "2019-09-06T05:24:13Z"
+        name: Create Effective Pipeline
+        startedTimestamp: "2019-09-06T05:24:08Z"
+        status: Succeeded
+      - completedTimestamp: "2019-09-06T05:24:17Z"
+        name: Create Tekton Crds
+        startedTimestamp: "2019-09-06T05:24:13Z"
+        status: Succeeded
+  - kind: Stage
+    stage:
+      completedTimestamp: "2019-09-06T05:26:56Z"
+      name: from build pack
+      startedTimestamp: "2019-09-06T05:24:19Z"
+      status: Succeeded
+      steps:
+      - completedTimestamp: "2019-09-06T05:24:19Z"
+        name: Credential Initializer 69f5q
+        startedTimestamp: "2019-09-06T05:24:19Z"
+        status: Succeeded
+      - completedTimestamp: "2019-09-06T05:24:20Z"
+        name: Working Dir Initializer Rx794
+        startedTimestamp: "2019-09-06T05:24:19Z"
+        status: Succeeded
+      - completedTimestamp: "2019-09-06T05:24:21Z"
+        name: Place Tools
+        startedTimestamp: "2019-09-06T05:24:20Z"
+        status: Succeeded
+      - completedTimestamp: "2019-09-06T05:24:30Z"
+        description: https://github.com/cb-kubecd/bdd-spring-1567745634.git
+        name: Git Source Cb Kubecd Bdd Spring 1567745634 N49gk
+        startedTimestamp: "2019-09-06T05:24:21Z"
+        status: Succeeded
+      - completedTimestamp: "2019-09-06T05:24:32Z"
+        name: Git Merge
+        startedTimestamp: "2019-09-06T05:24:30Z"
+        status: Succeeded
+      - completedTimestamp: "2019-09-06T05:24:50Z"
+        name: Build Set Version
+        startedTimestamp: "2019-09-06T05:24:32Z"
+        status: Succeeded
+      - completedTimestamp: "2019-09-06T05:25:19Z"
+        name: Build Mvn Install
+        startedTimestamp: "2019-09-06T05:24:50Z"
+        status: Succeeded
+      - completedTimestamp: "2019-09-06T05:25:20Z"
+        name: Build Skaffold Version
+        startedTimestamp: "2019-09-06T05:25:19Z"
+        status: Succeeded
+      - completedTimestamp: "2019-09-06T05:25:31Z"
+        name: Build Container Build
+        startedTimestamp: "2019-09-06T05:25:20Z"
+        status: Succeeded
+      - completedTimestamp: "2019-09-06T05:25:31Z"
+        name: Postbuild Post Build
+        startedTimestamp: "2019-09-06T05:25:31Z"
+        status: Succeeded
+      - completedTimestamp: "2019-09-06T05:25:52Z"
+        name: Promote Make Preview
+        startedTimestamp: "2019-09-06T05:25:31Z"
+        status: Succeeded
+      - completedTimestamp: "2019-09-06T05:26:56Z"
+        name: Promote Jx Preview
+        startedTimestamp: "2019-09-06T05:25:52Z"
+        status: Succeeded
+  - kind: Preview
+    preview:
+      applicationURL: http://bdd-spring-1567745634.jx-cb-kubecd-bdd-spring-1567745634-pr-1.34.77.156.80.nip.io
+      pullRequestURL: https://github.com/cb-kubecd/bdd-spring-1567745634/pull/1
+      startedTimestamp: "2019-09-06T05:26:14Z"
+status: {}

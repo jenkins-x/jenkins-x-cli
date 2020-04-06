@@ -1,0 +1,15 @@
+pipelineConfig:
+  env:
+    - name: FRUIT
+      value: BANANA
+    - name: GIT_AUTHOR_NAME
+      value: somebodyelse
+  pipelines:
+    overrides:
+      # Replace the build lifecycle/stage's steps
+      - pipeline: release
+        stage: build
+        steps:
+          - sh: echo goodbye
+          - sh: echo wait why am i here
+

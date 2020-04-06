@@ -1,3 +1,0 @@
-dependencies:
-- name: controller-team
-  repository: file://../jx

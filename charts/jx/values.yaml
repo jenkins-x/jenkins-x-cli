@@ -1,6 +1,6 @@
 image:
-  repository: jenkinsxio/jx
-  tag: dev
+  repository: gcr.io/jenkinsxio/jx
+  tag: 2.0.399
   pullPolicy: IfNotPresent
 
 replicaCount: 1
@@ -17,6 +17,8 @@ daemonset:
 job:
   enabled: false
 
+podAnnotations: {}
+
 cronjob:
   enabled: false
   schedule: "* * * * *"
@@ -26,6 +28,7 @@ cronjob:
 
 serviceaccount:
   enabled: false
+  customName: ""
 
 role:
   enabled: false
@@ -103,8 +106,14 @@ args:
   - "previews"
 
 env:
-  foo: bar
-  cheese: wine
+  # lets use JSON output in logs
+  JX_LOG_FORMAT: json
+
+  # lets set the logging level
+  JX_LOG_LEVEL: info
+
+  # lets mark this pod as being a CI/CD pipeline job so reuse the pipeline git user
+  PIPELINE_KIND: dummy
 
 internalPort: 80
 
@@ -118,7 +127,7 @@ service:
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
   # choice for the user. This also increases chances charts run on environments with little
-  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # resources. If you do want to specify resources, uncomment the following
   # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
   # limits:
   #  cpu: 100m

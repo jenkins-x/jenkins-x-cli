@@ -1,0 +1,43 @@
+buildPack: none
+noReleasePrepare: true
+pipelineConfig:
+  pipelines:
+    release:
+      pipeline:
+        agent:
+          image: cloudbees/whitesource-agent-jx
+        stages:
+          - name: dependencies-scanning
+            environment:
+              - name: WHITESOURCE_API_KEY
+                valueFrom:
+                  secretKeyRef:
+                    name: whitesource
+                    key: api-key
+              - name: WHITESOURCE_USER_KEY
+                valueFrom:
+                  secretKeyRef:
+                    name: whitesource
+                    key: user-key
+              - name: WHITESOURCE_PRODUCT_TOKEN
+                value: "499f35ebde4642b2ac550b9a331c2bb86c2deb1bcd5a4b9282f6879a0f2ab225"
+              - name: WHITESOURCE_PROJECT_TOKEN
+                value: "ee80483f83af44aa86c7a2458e30d0f6d22ea2769c7b44b3a2c2220cb7335b42"
+            options: 
+              containerOptions:
+                resources:
+                  limits:
+                    cpu: 2
+                    memory: 2Gi
+                  requests:
+                    cpu: 1
+                    memory: 1Gi
+            steps:
+              - name: whitesource
+                image: cloudbees/whitesource-agent-jx
+                command: /app/entrypoint-jx.sh
+                args:
+                  - -c
+                  - /workspace/source/.whitesource.config
+                  - regular
+                dir: /app/

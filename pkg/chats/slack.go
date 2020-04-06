@@ -45,7 +45,7 @@ func (c *SlackChatProvider) GetChannelMetrics(name string) (*ChannelMetrics, err
 		return metrics, err
 	}
 	for _, ch := range channels {
-		log.Infof("Found channel %s with id %s\n", ch.Name, ch.ID)
+		log.Logger().Infof("Found channel %s with id %s", ch.Name, ch.ID)
 		if ch.Name == name {
 			id = ch.ID
 			break

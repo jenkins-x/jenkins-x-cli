@@ -1,0 +1,111 @@
+apiVersion: jenkins.io/v1
+kind: PipelineActivity
+metadata:
+  creationTimestamp: 2019-02-21T22:07:38Z
+  generation: 1
+  labels:
+    branch: nested
+    owner: abayer
+    sourcerepository: abayer-js-test-repo
+  name: abayer-js-test-repo-nested-1
+  namespace: jx
+  resourceVersion: "7385"
+  selfLink: /apis/jenkins.io/v1/namespaces/jx/pipelineactivities/abayer-js-test-repo-nested-1
+  uid: 19ccd268-3625-11e9-b776-42010a8a00ac
+spec:
+  build: "1"
+  completedTimestamp: 2019-02-21T22:09:17Z
+  gitBranch: nested
+  gitOwner: abayer
+  gitRepository: js-test-repo
+  gitUrl: https://github.com/abayer/js-test-repo
+  pipeline: abayer/js-test-repo/nested
+  startedTimestamp: 2019-02-21T22:07:50Z
+  status: Succeeded
+  steps:
+  - kind: Stage
+    stage:
+      completedTimestamp: 2019-02-21T22:09:17Z
+      name: Parent
+      startedTimestamp: 2019-02-21T22:07:50Z
+      status: Succeeded
+  - kind: Stage
+    stage:
+      completedTimestamp: 2019-02-21T22:08:04Z
+      name: Parent / Build
+      startedTimestamp: 2019-02-21T22:07:50Z
+      status: Succeeded
+      steps:
+      - completedTimestamp: 2019-02-21T22:07:50Z
+        name: Credential Initializer 2f77p
+        startedTimestamp: 2019-02-21T22:07:50Z
+        status: Succeeded
+      - completedTimestamp: 2019-02-21T22:07:52Z
+        description: https://github.com/abayer/js-test-repo
+        name: Git Source Abayer Js Test Repo Nested X7vxn
+        startedTimestamp: 2019-02-21T22:07:52Z
+        status: Succeeded
+      - completedTimestamp: 2019-02-21T22:07:54Z
+        name: Place Tools
+        startedTimestamp: 2019-02-21T22:07:54Z
+        status: Succeeded
+      - completedTimestamp: 2019-02-21T22:07:55Z
+        name: Step2
+        startedTimestamp: 2019-02-21T22:07:55Z
+        status: Succeeded
+      - completedTimestamp: 2019-02-21T22:07:56Z
+        name: Step3
+        startedTimestamp: 2019-02-21T22:07:56Z
+        status: Succeeded
+      - completedTimestamp: 2019-02-21T22:08:02Z
+        name: Step4
+        startedTimestamp: 2019-02-21T22:07:57Z
+        status: Succeeded
+      - completedTimestamp: 2019-02-21T22:08:03Z
+        name: Source Mkdir Abayer Js Test Repo Nested 4z4x9
+        startedTimestamp: 2019-02-21T22:08:03Z
+        status: Succeeded
+      - completedTimestamp: 2019-02-21T22:08:04Z
+        name: Source Copy Abayer Js Test Repo Nested W9wfh
+        startedTimestamp: 2019-02-21T22:08:04Z
+        status: Succeeded
+  - kind: Stage
+    stage:
+      completedTimestamp: 2019-02-21T22:09:17Z
+      name: Parent / Second
+      startedTimestamp: 2019-02-21T22:09:05Z
+      status: Succeeded
+      steps:
+      - completedTimestamp: 2019-02-21T22:09:05Z
+        name: Credential Initializer 5hlqz
+        startedTimestamp: 2019-02-21T22:09:05Z
+        status: Succeeded
+      - completedTimestamp: 2019-02-21T22:09:06Z
+        name: Create Dir Workspace 58tvt
+        startedTimestamp: 2019-02-21T22:09:06Z
+        status: Succeeded
+      - completedTimestamp: 2019-02-21T22:09:07Z
+        name: Source Copy Workspace 0 5292z
+        startedTimestamp: 2019-02-21T22:09:07Z
+        status: Succeeded
+      - completedTimestamp: 2019-02-21T22:09:08Z
+        name: Place Tools
+        startedTimestamp: 2019-02-21T22:09:08Z
+        status: Succeeded
+      - completedTimestamp: 2019-02-21T22:09:09Z
+        name: Step2
+        startedTimestamp: 2019-02-21T22:09:09Z
+        status: Succeeded
+      - completedTimestamp: 2019-02-21T22:09:15Z
+        name: Step3
+        startedTimestamp: 2019-02-21T22:09:10Z
+        status: Succeeded
+      - completedTimestamp: 2019-02-21T22:09:16Z
+        name: Source Mkdir Abayer Js Test Repo Nested 47ds2
+        startedTimestamp: 2019-02-21T22:09:16Z
+        status: Succeeded
+      - completedTimestamp: 2019-02-21T22:09:17Z
+        name: Source Copy Abayer Js Test Repo Nested Bfzqd
+        startedTimestamp: 2019-02-21T22:09:17Z
+        status: Succeeded
+status: {}

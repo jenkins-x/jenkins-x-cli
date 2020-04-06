@@ -1,0 +1,10 @@
+postsubmits:
+  replace: true
+
+trigger:
+  joinOrgUrl: http://org-url
+  onlyOrgMembers: true
+
+plugins:
+  entries:
+  - cat

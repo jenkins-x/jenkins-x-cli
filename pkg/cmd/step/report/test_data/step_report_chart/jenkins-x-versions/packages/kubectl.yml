@@ -1,0 +1,4 @@
+version: 1.12.0
+upperLimit: 2.0.0
+gitUrl: https://github.com/kubernetes/kubernetes
+url: https://kubernetes.io/

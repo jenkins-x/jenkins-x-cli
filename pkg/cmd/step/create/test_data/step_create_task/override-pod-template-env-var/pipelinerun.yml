@@ -1,0 +1,27 @@
+apiVersion: tekton.dev/v1alpha1
+kind: PipelineRun
+metadata:
+  creationTimestamp: null
+  labels:
+    branch: master
+    build: "1"
+    jenkins.io/pipelineType: build
+    owner: abayer
+    repository: jx-demo-qs
+  name: abayer-jx-demo-qs-master-cmg46-1
+spec:
+  params:
+  - name: version
+    value: 0.0.1
+  pipelineRef:
+    apiVersion: tekton.dev/v1alpha1
+    name: abayer-jx-demo-qs-master-cmg46-1
+  podTemplate: {}
+  resources:
+  - name: abayer-jx-demo-qs-master-cmg46
+    resourceRef:
+      apiVersion: tekton.dev/v1alpha1
+      name: abayer-jx-demo-qs-master-cmg46
+  serviceAccountName: tekton-bot
+  timeout: 240h0m0s
+status: {}

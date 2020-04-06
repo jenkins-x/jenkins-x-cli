@@ -1,0 +1,105 @@
+apiVersion: jenkins.io/v1
+kind: PipelineActivity
+metadata:
+  generation: 1
+  labels:
+    branch: fakebranch
+    build: "1"
+    owner: fakeowner
+    provider: github
+    repository: fakerepo
+    sourcerepository: fakeowner-fakerepo
+  name: fakeowner-fakerepo-fakebranch-1
+  namespace: jx
+  selfLink: /apis/jenkins.io/v1/namespaces/jx/pipelineactivities/fakeowner-fakerepo-fakebranch-1
+spec:
+  author: fakeowner
+  batchPipelineActivity: {}
+  build: "1"
+  completedTimestamp: "2019-07-03T15:38:41Z"
+  gitBranch: fakebranch
+  gitOwner: fakeowner
+  gitRepository: fakerepo
+  gitUrl: https://github.com/fakeowner/fakerepo.git
+  lastCommitMessage: Draft create
+  lastCommitSHA: 1d0699fd4a7a84cddaddae3bf92f8ea1f7268012
+  pipeline: fakeowner/fakerepo/fakebranch
+  releaseNotesURL: https://github.com/fakeowner/fakerepo/releases/tag/v0.0.1
+  startedTimestamp: "2019-07-03T15:36:00Z"
+  status: Succeeded
+  steps:
+    - kind: Stage
+      stage:
+        completedTimestamp: "2019-07-03T15:38:41Z"
+        name: from build pack
+        startedTimestamp: "2019-07-03T15:36:00Z"
+        status: Succeeded
+        steps:
+          - completedTimestamp: "2019-07-03T15:36:00Z"
+            name: Credential Initializer V2f7m
+            startedTimestamp: "2019-07-03T15:36:00Z"
+            status: Succeeded
+          - completedTimestamp: "2019-07-03T15:36:02Z"
+            name: Working Dir Initializer Q9w2f
+            startedTimestamp: "2019-07-03T15:36:02Z"
+            status: Succeeded
+          - completedTimestamp: "2019-07-03T15:36:03Z"
+            name: Place Tools
+            startedTimestamp: "2019-07-03T15:36:03Z"
+            status: Succeeded
+          - completedTimestamp: "2019-07-03T15:36:07Z"
+            description: https://github.com/fakeowner/fakerepo
+            name: Git Source fakeowner fakerepo fakebranch 229l5
+            startedTimestamp: "2019-07-03T15:36:05Z"
+            status: Succeeded
+          - completedTimestamp: "2019-07-03T15:36:36Z"
+            name: Git Merge
+            startedTimestamp: "2019-07-03T15:36:36Z"
+            status: Succeeded
+          - completedTimestamp: "2019-07-03T15:36:46Z"
+            name: Setup Jx Git Credentials
+            startedTimestamp: "2019-07-03T15:36:46Z"
+            status: Succeeded
+          - completedTimestamp: "2019-07-03T15:36:47Z"
+            name: Build Python Unittest
+            startedTimestamp: "2019-07-03T15:36:46Z"
+            status: Succeeded
+          - completedTimestamp: "2019-07-03T15:36:58Z"
+            name: Build Container Build
+            startedTimestamp: "2019-07-03T15:36:49Z"
+            status: Succeeded
+          - completedTimestamp: "2019-07-03T15:36:59Z"
+            name: Build Post Build
+            startedTimestamp: "2019-07-03T15:36:49Z"
+            status: Succeeded
+          - completedTimestamp: "2019-07-03T15:37:05Z"
+            name: Promote Changelog
+            startedTimestamp: "2019-07-03T15:36:49Z"
+            status: Succeeded
+          - completedTimestamp: "2019-07-03T15:37:08Z"
+            name: Promote Helm Release
+            startedTimestamp: "2019-07-03T15:36:49Z"
+            status: Succeeded
+          - completedTimestamp: "2019-07-03T15:38:41Z"
+            name: Promote Jx Promote
+            startedTimestamp: "2019-07-03T15:36:49Z"
+            status: Succeeded
+    - kind: Promote
+      promote:
+        completedTimestamp: "2019-07-03T15:38:41Z"
+        environment: staging
+        pullRequest:
+          completedTimestamp: "2019-07-03T15:38:40Z"
+          mergeCommitSHA: 01b1c6aef237e677cbf3b9b09394f401d2649590
+          pullRequestURL: https://github.com/fakeowner/environment-daniel-dev-cluster0001-staging/pull/1
+          startedTimestamp: "2019-07-03T15:37:14Z"
+          status: Succeeded
+        startedTimestamp: "2019-07-03T15:37:14Z"
+        status: Succeeded
+        update:
+          completedTimestamp: "2019-07-03T15:38:41Z"
+          startedTimestamp: "2019-07-03T15:38:40Z"
+          status: Succeeded
+  version: 0.0.1
+  workflowStatus: Running
+status: {}

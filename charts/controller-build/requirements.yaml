@@ -1,4 +1,0 @@
-dependencies:
-- name: jx
-  repository: file://../jx
-  version: 1.0.0

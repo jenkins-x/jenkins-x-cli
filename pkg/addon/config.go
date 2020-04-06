@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/jenkins-x/jx/pkg/util"
-	"gopkg.in/yaml.v2"
+	"sigs.k8s.io/yaml"
 )
 
 //AddonConfig Addon Configuration

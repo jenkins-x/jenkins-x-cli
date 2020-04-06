@@ -4,22 +4,25 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"os"
 	"os/user"
 	"path/filepath"
 	"regexp"
 	"sort"
 	"strings"
 
-	"github.com/jenkins-x/jx/pkg/apis/jenkins.io/v1"
+	"github.com/jenkins-x/jx/pkg/jenkinsfile"
+
+	"github.com/ghodss/yaml"
+	"github.com/pkg/errors"
+
+	v1 "github.com/jenkins-x/jx/pkg/apis/jenkins.io/v1"
 	"github.com/jenkins-x/jx/pkg/auth"
 	"github.com/jenkins-x/jx/pkg/client/clientset/versioned"
 	"github.com/jenkins-x/jx/pkg/config"
 	"github.com/jenkins-x/jx/pkg/gits"
 	"github.com/jenkins-x/jx/pkg/log"
 	"github.com/jenkins-x/jx/pkg/util"
-	"gopkg.in/AlecAivazis/survey.v1"
-	"gopkg.in/AlecAivazis/survey.v1/terminal"
+	survey "gopkg.in/AlecAivazis/survey.v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -27,12 +30,15 @@ import (
 
 var useForkForEnvGitRepo = false
 
+// ResolveChartMuseumURLFn used to resolve the chart repository URL if using remote environments
+type ResolveChartMuseumURLFn func() (string, error)
+
 // CreateEnvironmentSurvey creates a Survey on the given environment using the default options
 // from the CLI
 func CreateEnvironmentSurvey(batchMode bool, authConfigSvc auth.ConfigService, devEnv *v1.Environment, data *v1.Environment,
-	config *v1.Environment, forkEnvGitURL string, ns string, jxClient versioned.Interface, kubeClient kubernetes.Interface, envDir string,
-	gitRepoOptions *gits.GitRepositoryOptions, helmValues config.HelmValuesConfig, prefix string, git gits.Gitter, in terminal.FileReader, out terminal.FileWriter, errOut io.Writer) (gits.GitProvider, error) {
-	surveyOpts := survey.WithStdio(in, out, errOut)
+	config *v1.Environment, update bool, forkEnvGitURL string, ns string, jxClient versioned.Interface, kubeClient kubernetes.Interface, envDir string,
+	gitRepoOptions *gits.GitRepositoryOptions, helmValues config.HelmValuesConfig, prefix string, git gits.Gitter, chartMusemFn ResolveChartMuseumURLFn, handles util.IOFileHandles) (gits.GitProvider, error) {
+	surveyOpts := survey.WithStdio(handles.In, handles.Out, handles.Err)
 	name := data.Name
 	createMode := name == ""
 	if createMode {
@@ -41,12 +47,18 @@ func CreateEnvironmentSurvey(batchMode bool, authConfigSvc auth.ConfigService, d
 			if err != nil {
 				return nil, err
 			}
-			err = ValidateEnvironmentDoesNotExist(jxClient, ns, config.Name)
-			if err != nil {
-				return nil, err
+			if !update {
+				err = ValidateEnvironmentDoesNotExist(jxClient, ns, config.Name)
+				if err != nil {
+					return nil, err
+				}
 			}
 			data.Name = config.Name
 		} else {
+			if batchMode {
+				return nil, fmt.Errorf("environment name cannot be empty. Use --name option.")
+			}
+
 			validator := func(val interface{}) error {
 				err := ValidateName(val)
 				if err != nil {
@@ -132,14 +144,13 @@ func CreateEnvironmentSurvey(batchMode bool, authConfigSvc auth.ConfigService, d
 	}
 
 	if helmValues.ExposeController.Config.Domain == "" {
-
 		ic, err := GetIngressConfig(kubeClient, ns)
 		if err != nil {
 			return nil, err
 		}
 
 		if batchMode {
-			log.Infof("Running in batch mode and no domain flag used so defaulting to team domain %s\n", ic.Domain)
+			log.Logger().Infof("Running in batch mode and no domain flag used so defaulting to team domain %s", ic.Domain)
 			helmValues.ExposeController.Config.Domain = ic.Domain
 		} else {
 			q := &survey.Input{
@@ -154,24 +165,35 @@ func CreateEnvironmentSurvey(batchMode bool, authConfigSvc auth.ConfigService, d
 		}
 	}
 
+	data.Spec.RemoteCluster = config.Spec.RemoteCluster
+	if !batchMode {
+		var err error
+		data.Spec.RemoteCluster, err = util.Confirm("Environment in separate cluster to Dev Environment:",
+			data.Spec.RemoteCluster, " Is this Environment going to be in a different cluster to the Development environment. For help on Multi Cluster support see: https://jenkins-x.io/getting-started/multi-cluster/", handles)
+		if err != nil {
+			return nil, err
+		}
+	}
 	if config.Spec.Cluster != "" {
 		data.Spec.Cluster = config.Spec.Cluster
 	} else {
-		// lets not show the UI for this if users specify the namespace via arguments
-		if !createMode || config.Spec.Namespace == "" {
-			defaultValue := data.Spec.Cluster
-			if batchMode {
-				data.Spec.Cluster = defaultValue
-			} else {
-				q := &survey.Input{
-					Message: "Cluster URL:",
-					Default: defaultValue,
-					Help:    "The Kubernetes cluster URL to use to host this Environment",
-				}
-				// TODO validate/transform to match valid kubnernetes cluster syntax
-				err := survey.AskOne(q, &data.Spec.Cluster, nil, surveyOpts)
-				if err != nil {
-					return nil, err
+		if data.Spec.RemoteCluster {
+			// lets not show the UI for this if users specify the namespace via arguments
+			if !createMode || config.Spec.Namespace == "" {
+				defaultValue := data.Spec.Cluster
+				if batchMode {
+					data.Spec.Cluster = defaultValue
+				} else {
+					q := &survey.Input{
+						Message: "Cluster URL:",
+						Default: defaultValue,
+						Help:    "The Kubernetes cluster URL to use to host this Environment. You can leave this blank for now.",
+					}
+					// TODO validate/transform to match valid kubnernetes cluster syntax
+					err := survey.AskOne(q, &data.Spec.Cluster, nil, surveyOpts)
+					if err != nil {
+						return nil, err
+					}
 				}
 			}
 		}
@@ -233,15 +255,27 @@ func CreateEnvironmentSurvey(batchMode bool, authConfigSvc auth.ConfigService, d
 			data.Spec.Order = i
 		}
 	}
-	_, gitProvider, err := CreateEnvGitRepository(batchMode, authConfigSvc, devEnv, data, config, forkEnvGitURL, envDir, gitRepoOptions, helmValues, prefix, git, in, out, errOut)
+	if batchMode && gitRepoOptions.Owner == "" {
+		devEnvGitOwner, err := GetDevEnvGitOwner(jxClient)
+		if err != nil {
+			return nil, fmt.Errorf("Failed to get default Git owner for repos: %s", err)
+		}
+		if devEnvGitOwner != "" {
+			gitRepoOptions.Owner = devEnvGitOwner
+		} else {
+			gitRepoOptions.Owner = gitRepoOptions.Username
+		}
+		log.Logger().Infof("Using %s environment git owner in batch mode.", util.ColorInfo(gitRepoOptions.Owner))
+	}
+	_, gitProvider, err := CreateEnvGitRepository(batchMode, authConfigSvc, devEnv, data, config, forkEnvGitURL, envDir, gitRepoOptions, helmValues, prefix, git, chartMusemFn, handles)
 	return gitProvider, err
 }
 
 // CreateEnvGitRepository creates the git repository for the given Environment
-func CreateEnvGitRepository(batchMode bool, authConfigSvc auth.ConfigService, devEnv *v1.Environment, data *v1.Environment, config *v1.Environment, forkEnvGitURL string, envDir string, gitRepoOptions *gits.GitRepositoryOptions, helmValues config.HelmValuesConfig, prefix string, git gits.Gitter, in terminal.FileReader, out terminal.FileWriter, errOut io.Writer) (*gits.GitRepository, gits.GitProvider, error) {
+func CreateEnvGitRepository(batchMode bool, authConfigSvc auth.ConfigService, devEnv *v1.Environment, data *v1.Environment, config *v1.Environment, forkEnvGitURL string, envDir string, gitRepoOptions *gits.GitRepositoryOptions, helmValues config.HelmValuesConfig, prefix string, git gits.Gitter, chartMusemFn ResolveChartMuseumURLFn, handles util.IOFileHandles) (*gits.GitRepository, gits.GitProvider, error) {
 	var gitProvider gits.GitProvider
 	var repo *gits.GitRepository
-	surveyOpts := survey.WithStdio(in, out, errOut)
+	surveyOpts := survey.WithStdio(handles.In, handles.Out, handles.Err)
 	createRepo := false
 	if config.Spec.Source.URL != "" {
 		data.Spec.Source.URL = config.Spec.Source.URL
@@ -255,7 +289,7 @@ func CreateEnvGitRepository(batchMode bool, authConfigSvc auth.ConfigService, de
 				}
 				err := survey.AskOne(confirm, &showURLEdit, nil, surveyOpts)
 				if err != nil {
-					return repo, nil, err
+					return repo, nil, errors.Wrap(err, "asking enable GitOps question")
 				}
 			} else {
 				showURLEdit = true
@@ -272,23 +306,23 @@ func CreateEnvGitRepository(batchMode bool, authConfigSvc auth.ConfigService, de
 					}
 					err := survey.AskOne(confirm, &createRepo, nil, surveyOpts)
 					if err != nil {
-						return repo, nil, err
+						return repo, nil, errors.Wrapf(err, "asking to create the git repository %q", data.Name)
 					}
 				}
 
 				if createRepo {
 					showURLEdit = false
 					var err error
-					repo, gitProvider, err = createEnvironmentGitRepo(batchMode, authConfigSvc, data, forkEnvGitURL, envDir, gitRepoOptions, helmValues, prefix, git, in, out, errOut)
+					repo, gitProvider, err = DoCreateEnvironmentGitRepo(batchMode, authConfigSvc, data, forkEnvGitURL, envDir, gitRepoOptions, helmValues, prefix, git, chartMusemFn, handles)
 					if err != nil {
-						return repo, gitProvider, err
+						return repo, gitProvider, errors.Wrap(err, "creating environment git repository")
 					}
 					data.Spec.Source.URL = repo.CloneURL
 				}
 			} else {
 				showURLEdit = true
 			}
-			if showURLEdit {
+			if showURLEdit && !batchMode {
 				q := &survey.Input{
 					Message: "Git URL for the Environment source code:",
 					Default: data.Spec.Source.URL,
@@ -296,7 +330,7 @@ func CreateEnvGitRepository(batchMode bool, authConfigSvc auth.ConfigService, de
 				}
 				err := survey.AskOne(q, &data.Spec.Source.URL, survey.Required, surveyOpts)
 				if err != nil {
-					return repo, nil, err
+					return repo, nil, errors.Wrap(err, "asking for environment git clone URL")
 				}
 			}
 		}
@@ -319,7 +353,7 @@ func CreateEnvGitRepository(batchMode bool, authConfigSvc auth.ConfigService, de
 				}
 				err := survey.AskOne(q, &data.Spec.Source.Ref, nil, surveyOpts)
 				if err != nil {
-					return repo, nil, err
+					return repo, nil, errors.Wrap(err, "asking git branch for environment source")
 				}
 			}
 		}
@@ -327,14 +361,17 @@ func CreateEnvGitRepository(batchMode bool, authConfigSvc auth.ConfigService, de
 	return repo, gitProvider, nil
 }
 
-func createEnvironmentGitRepo(batchMode bool, authConfigSvc auth.ConfigService, env *v1.Environment, forkEnvGitURL string,
-	environmentsDir string, gitRepoOptions *gits.GitRepositoryOptions, helmValues config.HelmValuesConfig, prefix string, git gits.Gitter, in terminal.FileReader, out terminal.FileWriter, outErr io.Writer) (*gits.GitRepository, gits.GitProvider, error) {
+// DoCreateEnvironmentGitRepo actually creates the git repository for the environment
+func DoCreateEnvironmentGitRepo(batchMode bool, authConfigSvc auth.ConfigService, env *v1.Environment, forkEnvGitURL string,
+	environmentsDir string, gitRepoOptions *gits.GitRepositoryOptions, helmValues config.HelmValuesConfig, prefix string,
+	git gits.Gitter, chartMuseumFn ResolveChartMuseumURLFn, handles util.IOFileHandles) (*gits.GitRepository, gits.GitProvider, error) {
 	defaultRepoName := fmt.Sprintf("environment-%s-%s", prefix, env.Name)
-	details, err := gits.PickNewGitRepository(batchMode, authConfigSvc, defaultRepoName, gitRepoOptions, nil, nil, git, in, out, outErr)
+	details, err := gits.PickNewGitRepository(batchMode, authConfigSvc, defaultRepoName, gitRepoOptions, nil, nil, git, handles)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, errors.Wrap(err, "picking new git repository for environment")
 	}
 	org := details.Organisation
+
 	repoName := details.RepoName
 	owner := org
 	if owner == "" {
@@ -345,40 +382,40 @@ func createEnvironmentGitRepo(batchMode bool, authConfigSvc auth.ConfigService, 
 
 	repo, err := provider.GetRepository(owner, repoName)
 	if err == nil {
-		fmt.Fprintf(out, "Git repository %s/%s already exists\n", util.ColorInfo(owner), util.ColorInfo(repoName))
+		log.Logger().Infof("Git repository %s/%s already exists", util.ColorInfo(owner), util.ColorInfo(repoName))
 		// if the repo already exists then lets just modify it if required
 		dir, err := util.CreateUniqueDirectory(envDir, details.RepoName, util.MaximumNewDirectoryAttempts)
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, errors.Wrap(err, "creating unique directory for environment repo")
 		}
-		pushGitURL, err := git.CreatePushURL(repo.CloneURL, details.User)
+		pushGitURL, err := git.CreateAuthenticatedURL(repo.CloneURL, details.User)
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, errors.Wrap(err, "creating push URL for environment repo")
 		}
 		err = git.Clone(pushGitURL, dir)
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, errors.Wrapf(err, "cloning environment from %q into %q", pushGitURL, dir)
 		}
-		err = ModifyNamespace(out, dir, env, git)
+		err = ModifyNamespace(handles.Out, dir, env, git, chartMuseumFn)
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, errors.Wrap(err, "modifying environment namespace")
 		}
-		err = addValues(out, dir, helmValues, git)
+		err = addValues(handles.Out, dir, helmValues, git)
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, errors.Wrap(err, "adding helm values to the environment")
 		}
 		err = git.PushMaster(dir)
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, errors.Wrap(err, "pushing environment master branch")
 		}
-		fmt.Fprintf(out, "Pushed Git repository to %s\n\n", util.ColorInfo(repo.HTMLURL))
+		log.Logger().Infof("Pushed Git repository to %s\n\n", util.ColorInfo(repo.HTMLURL))
 	} else {
-		fmt.Fprintf(out, "Creating Git repository %s/%s\n", util.ColorInfo(owner), util.ColorInfo(repoName))
+		log.Logger().Infof("Creating Git repository %s/%s\n", util.ColorInfo(owner), util.ColorInfo(repoName))
 
 		if forkEnvGitURL != "" {
 			gitInfo, err := gits.ParseGitURL(forkEnvGitURL)
 			if err != nil {
-				return nil, nil, err
+				return nil, nil, errors.Wrapf(err, "parsing forked environment git URL %q", forkEnvGitURL)
 			}
 			originalOrg := gitInfo.Organisation
 			originalRepo := gitInfo.Name
@@ -386,43 +423,45 @@ func createEnvironmentGitRepo(batchMode bool, authConfigSvc auth.ConfigService, 
 				// lets try fork the repository and rename it
 				repo, err := provider.ForkRepository(originalOrg, originalRepo, org)
 				if err != nil {
-					return nil, nil, fmt.Errorf("Failed to fork GitHub repo %s/%s to organisation %s due to %s", originalOrg, originalRepo, org, err)
+					return nil, nil, fmt.Errorf("failed to fork GitHub repo %s/%s to organisation %s due to %s",
+						originalOrg, originalRepo, org, err)
 				}
 				if repoName != originalRepo {
 					repo, err = provider.RenameRepository(owner, originalRepo, repoName)
 					if err != nil {
-						return nil, nil, fmt.Errorf("Failed to rename GitHub repo %s/%s to organisation %s due to %s", originalOrg, originalRepo, repoName, err)
+						return nil, nil, fmt.Errorf("failed to rename GitHub repo %s/%s to organisation %s due to %s",
+							originalOrg, originalRepo, repoName, err)
 					}
 				}
-				fmt.Fprintf(out, "Forked Git repository to %s\n\n", util.ColorInfo(repo.HTMLURL))
+				log.Logger().Infof("Forked Git repository to %s\n\n", util.ColorInfo(repo.HTMLURL))
 
 				dir, err := util.CreateUniqueDirectory(envDir, repoName, util.MaximumNewDirectoryAttempts)
 				if err != nil {
-					return nil, nil, err
+					return nil, nil, errors.Wrapf(err, "creating unique dir to fork environment repository %q", envDir)
 				}
 				err = git.Clone(repo.CloneURL, dir)
 				if err != nil {
-					return nil, nil, err
+					return nil, nil, errors.Wrapf(err, "cloning the environment %q", repo.CloneURL)
 				}
 				err = git.SetRemoteURL(dir, "upstream", forkEnvGitURL)
 				if err != nil {
-					return nil, nil, err
+					return nil, nil, errors.Wrapf(err, "setting remote upstream %q in forked environment repo", forkEnvGitURL)
 				}
 				err = git.PullUpstream(dir)
 				if err != nil {
-					return nil, nil, err
+					return nil, nil, errors.Wrap(err, "pulling upstream of forked environment repository")
 				}
-				err = ModifyNamespace(out, dir, env, git)
+				err = ModifyNamespace(handles.Out, dir, env, git, chartMuseumFn)
 				if err != nil {
-					return nil, nil, err
+					return nil, nil, errors.Wrap(err, "modifying namespace of forked environment")
 				}
-				err = addValues(out, dir, helmValues, git)
+				err = addValues(handles.Out, dir, helmValues, git)
 				if err != nil {
-					return nil, nil, err
+					return nil, nil, errors.Wrap(err, "adding helm values to the forked environment repo")
 				}
-				err = git.Push(dir)
+				err = git.Push(dir, "origin", false, "HEAD")
 				if err != nil {
-					return nil, nil, err
+					return nil, nil, errors.Wrapf(err, "pushing forked environment dir %q", dir)
 				}
 				return repo, provider, nil
 			}
@@ -431,51 +470,78 @@ func createEnvironmentGitRepo(batchMode bool, authConfigSvc auth.ConfigService, 
 		// default to forking the URL if possible...
 		repo, err = details.CreateRepository()
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, errors.Wrap(err, "creating the repository")
 		}
 
 		if forkEnvGitURL != "" {
 			// now lets clone the fork and push it...
 			dir, err := util.CreateUniqueDirectory(envDir, details.RepoName, util.MaximumNewDirectoryAttempts)
 			if err != nil {
-				return nil, nil, err
+				return nil, nil, errors.Wrap(err, "create unique directory for environment fork clone")
 			}
 			err = git.Clone(forkEnvGitURL, dir)
 			if err != nil {
-				return nil, nil, err
+				return nil, nil, errors.Wrapf(err, "cloning the forked environment %q into %q", forkEnvGitURL, dir)
 			}
-			pushGitURL, err := git.CreatePushURL(repo.CloneURL, details.User)
+			pushGitURL, err := git.CreateAuthenticatedURL(repo.CloneURL, details.User)
 			if err != nil {
-				return nil, nil, err
+				return nil, nil, errors.Wrapf(err, "creating the push URL for %q", repo.CloneURL)
 			}
 			err = git.AddRemote(dir, "upstream", forkEnvGitURL)
 			if err != nil {
-				return nil, nil, err
+				return nil, nil, errors.Wrapf(err, "adding remote %q to forked env clone", forkEnvGitURL)
 			}
 			err = git.UpdateRemote(dir, pushGitURL)
 			if err != nil {
-				return nil, nil, err
+				return nil, nil, errors.Wrapf(err, "updating remote %q", pushGitURL)
 			}
-			err = ModifyNamespace(out, dir, env, git)
+			err = ModifyNamespace(handles.Out, dir, env, git, chartMuseumFn)
 			if err != nil {
-				return nil, nil, err
+				return nil, nil, errors.Wrapf(err, "modifying dev environment namespace")
 			}
-			err = addValues(out, dir, helmValues, git)
+			err = addValues(handles.Out, dir, helmValues, git)
 			if err != nil {
-				return nil, nil, err
+				return nil, nil, errors.Wrap(err, "adding helm values into environment git repository")
 			}
 			err = git.PushMaster(dir)
 			if err != nil {
-				return nil, nil, err
+				return nil, nil, errors.Wrap(err, "push forked environment git repository")
 			}
-			fmt.Fprintf(out, "Pushed Git repository to %s\n\n", util.ColorInfo(repo.HTMLURL))
+			log.Logger().Infof("Pushed Git repository to %s\n\n", util.ColorInfo(repo.HTMLURL))
 		}
 	}
 	return repo, provider, nil
 }
 
+// GetDevEnvTeamSettings gets the team settings from the specified namespace.
+func GetDevEnvTeamSettings(jxClient versioned.Interface, ns string) (*v1.TeamSettings, error) {
+	devEnv, err := GetDevEnvironment(jxClient, ns)
+	if err != nil {
+		log.Logger().Errorf("Error loading team settings. %v", err)
+		return nil, err
+	}
+	if devEnv != nil {
+		return &devEnv.Spec.TeamSettings, nil
+	}
+	return nil, fmt.Errorf("unable to find development environment in %s to get team settings", ns)
+}
+
+// GetDevEnvGitOwner gets the default GitHub owner/organisation to use for Environment repos. This takes the setting
+// from the 'jx' Dev Env to get the one that was selected at installation time.
+func GetDevEnvGitOwner(jxClient versioned.Interface) (string, error) {
+	adminDevEnv, err := GetDevEnvironment(jxClient, "jx")
+	if err != nil {
+		log.Logger().Errorf("Error loading team settings. %v", err)
+		return "", err
+	}
+	if adminDevEnv != nil {
+		return adminDevEnv.Spec.TeamSettings.EnvOrganisation, nil
+	}
+	return "", errors.New("Unable to find development environment in 'jx' to take git owner from")
+}
+
 // ModifyNamespace modifies the namespace
-func ModifyNamespace(out io.Writer, dir string, env *v1.Environment, git gits.Gitter) error {
+func ModifyNamespace(out io.Writer, dir string, env *v1.Environment, git gits.Gitter, chartMusemFn ResolveChartMuseumURLFn) error {
 	ns := env.Spec.Namespace
 	if ns == "" {
 		return fmt.Errorf("No Namespace is defined for Environment %s", env.Name)
@@ -488,7 +554,7 @@ func ModifyNamespace(out io.Writer, dir string, env *v1.Environment, git gits.Gi
 		return err
 	}
 	if !exists {
-		log.Warnf("WARNING: Could not find a Makefile in %s\n", dir)
+		log.Logger().Warnf("WARNING: Could not find a Makefile in %s", dir)
 		return nil
 	}
 	input, err := ioutil.ReadFile(file)
@@ -512,9 +578,7 @@ func ModifyNamespace(out io.Writer, dir string, env *v1.Environment, git gits.Gi
 	if err != nil {
 		return err
 	}
-	if !exists {
-		log.Warnf("WARNING: Could not find a Jenkinsfile in %s\n", dir)
-	} else {
+	if exists {
 		input, err := ioutil.ReadFile(file)
 		if err != nil {
 			return err
@@ -529,6 +593,61 @@ func ModifyNamespace(out io.Writer, dir string, env *v1.Environment, git gits.Gi
 		if err != nil {
 			return err
 		}
+	}
+
+	// lets ensure the namespace is set in a jenkins-x.yml file for tekton
+	projectConfig, projectConfigFile, err := config.LoadProjectConfig(dir)
+	if err != nil {
+		return err
+	}
+	foundEnv := false
+	for i := range projectConfig.Env {
+		if projectConfig.Env[i].Name == "DEPLOY_NAMESPACE" {
+			projectConfig.Env[i].Value = ns
+			foundEnv = true
+			break
+		}
+	}
+	if !foundEnv {
+		projectConfig.Env = append(projectConfig.Env, corev1.EnvVar{
+			Name:  "DEPLOY_NAMESPACE",
+			Value: ns,
+		})
+	}
+	foundEnv = false
+	pipelineConfig := projectConfig.PipelineConfig
+	if pipelineConfig == nil {
+		projectConfig.PipelineConfig = &jenkinsfile.PipelineConfig{}
+		pipelineConfig = projectConfig.PipelineConfig
+	}
+	for i := range pipelineConfig.Env {
+		if pipelineConfig.Env[i].Name == "DEPLOY_NAMESPACE" {
+			pipelineConfig.Env[i].Value = ns
+			foundEnv = true
+			break
+		}
+	}
+	if !foundEnv {
+		pipelineConfig.Env = append(pipelineConfig.Env, corev1.EnvVar{
+			Name:  "DEPLOY_NAMESPACE",
+			Value: ns,
+		})
+	}
+
+	if env.Spec.RemoteCluster && chartMusemFn != nil {
+		// lets ensure we have a chart museum env var
+		u, err := chartMusemFn()
+		if err != nil {
+			return errors.Wrapf(err, "failed to resolve Chart Museum URL for remote Environment %s", env.Name)
+		}
+		if u != "" {
+			pipelineConfig.Env = SetEnvVar(pipelineConfig.Env, "CHART_REPOSITORY", u)
+		}
+	}
+
+	err = projectConfig.SaveConfig(projectConfigFile)
+	if err != nil {
+		return err
 	}
 
 	err = git.Add(dir, "*")
@@ -546,7 +665,6 @@ func ModifyNamespace(out io.Writer, dir string, env *v1.Environment, git gits.Gi
 }
 
 func addValues(out io.Writer, dir string, values config.HelmValuesConfig, git gits.Gitter) error {
-
 	file := filepath.Join(dir, "env", "values.yaml")
 	exists, err := util.FileExists(file)
 	if err != nil {
@@ -556,7 +674,7 @@ func addValues(out io.Writer, dir string, values config.HelmValuesConfig, git gi
 		return fmt.Errorf("could not find a values.yaml in %s", dir)
 	}
 
-	f, err := os.OpenFile(file, os.O_APPEND|os.O_WRONLY, 0644)
+	oldText, err := ioutil.ReadFile(file)
 	if err != nil {
 		return err
 	}
@@ -565,12 +683,33 @@ func addValues(out io.Writer, dir string, values config.HelmValuesConfig, git gi
 	if err != nil {
 		return err
 	}
-	_, err = f.WriteString(text)
+
+	sourceMap := map[string]interface{}{}
+	overrideMap := map[string]interface{}{}
+	err = yaml.Unmarshal(oldText, &sourceMap)
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "failed to parse YAML for file %s", file)
+	}
+	err = yaml.Unmarshal([]byte(text), &overrideMap)
+	if err != nil {
+		return errors.Wrapf(err, "failed to parse YAML for file %s", file)
 	}
 
-	f.Close()
+	if sourceMap != nil {
+		// now lets merge together the 2 blobs of YAML
+		util.CombineMapTrees(sourceMap, overrideMap)
+	} else {
+		sourceMap = overrideMap
+	}
+
+	output, err := yaml.Marshal(sourceMap)
+	if err != nil {
+		return errors.Wrap(err, "Failed to marshal the combined values YAML files back to YAML")
+	}
+	err = ioutil.WriteFile(file, output, util.DefaultWritePermissions)
+	if err != nil {
+		return errors.Wrapf(err, "Failed to save YAML file %s", file)
+	}
 
 	err = git.Add(dir, "*")
 	if err != nil {
@@ -793,8 +932,8 @@ func GetTeams(kubeClient kubernetes.Interface) ([]*corev1.Namespace, []string, e
 	return answer, names, nil
 }
 
-func PickEnvironment(envNames []string, defaultEnv string, in terminal.FileReader, out terminal.FileWriter, errOut io.Writer) (string, error) {
-	surveyOpts := survey.WithStdio(in, out, errOut)
+func PickEnvironment(envNames []string, defaultEnv string, handles util.IOFileHandles) (string, error) {
+	surveyOpts := survey.WithStdio(handles.In, handles.Out, handles.Err)
 	name := ""
 	if len(envNames) == 0 {
 		return "", nil
@@ -831,6 +970,31 @@ func (a ByOrder) Less(i, j int) bool {
 
 func SortEnvironments(environments []v1.Environment) {
 	sort.Sort(ByOrder(environments))
+}
+
+// ByTimestamp is used to fileter a list of PipelineActivities by their given timestamp
+type ByTimestamp []v1.PipelineActivity
+
+func (a ByTimestamp) Len() int      { return len(a) }
+func (a ByTimestamp) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
+func (a ByTimestamp) Less(i, j int) bool {
+	act1 := a[i]
+	act2 := a[j]
+	t1 := act1.Spec.StartedTimestamp
+	if t1 == nil {
+		return false
+	}
+	t2 := act2.Spec.StartedTimestamp
+	if t2 == nil {
+		return true
+	}
+
+	return t1.Before(t2)
+}
+
+// SortActivities sorts a list of PipelineActivities
+func SortActivities(activities []v1.PipelineActivity) {
+	sort.Sort(ByTimestamp(activities))
 }
 
 // NewPermanentEnvironment creates a new permanent environment for testing
@@ -873,7 +1037,9 @@ func NewPreviewEnvironment(name string) *v1.Environment {
 	}
 }
 
-// GetDevEnvironment returns the current development environment using the jxClient for the given ns
+// GetDevEnvironment returns the current development environment using the jxClient for the given ns.
+// If the Dev Environment cannot be found, returns nil Environment (rather than an error). A non-nil error is only
+// returned if there is an error fetching the Dev Environment.
 func GetDevEnvironment(jxClient versioned.Interface, ns string) (*v1.Environment, error) {
 	//Find the settings for the team
 	environmentInterface := jxClient.JenkinsV1().Environments(ns)
@@ -892,6 +1058,39 @@ func GetDevEnvironment(jxClient versioned.Interface, ns string) (*v1.Environment
 	if len(envList.Items) == 1 {
 		return &envList.Items[0], nil
 	}
-	return nil, fmt.Errorf("Unable to locate dev environment resource definition in namespace %s, No Environment called: %s or with selector: %s found %d entries: %v",
+	if len(envList.Items) == 0 {
+		return nil, nil
+	}
+	return nil, fmt.Errorf("Error fetching dev environment resource definition in namespace %s, No Environment called: %s or with selector: %s found %d entries: %v",
 		ns, name, selector, len(envList.Items), envList.Items)
+}
+
+// GetPreviewEnvironmentReleaseName returns the (helm) release name for the given (preview) environment
+// or the empty string is the environment is not a preview environment, or has no release name associated with it
+func GetPreviewEnvironmentReleaseName(env *v1.Environment) string {
+	if !IsPreviewEnvironment(env) {
+		return ""
+	}
+	return env.Annotations[AnnotationReleaseName]
+}
+
+// IsPermanentEnvironment indicates if an environment is permanent
+func IsPermanentEnvironment(env *v1.Environment) bool {
+	return env.Spec.Kind == v1.EnvironmentKindTypePermanent
+}
+
+// GetPermanentEnvironments returns a list with the current permanent environments
+func GetPermanentEnvironments(jxClient versioned.Interface, ns string) ([]*v1.Environment, error) {
+	result := []*v1.Environment{}
+	envs, err := jxClient.JenkinsV1().Environments(ns).List(metav1.ListOptions{})
+	if err != nil {
+		return result, errors.Wrapf(err, "listing the environments in namespace %q", ns)
+	}
+	for i := range envs.Items {
+		env := &envs.Items[i]
+		if IsPermanentEnvironment(env) {
+			result = append(result, env)
+		}
+	}
+	return result, nil
 }

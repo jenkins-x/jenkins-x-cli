@@ -1,12 +1,15 @@
+// +build unit
+
 package util_test
 
 import (
-	"github.com/jenkins-x/jx/pkg/tests"
 	"os"
 	"path/filepath"
 	"runtime"
 	"testing"
 	"time"
+
+	"github.com/jenkins-x/jx/pkg/tests"
 
 	"github.com/jenkins-x/jx/pkg/util"
 	"github.com/stretchr/testify/assert"

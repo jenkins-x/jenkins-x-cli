@@ -5,6 +5,8 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
+	v1 "k8s.io/api/rbac/v1"
+
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 
@@ -20,7 +22,8 @@ import (
 // +genclient
 // +genclient:noStatus
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-// +k8s:openapi-gen=true
+// Disable openapi-gen as this is not an API we want to promote
+// +k8s:openapi-gen=false
 
 // Extension represents an extension available to this Jenkins X install
 type Extension struct {
@@ -96,13 +99,14 @@ type ExtensionExecution struct {
 	Name                 string                `json:"name,omitempty"  protobuf:"bytes,1,opt,name=name"`
 	Description          string                `json:"description,omitempty"  protobuf:"bytes,2,opt,name=description"`
 	Script               string                `json:"script,omitempty"  protobuf:"bytes,3,opt,name=script"`
-	EnvironmentVariables []EnvironmentVariable `json:"environmentVariables,omitempty protobuf:"bytes,4,opt,name=environmentvariables"`
+	EnvironmentVariables []EnvironmentVariable `json:"environmentVariables,omitempty" protobuf:"bytes,4,opt,name=environmentvariables"`
 	Given                ExtensionGiven        `json:"given,omitempty"  protobuf:"bytes,5,opt,name=given"`
 	Namespace            string                `json:"namespace,omitempty"  protobuf:"bytes,7,opt,name=namespace"`
 	UUID                 string                `json:"uuid,omitempty"  protobuf:"bytes,8,opt,name=uuid"`
 }
 
 // ExtensionRepositoryLockList contains a list of ExtensionRepositoryLock items
+// +k8s:openapi-gen=false
 type ExtensionRepositoryLockList struct {
 	Version    string          `json:"version"`
 	Extensions []ExtensionSpec `json:"extensions"`
@@ -148,8 +152,8 @@ type ExtensionDefinitionChildReference struct {
 }
 
 type EnvironmentVariable struct {
-	Name  string `json:"name,omitempty protobuf:"bytes,1,opt,name=name"`
-	Value string `json:"value,omitempty protobuf:"bytes,2,opt,name=value"`
+	Name  string `json:"name,omitempty" protobuf:"bytes,1,opt,name=name"`
+	Value string `json:"value,omitempty" protobuf:"bytes,2,opt,name=value"`
 }
 
 // ExtensionsConfigList contains a list of ExtensionConfig items
@@ -161,7 +165,7 @@ type ExtensionConfigList struct {
 type ExtensionConfig struct {
 	Name       string                    `json:"name"`
 	Namespace  string                    `json:"namespace"`
-	Parameters []ExtensionParameterValue `json: "parameters"`
+	Parameters []ExtensionParameterValue `json:"parameters"`
 }
 
 const (
@@ -196,7 +200,7 @@ const (
 	OwnerReferenceGlobalParameterName string = "extOwnerReference"
 )
 
-func (e *ExtensionExecution) Execute(verbose bool) (err error) {
+func (e *ExtensionExecution) Execute() (err error) {
 	scriptFile, err := ioutil.TempFile("", fmt.Sprintf("%s-*", e.Name))
 	if err != nil {
 		return err
@@ -213,10 +217,8 @@ func (e *ExtensionExecution) Execute(verbose bool) (err error) {
 	if err != nil {
 		return err
 	}
-	if verbose {
-		log.Infof("Environment Variables:\n %s\n", e.EnvironmentVariables)
-		log.Infof("Script:\n %s\n", e.Script)
-	}
+	log.Logger().Debugf("Environment Variables:\n %s", e.EnvironmentVariables)
+	log.Logger().Debugf("Script:\n %s", e.Script)
 	envVars := make(map[string]string, 0)
 	for _, v := range e.EnvironmentVariables {
 		envVars[v.Name] = v.Value
@@ -226,7 +228,7 @@ func (e *ExtensionExecution) Execute(verbose bool) (err error) {
 		Env:  envVars,
 	}
 	out, err := cmd.RunWithoutRetry()
-	log.Infoln(out)
+	log.Logger().Info(out)
 	if err != nil {
 		return errors.Wrap(err, fmt.Sprintf("Error executing script %s", e.Name))
 	}
@@ -364,7 +366,7 @@ func (e *ExtensionSpec) Contains(when ExtensionWhen) bool {
 // +genclient
 // +genclient:noStatus
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-// +k8s:openapi-gen=true
+// +k8s:openapi-gen=false
 
 // CommitStatus represents the commit statuses for a particular pull request
 type CommitStatus struct {
@@ -438,8 +440,152 @@ type AppList struct {
 	Items []App `json:"items"`
 }
 
+// +genclient
+// +genclient:noStatus
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +k8s:openapi-gen=true
+
+// SourceRepositoryGroup is the metadata for an Application/Project/SourceRepository
+type SourceRepositoryGroup struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
+	Spec              SourceRepositoryGroupSpec `json:"spec,omitempty" protobuf:"bytes,2,opt,name=spec"`
+}
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+// SourceRepositoryGroupList is a structure used by k8s to store lists of apps
+type SourceRepositoryGroupList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata"`
+
+	Items []SourceRepositoryGroup `json:"items"`
+}
+
+// SourceRepositoryGroupSpec is the metadata for an Application/Project/SourceRepository
+type SourceRepositoryGroupSpec struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
+
+	SourceRepositorySpec []ResourceReference `json:"repositories" protobuf:"bytes,2,opt,name=repositories`
+	Scheduler            ResourceReference   `json:"scheduler" protobuf:"bytes,3,opt,name=scheduler`
+}
+
+// +genclient
+// +genclient:noStatus
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+// SourceRepository is the metadata for an Application/Project/SourceRepository
+type SourceRepository struct {
+	metav1.TypeMeta `json:",inline"`
+	// Standard object's metadata.
+	// More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#metadata
+	// +optional
+	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
+
+	Spec SourceRepositorySpec `json:"spec,omitempty" protobuf:"bytes,2,opt,name=spec"`
+}
+
+// Sanitize sanitizes the source repository URL
+func (repo *SourceRepository) Sanitize() {
+	repo.Spec.URL = util.SanitizeURL(repo.Spec.URL)
+	repo.Spec.HTTPCloneURL = util.SanitizeURL(repo.Spec.HTTPCloneURL)
+	repo.Spec.SSHCloneURL = util.SanitizeURL(repo.Spec.SSHCloneURL)
+	// The URL is stored sometimes in the provider and provider name
+	repo.Spec.Provider = util.SanitizeURL(repo.Spec.Provider)
+	repo.Spec.ProviderName = util.SanitizeURL(repo.Spec.ProviderName)
+}
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+// SourceRepositoryList is a structure used by k8s to store lists of apps
+type SourceRepositoryList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata"`
+
+	Items []SourceRepository `json:"items"`
+}
+
+// SourceRepositorySpec provides details of the metadata for an App
+type SourceRepositorySpec struct {
+	Description string `json:"description,omitempty" protobuf:"bytes,1,opt,name=description"`
+	// Provider stores the URL of the git provider such as https://github.com
+	Provider string `json:"provider,omitempty" protobuf:"bytes,2,opt,name=provider"`
+	Org      string `json:"org,omitempty" protobuf:"bytes,3,opt,name=org"`
+	Repo     string `json:"repo,omitempty" protobuf:"bytes,4,opt,name=repo"`
+	// ProviderName is a logical name for the provider without any URL scheme which can be used in a label selector
+	ProviderName string `json:"providerName,omitempty" protobuf:"bytes,5,opt,name=providerName"`
+	// ProviderKind is the kind of provider (github / bitbucketcloud / bitbucketserver etc)
+	ProviderKind string `json:"providerKind,omitempty" protobuf:"bytes,6,opt,name=providerKind"`
+	// URL is the web URL of the project page
+	URL string `json:"url,omitempty" protobuf:"bytes,7,opt,name=url"`
+	// SSHCloneURL is the git URL to clone this repository using SSH
+	SSHCloneURL string `json:"sshCloneURL,omitempty" protobuf:"bytes,8,opt,name=sshCloneURL"`
+	// HTTPCloneURL is the git URL to clone this repository using HTTP/HTTPS
+	HTTPCloneURL string `json:"httpCloneURL,omitempty" protobuf:"bytes,9,opt,name=httpCloneURL"`
+	// Scheduler a reference to a custom scheduler otherwise we default to the Team's Scededuler
+	Scheduler ResourceReference `json:"scheduler,omitempty" protobuf:"bytes,10,opt,name=scheduler"`
+}
+
 // AppSpec provides details of the metadata for an App
 type AppSpec struct {
-	// A list of services that this App exposes
-	ExposedServices []string `json:"exposedServices,omitempty" protobuf:"bytes,1,opt,name=exposedServices"`
+	SchemaPreprocessor     *corev1.Container `json:"schemaPreprocessor,omitempty" protobuf:"bytes,1,opt,name=schemaPreprocessor"`
+	SchemaPreprocessorRole *v1.Role          `json:"schemaPreprocessorRole,omitempty" protobuf:"bytes,2,opt,name=schemaPreprocessorRole"`
+
+	PipelineExtension *PipelineExtension `json:"pipelineExtension,omitempty" protobuf:"bytes,3,opt,name=pipelineExtension"`
+}
+
+// PipelineExtension defines the image and command of an app which wants to modify/extend the pipeline
+type PipelineExtension struct {
+	// Name of the container specified as a DNS_LABEL.
+	Name string `json:"name" protobuf:"bytes,1,opt,name=name"`
+	// Docker image name.
+	Image string `json:"image,omitempty" protobuf:"bytes,2,opt,name=image"`
+	// Entrypoint array. Not executed within a shell.
+	Command string `json:"command,omitempty" protobuf:"bytes,3,rep,name=command"`
+	// Arguments to the entrypoint.
+	Args []string `json:"args,omitempty" protobuf:"bytes,4,rep,name=args"`
+}
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+// PluginList is a list of Plugins available for a team
+type PluginList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata"`
+
+	Items []Plugin `json:"items"`
+}
+
+// +genclient
+// +genclient:noStatus
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +k8s:openapi-gen=true
+
+// Plugin represents a binary plugin installed into this Jenkins X team
+type Plugin struct {
+	metav1.TypeMeta `json:",inline"`
+	// Standard object's metadata.
+	// More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#metadata
+	// +optional
+	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
+
+	Spec PluginSpec `json:"spec,omitempty" protobuf:"bytes,2,opt,name=spec"`
+}
+
+// PluginSpec provides details of a binary plugin available for a team
+type PluginSpec struct {
+	SubCommand  string   `json:"subCommand,omitempty"  protobuf:"bytes,3,opt,name=subCommand"`
+	Group       string   `json:"group,omitempty"  protobuf:"bytes,4,opt,name=group"`
+	Binaries    []Binary `json:"binaries,omitempty" protobuf:"bytes,7opt,name=binaries"`
+	Description string   `json:"description,omitempty"  protobuf:"bytes,2,opt,name=description"`
+	Name        string   `json:"name,omitempty"  protobuf:"bytes,5,opt,name=name"`
+	Version     string   `json:"version,omitempty"  protobuf:"bytes,6,opt,name=version"`
+}
+
+// Binary provies the details of a downloadable binary
+type Binary struct {
+	Goarch string `json:"goarch,omitempty"  protobuf:"bytes,1,opt,name=goarch"`
+	Goos   string `json:"goos,omitempty"  protobuf:"bytes,2,opt,name=goos"`
+	URL    string `json:"url,omitempty"  protobuf:"bytes,3,opt,name=url"`
 }

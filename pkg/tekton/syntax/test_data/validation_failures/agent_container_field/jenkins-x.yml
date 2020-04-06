@@ -1,0 +1,14 @@
+pipelineConfig:
+  pipelines:
+    release:
+      pipeline:
+        agent:
+          container: some-image
+        stages:
+          - name: A Working Stage
+            steps:
+              - command: echo
+                args:
+                  - hello
+                  - world
+                name: A Step With Spaces And Such

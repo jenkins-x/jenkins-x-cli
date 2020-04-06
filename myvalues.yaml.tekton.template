@@ -1,0 +1,43 @@
+# override the build pod images
+jenkins:
+  Agent:
+    PodTemplates:
+      Maven:
+        Containers:
+          Maven:
+            Image: gcr.io/jenkinsxio/builder-maven:$VERSION
+        EnvVars:
+          CODECOV_TOKEN: $CODECOV_TOKEN
+      Nodejs:
+        Containers:
+          Nodejs:
+            Image: gcr.io/jenkinsxio/builder-nodejs:$VERSION
+        EnvVars:
+          CODECOV_TOKEN: $CODECOV_TOKEN
+      Go:
+        Containers:
+          Go:
+            Image: gcr.io/jenkinsxio/builder-go:$VERSION
+        EnvVars:
+          CODECOV_TOKEN: $CODECOV_TOKEN
+
+# override the pipelinerunner image
+pipelinerunner:
+  image:
+    repository: gcr.io/jenkinsxio/builder-maven
+    tag: $VERSION
+  args:
+    - controller
+    - pipelinerunner
+    - --meta-pipeline-image=gcr.io/jenkinsxio/builder-maven:$VERSION
+  env:
+    GIT_AUTHOR_NAME: "jenkins-x-bot"
+    GIT_AUTHOR_EMAIL: "jenkins-x@googlegroups.com"
+    XDG_CONFIG_HOME: "/home/jenkins"
+    MAVEN_OPTS: "-Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn"
+    CODECOV_TOKEN: $CODECOV_TOKEN
+
+controllerbuild:
+  image:
+    repository: gcr.io/jenkinsxio/builder-go
+    tag: $VERSION

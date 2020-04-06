@@ -1,0 +1,8 @@
+---
+name: jx
+metadata:
+  namespace: namespace1
+---
+name: jx2
+metadata:
+  namespace: namespace2

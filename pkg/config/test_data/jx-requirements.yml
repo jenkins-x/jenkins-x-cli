@@ -1,0 +1,34 @@
+autoUpdate:
+  enabled: true
+  schedule: 0 0 * * *
+bootConfigURL: https://github.com/cloudbees/jenkins-x-boot-config.git
+cluster:
+  environmentGitPublic: true
+  gitKind: github
+  gitName: github
+  gitPublic: true
+  gitServer: https://github.com
+  gke:
+    projectNumber: "1055835833001"
+  namespace: jx
+  provider: gke
+  registry: gcr.io
+  zone: us-east1-c
+environments:
+  - ingress:
+      cloud_dns_secret_name: external-dns-gcp-sa
+      externalDNS: true
+      namespaceSubDomain: -jx.
+      tls:
+        enabled: true
+        production: false
+    key: dev
+githubApp:
+  enabled: true
+gitops: true
+kaniko: true
+repository: nexus
+secretStorage: vault
+velero:
+  namespace: velero
+webhook: lighthouse

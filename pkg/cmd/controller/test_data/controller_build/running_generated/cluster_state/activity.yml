@@ -1,0 +1,72 @@
+apiVersion: jenkins.io/v1
+kind: PipelineActivity
+metadata:
+  creationTimestamp: "2019-09-10T17:43:36Z"
+  generation: 29
+  labels:
+    branch: master
+    build: "1"
+    owner: cb-kubecd
+    provider: github
+    repository: bdd-spring-1568135191
+    sourcerepository: cb-kubecd-bdd-spring-1568135191
+  name: cb-kubecd-bdd-spring-1568135191-master-1
+  namespace: jx
+  resourceVersion: "4954"
+  selfLink: /apis/jenkins.io/v1/namespaces/jx/pipelineactivities/cb-kubecd-bdd-spring-1568135191-master-1
+  uid: 8461830a-d3f2-11e9-82fc-42010a840132
+spec:
+  batchPipelineActivity: {}
+  build: "1"
+  gitBranch: master
+  gitOwner: cb-kubecd
+  gitRepository: bdd-spring-1568135191
+  gitUrl: https://github.com/cb-kubecd/bdd-spring-1568135191.git
+  lastCommitSHA: 7307e06426062dc31f76fd95abecbb8f93af5b54
+  pipeline: cb-kubecd/bdd-spring-1568135191/master
+  startedTimestamp: "2019-09-10T17:43:41Z"
+  status: Running
+  steps:
+  - kind: Stage
+    stage:
+      completedTimestamp: "2019-09-10T17:08:20Z"
+      name: meta pipeline
+      startedTimestamp: "2019-09-10T17:07:13Z"
+      status: Succeeded
+      steps:
+      - completedTimestamp: "2019-09-10T17:07:13Z"
+        name: Credential Initializer V7srb
+        startedTimestamp: "2019-09-10T17:07:13Z"
+        status: Succeeded
+      - completedTimestamp: "2019-09-10T17:07:15Z"
+        name: Working Dir Initializer Lnjrj
+        startedTimestamp: "2019-09-10T17:07:13Z"
+        status: Succeeded
+      - completedTimestamp: "2019-09-10T17:07:17Z"
+        name: Place Tools
+        startedTimestamp: "2019-09-10T17:07:15Z"
+        status: Succeeded
+      - completedTimestamp: "2019-09-10T17:07:30Z"
+        description: https://github.com/cb-kubecd/bdd-spring-1568135191.git
+        name: Git Source Meta Cb Kubecd Bdd Spring 15681 D925z
+        startedTimestamp: "2019-09-10T17:07:17Z"
+        status: Succeeded
+      - completedTimestamp: "2019-09-10T17:07:30Z"
+        name: Git Merge
+        startedTimestamp: "2019-09-10T17:07:30Z"
+        status: Succeeded
+      - completedTimestamp: "2019-09-10T17:07:30Z"
+        name: Merge Pull Refs
+        startedTimestamp: "2019-09-10T17:07:30Z"
+        status: Succeeded
+      - completedTimestamp: "2019-09-10T17:07:35Z"
+        name: Create Effective Pipeline
+        startedTimestamp: "2019-09-10T17:07:30Z"
+        status: Succeeded
+      - completedTimestamp: "2019-09-10T17:08:20Z"
+        name: Create Tekton Crds
+        startedTimestamp: "2019-09-10T17:07:35Z"
+        status: Succeeded
+  version: 0.0.1
+  workflowStatus: Running
+status: {}

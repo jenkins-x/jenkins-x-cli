@@ -5,7 +5,8 @@ import (
 	"k8s.io/apimachinery/pkg/util/uuid"
 )
 
-func CreateFolderXml(folderUrl string, name string) string {
+// CreateFolderXML creates a Jenkins Folder XML
+func CreateFolderXML(folderURL string, name string) string {
 	return `<?xml version='1.0' encoding='UTF-8'?>
 <com.cloudbees.hudson.plugins.folder.Folder plugin="cloudbees-folder@6.2.1">
   <actions>
@@ -45,7 +46,42 @@ func CreateFolderXml(folderUrl string, name string) string {
 `
 }
 
-func createBranchSource(info *gits.GitRepositoryInfo, gitProvider gits.GitProvider, credentials string, branches string) string {
+// CreatePipelineXML creates the XML for a stand alone pipeline that is not using the Multi Branch Project
+func CreatePipelineXML(gitURL string, branch string, jenksinsfileName string) string {
+	return `<?xml version='1.1' encoding='UTF-8'?>
+<flow-definition plugin="workflow-job@2.31">
+  <actions>
+    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobAction plugin="pipeline-model-definition@1.3.4.1"/>
+  </actions>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties/>
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition" plugin="workflow-cps@2.63">
+    <scm class="hudson.plugins.git.GitSCM" plugin="git@3.9.1">
+      <configVersion>2</configVersion>
+      <userRemoteConfigs>
+        <hudson.plugins.git.UserRemoteConfig>
+          <url>` + gitURL + `</url>
+        </hudson.plugins.git.UserRemoteConfig>
+      </userRemoteConfigs>
+      <branches>
+        <hudson.plugins.git.BranchSpec>
+          <name>*/` + branch + `</name>
+        </hudson.plugins.git.BranchSpec>
+      </branches>
+      <doGenerateSubmoduleConfigurations>false</doGenerateSubmoduleConfigurations>
+      <submoduleCfg class="list"/>
+      <extensions/>
+    </scm>
+    <scriptPath>` + jenksinsfileName + `</scriptPath>
+    <lightweight>true</lightweight>
+  </definition>
+  <triggers/>
+  <disabled>false</disabled>
+</flow-definition>`
+}
+
+func createBranchSource(info *gits.GitRepository, gitProvider gits.GitProvider, credentials string, branches string) string {
 	idXml := `<id>` + string(uuid.NewUUID()) + `</id>`
 	credXml := ""
 	if credentials != "" {
@@ -152,7 +188,7 @@ func createBranchSource(info *gits.GitRepositoryInfo, gitProvider gits.GitProvid
 `
 }
 
-func CreateMultiBranchProjectXml(info *gits.GitRepositoryInfo, gitProvider gits.GitProvider, credentials string, branches string, jenkinsfile string) string {
+func CreateMultiBranchProjectXml(info *gits.GitRepository, gitProvider gits.GitProvider, credentials string, branches string, jenkinsfile string) string {
 	triggerXml := `
 	  <triggers>
 	    <com.cloudbees.hudson.plugins.folder.computed.PeriodicFolderTrigger plugin="cloudbees-folder@6.3">

@@ -1,0 +1,15 @@
+postsubmits:
+  entries:
+  - name: release
+    branches:
+      replace: true
+      entries:
+        - 2.x
+
+trigger:
+  joinOrgUrl: http://org-url
+  onlyOrgMembers: true
+
+plugins:
+  entries:
+  - cat

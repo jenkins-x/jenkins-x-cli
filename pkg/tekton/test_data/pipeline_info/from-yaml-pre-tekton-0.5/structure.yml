@@ -1,0 +1,25 @@
+apiVersion: jenkins.io/v1
+kind: PipelineStructure
+metadata:
+  creationTimestamp: 2019-03-05T20:06:13Z
+  generation: 1
+  name: abayer-js-test-repo-master-1
+  namespace: jx
+  ownerReferences:
+  - apiVersion: tekton.dev/v1alpha1
+    kind: Pipeline
+    name: abayer-js-test-repo-master
+    uid: 208e0fad-3f82-11e9-bd41-42010a8a00a2
+  resourceVersion: "1421155"
+  selfLink: /apis/jenkins.io/v1/namespaces/jx/pipelinestructures/abayer-js-test-repo-master-1
+  uid: 20c58bd5-3f82-11e9-bd41-42010a8a00a2
+pipelineRef: abayer-js-test-repo-master
+pipelineRunRef: abayer-js-test-repo-master-1
+stages:
+- depth: 0
+  name: Build
+  taskRef: abayer-js-test-repo-master-build
+- depth: 0
+  name: Second
+  previous: Build
+  taskRef: abayer-js-test-repo-master-second

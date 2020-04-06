@@ -1,0 +1,23 @@
+apiVersion: v1
+items:
+- apiVersion: tekton.dev/v1alpha1
+  kind: PipelineResource
+  metadata:
+    creationTimestamp: 2019-03-05T20:06:13Z
+    generation: 1
+    name: abayer-js-test-repo-master
+    namespace: jx
+    resourceVersion: "1421137"
+    selfLink: /apis/tekton.dev/v1alpha1/namespaces/jx/pipelineresources/abayer-js-test-repo-master
+    uid: 205ea3de-3f82-11e9-bd41-42010a8a00a2
+  spec:
+    params:
+    - name: revision
+      value: ""
+    - name: url
+      value: https://github.com/abayer/js-test-repo
+    type: git
+kind: List
+metadata:
+  resourceVersion: ""
+  selfLink: ""

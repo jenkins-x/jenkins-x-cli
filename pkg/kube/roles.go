@@ -4,14 +4,22 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/jenkins-x/jx/pkg/apis/jenkins.io/v1"
+	v1 "github.com/jenkins-x/jx/pkg/apis/jenkins.io/v1"
 	"github.com/jenkins-x/jx/pkg/client/clientset/versioned"
 	"github.com/jenkins-x/jx/pkg/log"
 	"github.com/jenkins-x/jx/pkg/util"
 	"github.com/pkg/errors"
 	rbacv1 "k8s.io/api/rbac/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+)
+
+const (
+	clusterRoleBindingKind = "ClusterRoleBinding"
+	clusterRoleKind        = "ClusterRole"
+	apiGroup               = "rbac.authorization.k8s.io"
+	subjectKind            = "ServiceAccount"
 )
 
 // GetTeamRoles returns the roles for the given team dev namespace
@@ -56,10 +64,16 @@ func GetEnvironmentRoles(jxClient versioned.Interface, ns string) (map[string]*v
 
 // UpdateUserRoles updates the EnvironmentRoleBinding values based on the given userRoles
 // userKind is "User" or "ServiceAccount"
-func GetUserRoles(jxClient versioned.Interface, ns string, userKind string, userName string) ([]string, error) {
+func GetUserRoles(kubeClient kubernetes.Interface, jxClient versioned.Interface, ns string, userKind string, userName string) ([]string, error) {
 	envRoles, _, err := GetEnvironmentRoles(jxClient, ns)
-
-	currentRoles := userRolesFor(userKind, userName, envRoles)
+	if err != nil {
+		return nil, err
+	}
+	adminNs, err := GetAdminNamespace(kubeClient, ns)
+	if err != nil {
+		return nil, err
+	}
+	currentRoles := userRolesFor(userKind, userName, adminNs, envRoles)
 	return currentRoles, err
 }
 
@@ -70,7 +84,13 @@ func UpdateUserRoles(kubeClient kubernetes.Interface, jxClient versioned.Interfa
 	envRoleInterface := jxClient.JenkinsV1().EnvironmentRoleBindings(ns)
 	envRoles, _, err := GetEnvironmentRoles(jxClient, ns)
 
-	for name, _ := range roles {
+	adminNs, err := GetAdminNamespace(kubeClient, ns)
+	if err != nil {
+		return errors.Wrapf(err, "Obtaining admin namespace for user lookup")
+	}
+
+	// make sure all of the EnvironmentRoleBinding are created
+	for name := range roles {
 		envRole := envRoles[name]
 		if envRole == nil {
 			envRole = &v1.EnvironmentRoleBinding{
@@ -98,28 +118,30 @@ func UpdateUserRoles(kubeClient kubernetes.Interface, jxClient versioned.Interfa
 		}
 	}
 
-	oldRoles := userRolesFor(userKind, userName, envRoles)
+	oldRoles := userRolesFor(userKind, userName, adminNs, envRoles)
 
 	deleteRoles, createRoles := util.DiffSlices(oldRoles, userRoles)
 
+	// should we use a single patch or create at the end and be atomic for the whole operation?
 	for _, name := range deleteRoles {
 		envRole := envRoles[name]
 		if envRole == nil {
-			log.Warnf("Could not remove user %s kind %s from EnvironmentRoleBinding %s as it does not exist", userName, userKind, name)
+			log.Logger().Warnf("Could not remove user %s kind %s from EnvironmentRoleBinding %s as it does not exist", userName, userKind, name)
 		} else {
 			found := false
 			for idx, subject := range envRole.Spec.Subjects {
-				if subject.Kind == userKind && subject.Name == userName {
+				if subject.Kind == userKind && subject.Name == userName && subject.Namespace == adminNs {
 					found = true
 					envRole.Spec.Subjects = append(envRole.Spec.Subjects[0:idx], envRole.Spec.Subjects[idx+1:]...)
-					_, err = envRoleInterface.Update(envRole)
+					_, err = envRoleInterface.PatchUpdate(envRole)
 					if err != nil {
-						return errors.Wrapf(err, "Failed to add User %s kind %s as a Subject of EnvironmentRoleBinding %s: %s", userName, userKind, name, err)
+						return errors.Wrapf(err, "Failed to remove User %s kind %s as a Subject of EnvironmentRoleBinding %s: %s", userName, userKind, name, err)
 					}
+					break
 				}
 			}
 			if !found {
-				log.Warnf("User user %s kind %s is not a Subject of EnvironmentRoleBinding %s", userName, userKind, name)
+				log.Logger().Warnf("User %s kind %s is not a Subject of EnvironmentRoleBinding %s", userName, userKind, name)
 			}
 		}
 	}
@@ -127,21 +149,21 @@ func UpdateUserRoles(kubeClient kubernetes.Interface, jxClient versioned.Interfa
 		envRole := envRoles[name]
 		if envRole == nil {
 			// TODO lazily create the EnvironmentRoleBinding?
-			log.Warnf("Could not add user %s to EnvironmentRoleBinding %s as it does not exist!", userName, name)
+			log.Logger().Warnf("Could not add user %s to EnvironmentRoleBinding %s as it does not exist!", userName, name)
 		} else {
 			found := false
 			for _, subject := range envRole.Spec.Subjects {
-				if subject.Kind == userKind && subject.Name == userName {
+				if subject.Kind == userKind && subject.Name == userName && subject.Namespace == adminNs {
 					found = true
 				}
 			}
 			if found {
-				log.Warnf("User %s kind %s is already a Subject of EnvironmentRoleBinding %s", userName, userKind, name)
+				log.Logger().Warnf("User %s kind %s is already a Subject of EnvironmentRoleBinding %s", userName, userKind, name)
 			} else {
 				newSubject := rbacv1.Subject{
 					Name:      userName,
 					Kind:      userKind,
-					Namespace: ns,
+					Namespace: adminNs,
 				}
 				newEnvRole, err := envRoleInterface.Get(envRole.Name, metav1.GetOptions{})
 				create := false
@@ -158,7 +180,7 @@ func UpdateUserRoles(kubeClient kubernetes.Interface, jxClient versioned.Interfa
 						return errors.Wrapf(err, "Failed to create EnvironmentRoleBinding %s with Subject User %s kind %s: %s", name, userName, userKind, err)
 					}
 				} else {
-					_, err = envRoleInterface.Update(newEnvRole)
+					_, err = envRoleInterface.PatchUpdate(newEnvRole)
 					if err != nil {
 						return errors.Wrapf(err, "Failed to add User %s kind %s as a Subject of EnvironmentRoleBinding %s: %s", userName, userKind, name, err)
 					}
@@ -169,14 +191,107 @@ func UpdateUserRoles(kubeClient kubernetes.Interface, jxClient versioned.Interfa
 	return nil
 }
 
-func userRolesFor(userKind string, userName string, envRoles map[string]*v1.EnvironmentRoleBinding) []string {
+func userRolesFor(userKind string, userName string, userNamespace string, envRoles map[string]*v1.EnvironmentRoleBinding) []string {
 	answer := []string{}
 	for _, envRole := range envRoles {
 		for _, subject := range envRole.Spec.Subjects {
-			if subject.Kind == userKind && subject.Name == userName {
+			if subject.Kind == userKind && subject.Name == userName && subject.Namespace == userNamespace {
 				answer = append(answer, envRole.Name)
 			}
 		}
 	}
 	return answer
+}
+
+// IsClusterRoleBinding checks if the cluster role binding exists
+func IsClusterRoleBinding(kubeClient kubernetes.Interface, name string) bool {
+	_, err := kubeClient.RbacV1().ClusterRoleBindings().Get(name, metav1.GetOptions{})
+	if apierrors.IsNotFound(err) {
+		return false
+	}
+	return true
+}
+
+// CreateClusterRoleBinding creates acluster role binding in a given namespace for a service account
+func CreateClusterRoleBinding(kubeClient kubernetes.Interface, namespace string, name string,
+	serviceAccountName string, clusterRoleName string) error {
+	rb := &rbacv1.ClusterRoleBinding{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       clusterRoleBindingKind,
+			APIVersion: "v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Subjects: []rbacv1.Subject{
+			{
+				Kind:      subjectKind,
+				Name:      serviceAccountName,
+				Namespace: namespace,
+			},
+		},
+		RoleRef: rbacv1.RoleRef{
+			APIGroup: apiGroup,
+			Kind:     clusterRoleKind,
+			Name:     clusterRoleName,
+		},
+	}
+
+	_, err := kubeClient.RbacV1().ClusterRoleBindings().Create(rb)
+	if err != nil {
+		return errors.Wrap(err, "creating cluster role binding")
+	}
+	return nil
+}
+
+// DeleteClusterRoleBinding deltes a cluster role binding
+func DeleteClusterRoleBinding(kubeClient kubernetes.Interface, name string) error {
+	_, err := kubeClient.RbacV1().ClusterRoleBindings().Get(name, metav1.GetOptions{})
+	if err == nil {
+		return kubeClient.RbacV1().ClusterRoleBindings().Delete(name, &metav1.DeleteOptions{})
+	}
+	return nil
+}
+
+// IsClusterRole checks if a cluster role exists
+func IsClusterRole(kubeClient kubernetes.Interface, name string) bool {
+	_, err := kubeClient.RbacV1().ClusterRoles().Get(name, metav1.GetOptions{})
+	if apierrors.IsNotFound(err) {
+		return false
+	}
+	return true
+}
+
+// CreateClusterRole creates a new cluster role
+func CreateClusterRole(kubeClient kubernetes.Interface, namesapce string, name string,
+	apiGroups []string, resources []string, verbs []string) error {
+	role := &rbacv1.ClusterRole{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       clusterRoleKind,
+			APIVersion: "v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Rules: []rbacv1.PolicyRule{
+			{
+				APIGroups: apiGroups,
+				Resources: resources,
+				Verbs:     verbs,
+			},
+		},
+	}
+	_, err := kubeClient.RbacV1().ClusterRoles().Create(role)
+	if err != nil {
+		return errors.Wrap(err, "creating custer role")
+	}
+	return nil
+}
+
+// DeleteClusterRole deletes a cluster role if exists
+func DeleteClusterRole(kubeClient kubernetes.Interface, name string) error {
+	if IsClusterRole(kubeClient, name) {
+		return kubeClient.RbacV1().ClusterRoles().Delete(name, &metav1.DeleteOptions{})
+	}
+	return nil
 }

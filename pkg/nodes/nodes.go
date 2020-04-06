@@ -2,8 +2,9 @@ package nodes
 
 import (
 	"bytes"
-	"github.com/chromedp/cdproto/cdp"
 	"strings"
+
+	"github.com/chromedp/cdproto/cdp"
 )
 
 func NodeText(node *cdp.Node) string {

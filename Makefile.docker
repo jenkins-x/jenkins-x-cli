@@ -1,0 +1,69 @@
+docker-test: ## Run the tests in a docker container
+	docker run --rm -v $(shell pwd):/go/src/github.com/jenkins-x/jx golang:1.11 sh -c "rm /usr/bin/git && cd /go/src/github.com/jenkins-x/jx && make test"
+
+docker-test-slow: ## Run the tests sequentially in a docker container
+	docker run --rm -v $(shell pwd):/go/src/github.com/jenkins-x/jx golang:1.11 sh -c "rm /usr/bin/git && cd /go/src/github.com/jenkins-x/jx && make test-slow"
+
+# EASY WAY TO TEST IF YOUR TEST SHOULD BE A UNIT OR INTEGRATION TEST
+docker-test-integration: ## Run the integration tests in a docker container
+	docker run --rm -v $(shell pwd):/go/src/github.com/jenkins-x/jx golang:1.11 sh -c "rm /usr/bin/git && cd /go/src/github.com/jenkins-x/jx && make test-integration"
+
+# EASY WAY TO TEST IF YOUR SLOW TEST SHOULD BE A UNIT OR INTEGRATION TEST
+docker-test-slow-integration:
+	docker run --rm -v $(shell pwd):/go/src/github.com/jenkins-x/jx golang:1.11 sh -c "rm /usr/bin/git && cd /go/src/github.com/jenkins-x/jx && make test-slow-integration"
+
+docker: linux ## Build and push a docker image for Linux
+	docker build -t rawlingsj/jx:dev207 .
+	docker push rawlingsj/jx:dev207
+
+docker-go: linux Dockerfile.builder-go ## Build a docker image for Go
+	docker build --no-cache -t builder-go -f Dockerfile.builder-go .
+
+docker-maven: linux Dockerfile.builder-maven ## Build a docker image for maven
+	docker build --no-cache -t builder-maven -f Dockerfile.builder-maven .
+
+jenkins-maven: linux Dockerfile.jenkins-maven
+	docker build --no-cache -t jenkins-maven -f Dockerfile.jenkins-maven .
+
+docker-jx: linux Dockerfile.builder-jx ## Build a docker image for jx builder
+	docker build --no-cache -t builder-jx -f Dockerfile.builder-jx .
+
+docker-base: linux ## Build a docker base image
+	docker build -t rawlingsj/builder-base:dev16 . -f Dockerfile.builder-base
+
+docker-pull:
+	docker images | grep -v REPOSITORY | awk '{print $$1}' | uniq -u | grep jenkinsxio | awk '{print $$1":latest"}' | xargs -L1 docker pull
+
+docker-build-and-push: ## Build and push all docker images
+	docker build --no-cache -t $(DOCKER_HUB_USER)/jx:dev .
+	docker push $(DOCKER_HUB_USER)/jx:dev
+	docker build --no-cache -t $(DOCKER_HUB_USER)/builder-base:dev -f Dockerfile.builder-base .
+	docker push $(DOCKER_HUB_USER)/builder-base:dev
+	docker build --no-cache -t $(DOCKER_HUB_USER)/builder-maven:dev -f Dockerfile.builder-maven .
+	docker push $(DOCKER_HUB_USER)/builder-maven:dev
+	docker build --no-cache -t $(DOCKER_HUB_USER)/builder-go:dev -f Dockerfile.builder-go .
+	docker push $(DOCKER_HUB_USER)/builder-go:dev
+
+docker-dev: build linux docker-pull docker-build-and-push
+
+docker-dev-no-pull: build linux docker-build-and-push
+
+docker-dev-all: build linux docker-pull docker-build-and-push
+	docker build --no-cache -t $(DOCKER_HUB_USER)/builder-gradle:dev -f Dockerfile.builder-gradle .
+	docker push $(DOCKER_HUB_USER)/builder-gradle:dev
+	docker build --no-cache -t $(DOCKER_HUB_USER)/builder-rust:dev -f Dockerfile.builder-rust .
+	docker push $(DOCKER_HUB_USER)/builder-rust:dev
+	docker build --no-cache -t $(DOCKER_HUB_USER)/builder-scala:dev -f Dockerfile.builder-scala .
+	docker push $(DOCKER_HUB_USER)/builder-scala:dev
+	docker build --no-cache -t $(DOCKER_HUB_USER)/builder-swift:dev -f Dockerfile.builder-swift .
+	docker push $(DOCKER_HUB_USER)/builder-swift:dev
+	docker build --no-cache -t $(DOCKER_HUB_USER)/builder-terraform:dev -f Dockerfile.builder-terraform .
+	docker push $(DOCKER_HUB_USER)/builder-terraform:dev
+	docker build --no-cache -t $(DOCKER_HUB_USER)/builder-nodejs:dev -f Dockerfile.builder-nodejs .
+	docker push $(DOCKER_HUB_USER)/builder-nodejs:dev
+	docker build --no-cache -t $(DOCKER_HUB_USER)/builder-python:dev -f Dockerfile.builder-python .
+	docker push $(DOCKER_HUB_USER)/builder-python:dev
+	docker build --no-cache -t $(DOCKER_HUB_USER)/builder-python2:dev -f Dockerfile.builder-python2 .
+	docker push $(DOCKER_HUB_USER)/builder-python2:dev
+	docker build --no-cache -t $(DOCKER_HUB_USER)/builder-ruby:dev -f Dockerfile.builder-ruby .
+	docker push $(DOCKER_HUB_USER)/builder-ruby:dev

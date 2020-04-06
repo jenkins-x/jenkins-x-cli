@@ -1,0 +1,19 @@
+pipelineConfig:
+  pipelines:
+    release:
+      pipeline:
+        agent:
+          image: some-image
+        stages:
+          - name: Parent Stage
+            stages:
+              - name: A Working Stage
+                steps:
+                  - command: echo
+                    args:
+                      - hello
+                      - world
+              - name: Another stage
+                steps:
+                  - command: echo
+                    args: ['again']

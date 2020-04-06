@@ -1,0 +1,12 @@
+{
+  "apiVersion": "jenkins.io/v1",
+  "kind": "Environment",
+  "spec": {
+    "kind": "Development",
+    "label": "Development",
+    "namespace": "jx",
+    "teamSettings": {
+      "gitPublic": false
+    }
+  }
+}

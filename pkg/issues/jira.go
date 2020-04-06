@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/andygrunwald/go-jira"
+	jira "github.com/andygrunwald/go-jira"
 	"github.com/jenkins-x/jx/pkg/auth"
 	"github.com/jenkins-x/jx/pkg/gits"
 	"github.com/jenkins-x/jx/pkg/log"
@@ -36,14 +36,14 @@ func CreateJiraIssueProvider(server *auth.AuthServer, userAuth *auth.UserAuth, p
 		}
 		httpClient = tp.Client()
 		if batchMode {
-			log.Infof("Using JIRA server %s user name %s and API token %s\n", u, username, strings.Repeat("*", len(userAuth.ApiToken)))
+			log.Logger().Infof("Using JIRA server %s user name %s and API token %s", u, username, strings.Repeat("*", len(userAuth.ApiToken)))
 		}
 	} else {
 		if batchMode {
 			if userAuth != nil && userAuth.Username != "" {
-				log.Warnf("No API token found for JIRA server %s user %s so using anonymous access\n", u, userAuth.Username)
+				log.Logger().Warnf("No API token found for JIRA server %s user %s so using anonymous access", u, userAuth.Username)
 			} else {
-				log.Warnf("No authentication found for JIRA server %s so using anonymous access\n", u)
+				log.Logger().Warnf("No authentication found for JIRA server %s so using anonymous access", u)
 			}
 		}
 	}
@@ -82,7 +82,7 @@ func (i *JiraService) SearchIssues(query string) ([]*gits.GitIssue, error) {
 }
 
 func (i *JiraService) SearchIssuesClosedSince(t time.Time) ([]*gits.GitIssue, error) {
-	log.Warn("TODO SearchIssuesClosedSince() not yet implemented for JIRA")
+	log.Logger().Warn("TODO SearchIssuesClosedSince() not yet implemented for JIRA")
 	return nil, nil
 }
 
@@ -124,7 +124,7 @@ func (i *JiraService) jiraToGitIssue(issue *jira.Issue) *gits.GitIssue {
 	if fields != nil {
 		answer.Title = fields.Summary
 		answer.Body = fields.Description
-		answer.Labels = i.Git.ToGitLabels(fields.Labels)
+		answer.Labels = gits.ToGitLabels(fields.Labels)
 		answer.ClosedAt = jiraTimeToTimeP(fields.Resolutiondate)
 		answer.User = jiraUserToGitUser(fields.Reporter)
 		assignee := jiraUserToGitUser(fields.Assignee)

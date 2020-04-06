@@ -1,0 +1,4 @@
+version: 2.15.0
+upperLimit: 3.0.0
+gitUrl: https://github.com/git/git.git
+url: https://git-scm.com/book/en/v2/Getting-Started-Installing-Git

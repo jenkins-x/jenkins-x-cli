@@ -1,0 +1,13 @@
+currentserver: test
+defaultusername: "test"
+pipelineserver: "test"
+pipelineusername: "test"
+servers:
+- currentuser: "test"
+  kind: bitbucketserver
+  name: bs
+  url: https://bitbucket.example.com
+  users:
+  - apitoken: "vault:test-cluster/pipelineUser:token"
+    bearertoken: ""
+    username: "test"

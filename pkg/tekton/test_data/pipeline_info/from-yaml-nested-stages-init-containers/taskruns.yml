@@ -1,0 +1,242 @@
+apiVersion: v1
+items:
+- apiVersion: tekton.dev/v1alpha1
+  kind: TaskRun
+  metadata:
+    creationTimestamp: 2019-02-21T22:07:36Z
+    generation: 1
+    labels:
+      branch: nested
+      build-number: "1"
+      jenkins.io/task-stage-name: build
+      owner: abayer
+      repo: js-test-repo
+      tekton.dev/pipeline: abayer-js-test-repo-nested
+      tekton.dev/pipelineRun: abayer-js-test-repo-nested-1
+      tekton.dev/task: abayer-js-test-repo-nested-build
+    name: abayer-js-test-repo-nested-1-build-hpqp5
+    namespace: jx
+    ownerReferences:
+    - apiVersion: tekton.dev/v1alpha1
+      blockOwnerDeletion: true
+      controller: true
+      kind: PipelineRun
+      name: abayer-js-test-repo-nested-1
+      uid: 18b7834e-3625-11e9-b776-42010a8a00ac
+    resourceVersion: "7184"
+    selfLink: /apis/tekton.dev/v1alpha1/namespaces/jx/taskruns/abayer-js-test-repo-nested-1-build-hpqp5
+    uid: 18bc5840-3625-11e9-b776-42010a8a00ac
+  spec:
+    Status: ""
+    inputs:
+      resources:
+      - name: workspace
+        paths: null
+        resourceRef:
+          name: abayer-js-test-repo-nested
+        resourceSpec: null
+      - name: temp-ordering-resource
+        paths: null
+        resourceRef:
+          name: temp-ordering-resource
+        resourceSpec: null
+    outputs:
+      resources:
+      - name: workspace
+        paths:
+        - /pvc/build/workspace
+        resourceRef:
+          name: abayer-js-test-repo-nested
+        resourceSpec: null
+      - name: temp-ordering-resource
+        paths:
+        - /pvc/build/temp-ordering-resource
+        resourceRef:
+          name: temp-ordering-resource
+        resourceSpec: null
+    serviceAccount: tekton-bot
+    taskRef:
+      kind: Task
+      name: abayer-js-test-repo-nested-build
+    trigger:
+      type: ""
+  status:
+    conditions:
+    - lastTransitionTime: 2019-02-21T22:08:24Z
+      status: "True"
+      type: Succeeded
+    podName: abayer-js-test-repo-nested-1-build-hpqp5-pod-7a19f8
+    startTime: 2019-02-21T22:07:36Z
+    steps:
+    - logsURL: ""
+      terminated:
+        containerID: docker://68a22c83dff530574256b40e45baad20ea43f47a74646131cffaddb1289b0e2a
+        exitCode: 0
+        finishedAt: 2019-02-21T22:07:52Z
+        reason: Completed
+        startedAt: 2019-02-21T22:07:52Z
+    - logsURL: ""
+      terminated:
+        containerID: docker://cb86c44d8acb9c6a79967216e6142967c0dee23fd7b6715ae979c0df120e1c2d
+        exitCode: 0
+        finishedAt: 2019-02-21T22:07:54Z
+        reason: Completed
+        startedAt: 2019-02-21T22:07:54Z
+    - logsURL: ""
+      terminated:
+        containerID: docker://8c13cf936c022c6ec09f499f29472b5280287fc43059a15ab3625bb1c45cd279
+        exitCode: 0
+        finishedAt: 2019-02-21T22:07:55Z
+        reason: Completed
+        startedAt: 2019-02-21T22:07:55Z
+    - logsURL: ""
+      terminated:
+        containerID: docker://2381c51e7848096cc148d3bee66f6c17d65e60f56e93f847250fc5cfbb597046
+        exitCode: 0
+        finishedAt: 2019-02-21T22:07:56Z
+        reason: Completed
+        startedAt: 2019-02-21T22:07:56Z
+    - logsURL: ""
+      terminated:
+        containerID: docker://46ff2e0ca92d4c49fcb3de5a91dcf16aa455952503c452245d6093d23b1ace78
+        exitCode: 0
+        finishedAt: 2019-02-21T22:08:02Z
+        reason: Completed
+        startedAt: 2019-02-21T22:07:57Z
+    - logsURL: ""
+      terminated:
+        containerID: docker://3fc5435ebe81ec2328a1d8c160779c2447446aeafb07c207a709a9aa1a856358
+        exitCode: 0
+        finishedAt: 2019-02-21T22:08:03Z
+        reason: Completed
+        startedAt: 2019-02-21T22:08:03Z
+    - logsURL: ""
+      terminated:
+        containerID: docker://8daed959ed9fd64eaa3c0df3008407506ad6e353f603951972f86ac1f5c53a4b
+        exitCode: 0
+        finishedAt: 2019-02-21T22:08:04Z
+        reason: Completed
+        startedAt: 2019-02-21T22:08:04Z
+- apiVersion: tekton.dev/v1alpha1
+  kind: TaskRun
+  metadata:
+    creationTimestamp: 2019-02-21T22:08:54Z
+    generation: 1
+    labels:
+      branch: nested
+      build-number: "1"
+      jenkins.io/task-stage-name: second
+      owner: abayer
+      repo: js-test-repo
+      tekton.dev/pipeline: abayer-js-test-repo-nested
+      tekton.dev/pipelineRun: abayer-js-test-repo-nested-1
+      tekton.dev/task: abayer-js-test-repo-nested-second
+    name: abayer-js-test-repo-nested-1-second-bxxzl
+    namespace: jx
+    ownerReferences:
+    - apiVersion: tekton.dev/v1alpha1
+      blockOwnerDeletion: true
+      controller: true
+      kind: PipelineRun
+      name: abayer-js-test-repo-nested-1
+      uid: 18b7834e-3625-11e9-b776-42010a8a00ac
+    resourceVersion: "7408"
+    selfLink: /apis/tekton.dev/v1alpha1/namespaces/jx/taskruns/abayer-js-test-repo-nested-1-second-bxxzl
+    uid: 46ff1811-3625-11e9-b776-42010a8a00ac
+  spec:
+    Status: ""
+    inputs:
+      resources:
+      - name: workspace
+        paths:
+        - /pvc/build/workspace
+        resourceRef:
+          name: abayer-js-test-repo-nested
+        resourceSpec: null
+      - name: temp-ordering-resource
+        paths:
+        - /pvc/build/temp-ordering-resource
+        resourceRef:
+          name: temp-ordering-resource
+        resourceSpec: null
+    outputs:
+      resources:
+      - name: temp-ordering-resource
+        paths:
+        - /pvc/second/temp-ordering-resource
+        resourceRef:
+          name: temp-ordering-resource
+        resourceSpec: null
+      - name: workspace
+        paths:
+        - /pvc/second/workspace
+        resourceRef:
+          name: abayer-js-test-repo-nested
+        resourceSpec: null
+    serviceAccount: tekton-bot
+    taskRef:
+      kind: Task
+      name: abayer-js-test-repo-nested-second
+    trigger:
+      type: ""
+  status:
+    conditions:
+    - lastTransitionTime: 2019-02-21T22:09:24Z
+      status: "True"
+      type: Succeeded
+    podName: abayer-js-test-repo-nested-1-second-bxxzl-pod-a32406
+    startTime: 2019-02-21T22:08:54Z
+    steps:
+    - logsURL: ""
+      terminated:
+        containerID: docker://68ca0553b9bafb3fa8d3ac0a48c7c71cc8a7eef0ebb242579b5658e9de6ba015
+        exitCode: 0
+        finishedAt: 2019-02-21T22:09:06Z
+        reason: Completed
+        startedAt: 2019-02-21T22:09:06Z
+    - logsURL: ""
+      terminated:
+        containerID: docker://a5973f7e56214414269f7fb4a76e8d4b730de71fedc561388cb62a7041c35dbb
+        exitCode: 0
+        finishedAt: 2019-02-21T22:09:07Z
+        reason: Completed
+        startedAt: 2019-02-21T22:09:07Z
+    - logsURL: ""
+      terminated:
+        containerID: docker://326470b66abbc90bbfa191a977c04d083afb127990475f4cb80295bc11563b63
+        exitCode: 0
+        finishedAt: 2019-02-21T22:09:08Z
+        reason: Completed
+        startedAt: 2019-02-21T22:09:08Z
+    - logsURL: ""
+      terminated:
+        containerID: docker://8b405c8dc3f0af155d2dcec43a3dda185c267c12682ae52635a9e69295eb6062
+        exitCode: 0
+        finishedAt: 2019-02-21T22:09:09Z
+        reason: Completed
+        startedAt: 2019-02-21T22:09:09Z
+    - logsURL: ""
+      terminated:
+        containerID: docker://c91ee0373888814e68374c5350a7aa301eb7bb436ecc6414d592dfaf2600715f
+        exitCode: 0
+        finishedAt: 2019-02-21T22:09:15Z
+        reason: Completed
+        startedAt: 2019-02-21T22:09:10Z
+    - logsURL: ""
+      terminated:
+        containerID: docker://018db1d199fce127a8ef61b55fa3d432284dff2dd508f105e3902c05ef67ba17
+        exitCode: 0
+        finishedAt: 2019-02-21T22:09:16Z
+        reason: Completed
+        startedAt: 2019-02-21T22:09:16Z
+    - logsURL: ""
+      terminated:
+        containerID: docker://5e61d0e99c4ed611244e88803112cd580f406c70bd50f14c74c90c530719504b
+        exitCode: 0
+        finishedAt: 2019-02-21T22:09:17Z
+        reason: Completed
+        startedAt: 2019-02-21T22:09:17Z
+kind: List
+metadata:
+  resourceVersion: ""
+  selfLink: ""

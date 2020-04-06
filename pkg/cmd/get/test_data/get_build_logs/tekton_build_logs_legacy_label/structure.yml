@@ -1,0 +1,21 @@
+apiVersion: jenkins.io/v1
+kind: PipelineStructure
+metadata:
+  creationTimestamp: "2019-07-02T12:34:56Z"
+  generation: 1
+  name: fakeowner-fakerepo-fakebranch-1
+  namespace: jx
+  ownerReferences:
+    - apiVersion: tekton.dev/v1alpha1
+      kind: pipeline
+      name: fakeowner-fakerepo-fakebranch-1
+      uid: cc57794e-9cc5-11e9-aa2e-42010a8a00fe
+  resourceVersion: "235866"
+  selfLink: /apis/jenkins.io/v1/namespaces/jx/pipelinestructures/fakeowner-fakerepo-fakebranch-1
+  uid: cc5c12bc-9cc5-11e9-aa2e-42010a8a00fe
+pipelineRef: fakeowner-fakerepo-fakebranch-1
+pipelineRunRef: fakeowner-fakerepo-fakebranch-1
+stages:
+  - depth: 0
+    name: from-build-pack
+    taskRef: fakeowner-fakerepo-fakebranch-from-fakebranch-1

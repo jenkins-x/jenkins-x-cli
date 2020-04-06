@@ -4,12 +4,14 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"os"
 	"time"
 
-	"github.com/andygrunwald/go-gerrit"
+	gerrit "github.com/andygrunwald/go-gerrit"
 	"github.com/google/go-github/github"
 	"github.com/jenkins-x/jx/pkg/auth"
 	"github.com/jenkins-x/jx/pkg/log"
+	"github.com/pkg/errors"
 )
 
 type GerritProvider struct {
@@ -141,15 +143,25 @@ func (p *GerritProvider) CreatePullRequest(data *GitPullRequestArguments) (*GitP
 	return nil, nil
 }
 
+// UpdatePullRequest updates pull request with number using data
+func (p *GerritProvider) UpdatePullRequest(data *GitPullRequestArguments, number int) (*GitPullRequest, error) {
+	return nil, errors.Errorf("Not yet implemented for gerrit")
+}
+
 func (p *GerritProvider) UpdatePullRequestStatus(pr *GitPullRequest) error {
 	return nil
 }
 
-func (p *GerritProvider) GetPullRequest(owner string, repo *GitRepositoryInfo, number int) (*GitPullRequest, error) {
+func (p *GerritProvider) GetPullRequest(owner string, repo *GitRepository, number int) (*GitPullRequest, error) {
 	return nil, nil
 }
 
-func (p *GerritProvider) GetPullRequestCommits(owner string, repo *GitRepositoryInfo, number int) ([]*GitCommit, error) {
+// ListOpenPullRequests lists the open pull requests
+func (p *GerritProvider) ListOpenPullRequests(owner string, repo string) ([]*GitPullRequest, error) {
+	return nil, nil
+}
+
+func (p *GerritProvider) GetPullRequestCommits(owner string, repo *GitRepository, number int) ([]*GitCommit, error) {
 	return nil, nil
 }
 
@@ -214,32 +226,32 @@ func (p *GerritProvider) Kind() string {
 }
 
 func (p *GerritProvider) GetIssue(org string, name string, number int) (*GitIssue, error) {
-	log.Warn("Gerrit does not support issue tracking")
+	log.Logger().Warn("Gerrit does not support issue tracking")
 	return nil, nil
 }
 
 func (p *GerritProvider) IssueURL(org string, name string, number int, isPull bool) string {
-	log.Warn("Gerrit does not support issue tracking")
+	log.Logger().Warn("Gerrit does not support issue tracking")
 	return ""
 }
 
 func (p *GerritProvider) SearchIssues(org string, name string, query string) ([]*GitIssue, error) {
-	log.Warn("Gerrit does not support issue tracking")
+	log.Logger().Warn("Gerrit does not support issue tracking")
 	return nil, nil
 }
 
 func (p *GerritProvider) SearchIssuesClosedSince(org string, name string, t time.Time) ([]*GitIssue, error) {
-	log.Warn("Gerrit does not support issue tracking")
+	log.Logger().Warn("Gerrit does not support issue tracking")
 	return nil, nil
 }
 
 func (p *GerritProvider) CreateIssue(owner string, repo string, issue *GitIssue) (*GitIssue, error) {
-	log.Warn("Gerrit does not support issue tracking")
+	log.Logger().Warn("Gerrit does not support issue tracking")
 	return nil, nil
 }
 
 func (p *GerritProvider) HasIssues() bool {
-	log.Warn("Gerrit does not support issue tracking")
+	log.Logger().Warn("Gerrit does not support issue tracking")
 	return false
 }
 
@@ -248,7 +260,7 @@ func (p *GerritProvider) AddPRComment(pr *GitPullRequest, comment string) error 
 }
 
 func (p *GerritProvider) CreateIssueComment(owner string, repo string, number int, comment string) error {
-	log.Warn("Gerrit does not support issue tracking")
+	log.Logger().Warn("Gerrit does not support issue tracking")
 	return nil
 }
 
@@ -256,7 +268,17 @@ func (p *GerritProvider) UpdateRelease(owner string, repo string, tag string, re
 	return nil
 }
 
+// UpdateReleaseStatus is not supported for this git provider
+func (p *GerritProvider) UpdateReleaseStatus(owner string, repo string, tag string, releaseInfo *GitRelease) error {
+	return nil
+}
+
 func (p *GerritProvider) ListReleases(org string, name string) ([]*GitRelease, error) {
+	return nil, nil
+}
+
+// GetRelease returns the release info for org, repo name and tag
+func (p *GerritProvider) GetRelease(org string, name string, tag string) (*GitRelease, error) {
 	return nil, nil
 }
 
@@ -289,20 +311,65 @@ func (p *GerritProvider) UserInfo(username string) *GitUser {
 }
 
 func (p *GerritProvider) AddCollaborator(user string, organisation string, repo string) error {
-	log.Infof("Automatically adding the pipeline user as a collaborator is currently not implemented for gerrit. Please add user: %v as a collaborator to this project.\n", user)
+	log.Logger().Infof("Automatically adding the pipeline user as a collaborator is currently not implemented for gerrit. Please add user: %v as a collaborator to this project.", user)
 	return nil
 }
 
 func (p *GerritProvider) ListInvitations() ([]*github.RepositoryInvitation, *github.Response, error) {
-	log.Infof("Automatically adding the pipeline user as a collaborator is currently not implemented for gerrit.\n")
+	log.Logger().Infof("Automatically adding the pipeline user as a collaborator is currently not implemented for gerrit.")
 	return []*github.RepositoryInvitation{}, &github.Response{}, nil
 }
 
 func (p *GerritProvider) AcceptInvitation(ID int64) (*github.Response, error) {
-	log.Infof("Automatically adding the pipeline user as a collaborator is currently not implemented for gerrit.\n")
+	log.Logger().Infof("Automatically adding the pipeline user as a collaborator is currently not implemented for gerrit.")
 	return &github.Response{}, nil
 }
 
 func (p *GerritProvider) GetContent(org string, name string, path string, ref string) (*GitFileContent, error) {
 	return nil, fmt.Errorf("Getting content not supported on gerrit")
+}
+
+// ShouldForkForPullReques treturns true if we should create a personal fork of this repository
+// before creating a pull request
+func (p *GerritProvider) ShouldForkForPullRequest(originalOwner string, repoName string, username string) bool {
+	return originalOwner != username
+}
+
+func (p *GerritProvider) ListCommits(owner, repo string, opt *ListCommitsArguments) ([]*GitCommit, error) {
+	return nil, fmt.Errorf("Listing commits not supported on gerrit")
+}
+
+// AddLabelsToIssue adds labels to issues or pullrequests
+func (p *GerritProvider) AddLabelsToIssue(owner, repo string, number int, labels []string) error {
+	return fmt.Errorf("Getting content not supported on gerrit")
+}
+
+// GetLatestRelease fetches the latest release from the git provider for org and name
+func (p *GerritProvider) GetLatestRelease(org string, name string) (*GitRelease, error) {
+	return nil, nil
+}
+
+// UploadReleaseAsset will upload an asset to org/repo to a release with id, giving it a name, it will return the release asset from the git provider
+func (p *GerritProvider) UploadReleaseAsset(org string, repo string, id int64, name string, asset *os.File) (*GitReleaseAsset, error) {
+	return nil, nil
+}
+
+// GetBranch returns the branch information for an owner/repo, including the commit at the tip
+func (p *GerritProvider) GetBranch(owner string, repo string, branch string) (*GitBranch, error) {
+	return nil, nil
+}
+
+// GetProjects returns all the git projects in owner/repo
+func (p *GerritProvider) GetProjects(owner string, repo string) ([]GitProject, error) {
+	return nil, nil
+}
+
+//ConfigureFeatures sets specific features as enabled or disabled for owner/repo
+func (p *GerritProvider) ConfigureFeatures(owner string, repo string, issues *bool, projects *bool, wikis *bool) (*GitRepository, error) {
+	return nil, nil
+}
+
+// IsWikiEnabled returns true if a wiki is enabled for owner/repo
+func (p *GerritProvider) IsWikiEnabled(owner string, repo string) (bool, error) {
+	return false, nil
 }

@@ -1,0 +1,15 @@
+metadata:
+  creationTimestamp: null
+  labels:
+    branch: build-pack
+    build: "1"
+    owner: abayer
+    jenkins.io/pipelineType: build
+    repository: js-test-repo
+  name: abayer-js-test-repo-build-pack-1
+pipelineRef: null
+pipelineRunRef: null
+stages:
+- depth: 0
+  name: from-build-pack
+  taskRef: abayer-js-test-repo-build-pack-from-build-pack-1

@@ -1,0 +1,17 @@
+adminUser:
+  password: local:/my-cheese-cluster/adminUser:password-passthrough
+  username: admin
+docker:
+  password: local:/my-cheese-cluster/dockerRegistry:password-passthrough
+  url: https://index.docker.io/v1/
+  username: james
+enableDocker: true
+enableGpg: false
+gitProvider: github
+pipelineUser:
+  github:
+    host: github.com
+    password: local:/my-cheese-cluster/pipelineUser:token-passthrough
+    username: james
+prow:
+  hmacToken: abc

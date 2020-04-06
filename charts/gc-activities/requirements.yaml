@@ -1,3 +1,0 @@
-dependencies:
-- name: gc-activities
-  repository: file://../jx

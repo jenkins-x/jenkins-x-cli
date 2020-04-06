@@ -1,0 +1,66 @@
+{
+  "links": {
+      "self": {
+          "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/issues/1/comments/50299722"
+      },
+      "html": {
+          "href": "https://bitbucket.org/test-user/test-repo/issues/1#comment-50299722"
+      }
+  },
+  "issue": {
+      "links": {
+          "self": {
+              "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo/issues/1"
+          }
+      },
+      "type": "issue",
+      "id": 1,
+      "repository": {
+          "links": {
+              "self": {
+                  "href": "https://api.bitbucket.org/2.0/repositories/test-user/test-repo"
+              },
+              "html": {
+                  "href": "https://bitbucket.org/test-user/test-repo"
+              },
+              "avatar": {
+                  "href": "https://bytebucket.org/ravatar/%7B57b5b5bc-9af8-4d8b-a99d-45a100f55bd2%7D?ts=default"
+              }
+          },
+          "type": "repository",
+          "name": "test-repo",
+          "full_name": "test-user/test-repo",
+          "uuid": "{57b5b5bc-9af8-4d8b-a99d-45a100f55bd2}"
+      },
+      "title": "This is my issue"
+  },
+  "content": {
+      "raw": "I created this comment using the REST API.",
+      "markup": "markdown",
+      "html": "<p>I created this comment using the REST API.</p>",
+      "type": "rendered"
+  },
+  "created_on": "2019-01-29T04:24:55.236903+00:00",
+  "user": {
+      "username": "test-user",
+      "display_name": "Test User",
+      "account_id": "5a9ffb3f26f28c2a7f1c437b",
+      "links": {
+          "self": {
+              "href": "https://api.bitbucket.org/2.0/users/test-user"
+          },
+          "html": {
+              "href": "https://bitbucket.org/test-user/"
+          },
+          "avatar": {
+              "href": "https://bitbucket.org/account/test-user/avatar/"
+          }
+      },
+      "nickname": "test-user",
+      "type": "user",
+      "uuid": "{0a3c1273-f935-421f-848c-c21435948831}"
+  },
+  "updated_on": null,
+  "type": "issue_comment",
+  "id": 50299722
+}

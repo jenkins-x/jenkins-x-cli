@@ -1,0 +1,27 @@
+extends:
+  file: ../pipeline.yaml
+agent:
+  label: jenkins-maven
+  container: maven
+pipelines:
+  pullRequest:
+    build:
+      steps:
+        - sh: mvn versions:set -DnewVersion=$PREVIEW_VERSION
+          name: set-version
+        - sh: mvn install
+          name: mvn-install
+  release:
+    setVersion:
+      steps:
+        - sh: echo \$(jx-release-version) > VERSION
+          name: next-version
+          comment: so we can retrieve the version in later steps
+        - sh: mvn versions:set -DnewVersion=\$(cat VERSION)
+          name: set-version
+        - sh: jx step tag --version \$(cat VERSION)
+          name: tag-version
+    build:
+      steps:
+        - sh: mvn clean deploy
+          name: mvn-deploy

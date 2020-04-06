@@ -3,6 +3,7 @@ package testkube
 import (
 	"github.com/jenkins-x/jx/pkg/gits"
 	"github.com/jenkins-x/jx/pkg/kube"
+	"github.com/jenkins-x/jx/pkg/kube/naming"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -11,7 +12,7 @@ import (
 func CreateTestPipelineGitSecret(gitServiceKind string, name string, gitUrl string, username string, password string) corev1.Secret {
 	return corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      kube.ToValidName(name),
+			Name:      naming.ToValidName(name),
 			Namespace: "jx",
 			Annotations: map[string]string{
 				kube.AnnotationURL:  gitUrl,

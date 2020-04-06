@@ -1,0 +1,88 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: maven
+  labels:
+    jenkins.io/kind: podTemplate
+data:
+  pod: |-
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: jenkins-maven
+      labels:
+        jenkins.io/kind: build-pod
+      annotations:
+        jenkins-x.io/devpodPorts: 5005, 8080
+    spec:
+      serviceAccount: jenkins
+      nodeSelector:
+      volumes:
+      - name: workspace-volume
+        emptyDir: {}
+      - name: docker-daemon
+        hostPath:
+          path: /var/run/docker.sock
+      - name: volume-0
+        secret:
+          secretName: jenkins-maven-settings
+      - name: volume-1
+        secret:
+          secretName: jenkins-docker-cfg
+      - name: volume-2
+        secret:
+          secretName: jenkins-release-gpg
+      containers:
+      - name: maven
+        image: gcr.io/jenkinsxio/builder-maven:0.1.350
+        args:
+        - cat
+        command:
+        - /bin/sh
+        - -c
+        workingDir: /home/jenkins
+        securityContext:
+          privileged: true
+        tty: true
+        env:
+        - name: DOCKER_REGISTRY
+          valueFrom:
+            configMapKeyRef:
+              name: jenkins-x-docker-registry
+              key: docker.registry
+        - name: TILLER_NAMESPACE
+          value: kube-system
+        - name: DOCKER_CONFIG
+          value: /home/jenkins/.docker/
+        - name: GIT_AUTHOR_EMAIL
+          value: jenkins-x@googlegroups.com
+        - name: GIT_AUTHOR_NAME
+          value: jenkins-x-bot
+        - name: GIT_COMMITTER_EMAIL
+          value: jenkins-x@googlegroups.com
+        - name: GIT_COMMITTER_NAME
+          value: jenkins-x-bot
+        - name: JENKINS_URL
+          value: http://jenkins:8080
+        - name: MAVEN_OPTS
+          value: -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
+        - name: XDG_CONFIG_HOME
+          value: /home/jenkins
+        - name: _JAVA_OPTIONS
+          value: -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -Dsun.zip.disableMemoryMapping=true -XX:+UseParallelGC -XX:MinHeapFreeRatio=5 -XX:MaxHeapFreeRatio=10 -XX:GCTimeRatio=4 -XX:AdaptiveSizePolicyWeight=90 -Xms10m -Xmx192m
+        resources:
+          requests:
+            cpu: 400m
+            memory: 512Mi
+          limits:
+        volumeMounts:
+          - mountPath: /home/jenkins
+            name: workspace-volume
+          - name: docker-daemon
+            mountPath: /var/run/docker.sock
+          - name: volume-0
+            mountPath: /root/.m2/
+          - name: volume-1
+            mountPath: /home/jenkins/.docker
+          - name: volume-2
+            mountPath: /home/jenkins/.gnupg

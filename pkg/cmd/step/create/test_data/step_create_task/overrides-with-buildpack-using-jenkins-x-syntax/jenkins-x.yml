@@ -1,0 +1,11 @@
+buildPack: jx-syntax-in-buildpack
+pipelineConfig:
+  pipelines:
+    overrides:
+      - pipeline: release
+        stage: build
+        name: flake8
+        step:
+          command: echo hi there
+          name: hi-there
+        type: after

@@ -1,0 +1,35 @@
+cluster:
+  clusterName: my-cluster-name
+  environmentGitOwner: myorg
+  gitKind: github
+  gitName: github
+  gitServer: https://github.com
+  namespace: jx
+  project: foo
+  provider: gke
+  zone: myzone
+ingress:
+  domain: ""
+  externalDNS: false
+  namespaceSubDomain: -jx.
+  tls:
+    email: ""
+    enabled: false
+    production: false
+kaniko: true
+secretStorage: local
+storage:
+  logs:
+    enabled: false
+    url: ""
+  reports:
+    enabled: false
+    url: ""
+  repository:
+    enabled: false
+    url: ""
+terraform: true
+versionStream:
+  ref: v1.0.3
+  url: https://github.com/jenkins-x/jenkins-x-versions.git
+webhook: prow

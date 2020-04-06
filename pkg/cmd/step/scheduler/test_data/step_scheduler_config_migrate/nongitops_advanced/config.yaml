@@ -1,0 +1,1240 @@
+periodics:
+- name: periodic-jx-stale
+  interval: 1h
+  decorate: false
+  spec:
+    containers:
+    - image: gcr.io/k8s-prow/commenter:v20190528-0d7c4b53a
+      command:
+      - /app/robots/commenter/app.binary
+      args:
+      - |-
+        --query=org:jenkins-x
+        -label:lifecycle/frozen
+        -label:lifecycle/stale
+        -label:lifecycle/rotten
+      - --updated=2160h
+      - --token=/etc/token/oauth
+      - |-
+        --comment=Issues go stale after 90d of inactivity.
+        Mark the issue as fresh with `/remove-lifecycle stale`.
+        Stale issues rot after an additional 30d of inactivity and eventually close.
+        If this issue is safe to close now please do so with `/close`.
+        Provide feedback via https://jenkins-x.io/community.
+        /lifecycle stale
+      - --template
+      - --ceiling=30
+      - --confirm
+      volumeMounts:
+      - name: token
+        mountPath: /etc/token
+    volumes:
+    - name: token
+      secret:
+        secretName: oauth-token
+
+- name: periodic-jx-close
+  interval: 1h
+  decorate: false
+  spec:
+    containers:
+    - image: gcr.io/k8s-prow/commenter:v20190528-0d7c4b53a
+      command:
+      - /app/robots/commenter/app.binary
+      args:
+      - |-
+        --query=org:jenkins-x
+        -label:lifecycle/frozen
+        label:lifecycle/rotten
+      - --updated=720h
+      - --token=/etc/token/oauth
+      - |-
+        --comment=Rotten issues close after 30d of inactivity.
+        Reopen the issue with `/reopen`.
+        Mark the issue as fresh with `/remove-lifecycle rotten`.
+        Provide feedback via https://jenkins-x.io/community.
+        /close
+      - --template
+      - --ceiling=10
+      - --confirm
+      volumeMounts:
+      - name: token
+        mountPath: /etc/token
+    volumes:
+    - name: token
+      secret:
+        secretName: oauth-token
+
+- name: periodic-jx-rotten
+  interval: 1h
+  decorate: false
+  spec:
+    containers:
+    - image: gcr.io/k8s-prow/commenter:v20190528-0d7c4b53a
+      command:
+      - /app/robots/commenter/app.binary
+      args:
+      - |-
+        --query=org:jenkins-x
+        -label:lifecycle/frozen
+        label:lifecycle/stale
+        -label:lifecycle/rotten
+      - --updated=720h
+      - --token=/etc/token/oauth
+      - |-
+        --comment=Stale issues rot after 30d of inactivity.
+        Mark the issue as fresh with `/remove-lifecycle rotten`.
+        Rotten issues close after an additional 30d of inactivity.
+        If this issue is safe to close now please do so with `/close`.
+        Provide feedback via https://jenkins-x.io/community.
+        /lifecycle rotten
+      - --template
+      - --ceiling=10
+      - --confirm
+      volumeMounts:
+      - name: token
+        mountPath: /etc/token
+    volumes:
+    - name: token
+      secret:
+        secretName: oauth-token
+
+branch-protection:
+  orgs:
+    cloudbees:
+      repos:
+        jxui-backend:
+          required_status_checks:
+            contexts: ["tekton"]
+        jxui-frontend:
+          required_status_checks:
+            contexts: ["tekton"]
+        jxui-ts-client:
+          required_status_checks:
+            contexts: ["tekton"]
+        cb-app-slack:
+          required_status_checks:
+            contexts: ["tekton"]
+    jenkins-x-charts:
+      required_status_checks:
+        contexts: ["tekton"]
+    jenkins-x-apps:
+      required_status_checks:
+        contexts: ["tekton"]
+    jenkins-x:
+      repos:
+        environment-tekton-mole-dev:
+          required_status_checks:
+            contexts:
+            - promotion-build
+        environment-tekton-mole-production:
+          required_status_checks:
+            contexts:
+            - promotion-build
+        environment-tekton-mole-staging:
+          required_status_checks:
+            contexts:
+            - promotion-build
+        jx:
+          required_status_checks:
+            contexts:
+              ["bdd","integration","lint"]
+        jx-datadog:
+          required_status_checks:
+            contexts: ["tekton"]
+        jx-docs:
+          required_status_checks:
+            contexts: ["tekton"]
+        jx-tutorial:
+          required_status_checks:
+            contexts: ["tekton"]
+        jenkins-x-builders-base-image:
+          required_status_checks:
+            contexts: ["tekton"]
+        jenkins-x-builders-base:
+          required_status_checks:
+            contexts: ["tekton"]
+        jenkins-x-builders:
+          required_status_checks:
+            contexts: ["tekton"]
+        jenkins-x-serverless-filerunner:
+          required_status_checks:
+            contexts: ["tekton"]
+        jenkins-x-serverless:
+          required_status_checks:
+            contexts: ["tekton"]
+        homebrew-jx:
+          required_status_checks:
+            contexts: ["tekton"]
+        dev-env:
+          required_status_checks:
+            contexts: ["tekton"]
+        dev-env-base:
+          required_status_checks:
+            contexts: ["tekton"]
+        updatebot:
+          required_status_checks:
+            contexts: ["tekton"]
+        ext-java-code-quality:
+          required_status_checks:
+            contexts: ["tekton"]
+        jenkins-x-image:
+          required_status_checks:
+            contexts: ["tekton"]
+        sso-operator:
+          required_status_checks:
+            contexts: ["tekton"]
+        bucketrepo:
+          required_status_checks:
+            contexts: ["tekton"]
+  protect-tested-repos: true
+deck:
+  spyglass:
+    size_limit: 500e+6 # 500MB
+    viewers:
+      #"started.json|finished.json": ["metadata"]
+      "\\*.log": ["buildlog"]
+      #"artifacts/junit.*\\.xml": ["junit"] # Remember to escape your '\' in yaml strings!
+gerrit: {}
+owners_dir_blacklist:
+  default: null
+  repos: null
+plank:
+  job_url_prefix: 'https://dashboard.infra.jrawlings.co.uk/teams'
+  report_template: '{{if eq .Spec.Type "presubmit"}}[View all Builds for this Pull Request](https://dashboard.infra.jrawlings.co.uk/teams/{{.Spec.Namespace}}/projects/{{.Spec.Refs.Org}}/{{.Spec.Refs.Repo}}/PR-{{(index .Spec.Refs.Pulls 0).Number}}) {{else if eq .Spec.Type "batch"}} Run `jx get build log --owner {{.Spec.Refs.Org}} --repo {{.Spec.Refs.Repo}} --branch batch` whilst connected to the cluster. UI support coming soon. {{end}}'
+  job_url_template: '{{if eq .Spec.Type "presubmit"}}https://dashboard.infra.jrawlings.co.uk/teams/{{.Spec.Namespace}}/projects/{{.Spec.Refs.Org}}/{{.Spec.Refs.Repo}}/PR-{{(index .Spec.Refs.Pulls 0).Number}}/{{.Status.BuildID}}{{else if eq .Spec.Type "postsubmit"}}https://dashboard.infra.jrawlings.co.uk/teams/{{.Spec.Namespace}}/projects/{{.Spec.Refs.Org}}/{{.Spec.Refs.Repo}}/{{.Spec.Refs.BaseRef}}/{{.Status.BuildID}}{{end}}'
+
+  # pod_pending_timeout: 60m
+  # default_decoration_config:
+  #   timeout: 10800000000000
+  #   grace_period: 15000000000
+  #   utility_images:
+  #     clonerefs: "gcr.io/k8s-prow/clonerefs:v20190528-0d7c4b53a"
+  #     initupload: "gcr.io/k8s-prow/initupload:v20190528-0d7c4b53a"
+  #     entrypoint: "gcr.io/k8s-prow/entrypoint:v20190528-0d7c4b53a"
+  #     sidecar: "gcr.io/k8s-prow/sidecar:v20190528-0d7c4b53a"
+
+pod_namespace: jx
+postsubmits:
+  cloudbees/jxui-backend:
+  - agent: tekton
+    context: tekton
+    name: tekton
+    branches:
+    - master
+  cloudbees/jxui-ts-client:
+  - agent: tekton
+    context: tekton
+    name: tekton
+    branches:
+    - master
+  cloudbees/jxui-frontend:
+  - agent: tekton
+    context: tekton
+    name: tekton
+    branches:
+    - master
+  jenkins-x/environment-tekton-mole-dev:
+  - agent: tekton
+    branches:
+    - master
+    context: ""
+    name: promotion
+  jenkins-x/environment-tekton-mole-production:
+  - agent: tekton
+    branches:
+    - master
+    context: ""
+    name: promotion
+  jenkins-x/environment-tekton-mole-staging:
+  - agent: tekton
+    branches:
+    - master
+    context: ""
+    name: promotion
+  jenkins-x-apps/jx-app-sonarqube:
+  - agent: tekton
+    context: tekton
+    name: tekton
+    branches:
+    - master
+  jenkins-x-apps/jx-app-cheese:
+  - agent: tekton
+    context: tekton
+    name: tekton
+    branches:
+    - master
+  jenkins-x-apps/jx-app-grafana:
+  - agent: tekton
+    context: tekton
+    name: tekton
+    branches:
+    - master
+  jenkins-x-apps/jx-app-datadog:
+  - agent: tekton
+    context: tekton
+    name: tekton
+    branches:
+    - master
+  jenkins-x-apps/jx-app-istio:
+  - agent: tekton
+    context: tekton
+    name: tekton
+    branches:
+    - master
+  jenkins-x-apps/jx-app-gitea:
+  - agent: tekton
+    context: tekton
+    name: tekton
+    branches:
+    - master
+  jenkins-x-apps/jx-app-jenkins:
+  - agent: tekton
+    context: tekton
+    name: tekton
+    branches:
+    - master
+  jenkins-x-apps/jx-app-anchore:
+  - agent: tekton
+    context: tekton
+    name: tekton
+    branches:
+    - master
+  jenkins-x-apps/jx-app-ambassador:
+  - agent: tekton
+    context: tekton
+    name: tekton
+    branches:
+    - master
+  jenkins-x-apps/jx-app-test-lifecycle:
+  - agent: tekton
+    context: tekton
+    name: tekton
+    branches:
+    - master
+  jenkins-x-apps/jx-app-athens:
+  - agent: tekton
+    context: tekton
+    name: tekton
+    branches:
+    - master
+  jenkins-x-apps/jx-app-sso:
+  - agent: tekton
+    context: tekton
+    name: tekton
+    branches:
+    - master
+  jenkins-x-apps/jx-app-cert-manager:
+  - agent: tekton
+    context: tekton
+    name: tekton
+    branches:
+    - master
+  jenkins-x-apps/jx-app-jacoco:
+  - agent: tekton
+    context: tekton
+    name: tekton
+    branches:
+    - master
+  jenkins-x-apps/jx-app-prometheus:
+  - agent: tekton
+    context: tekton
+    name: tekton
+    branches:
+    - master
+  jenkins-x-charts/hey:
+  - agent: tekton
+    context: tekton
+    name: tekton
+    branches:
+    - master
+  jenkins-x-charts/jenkins-x-minimal:
+  - agent: tekton
+    context: tekton
+    name: tekton
+    branches:
+    - master
+  jenkins-x-charts/nexus:
+  - agent: tekton
+    context: tekton
+    name: tekton
+    branches:
+    - master
+  jenkins-x-charts/tekton:
+  - agent: tekton
+    context: tekton
+    name: tekton
+    branches:
+    - master
+  jenkins-x-charts/openshift-namespace-rbac-chart:
+  - agent: tekton
+    context: tekton
+    name: tekton
+    branches:
+    - master
+  jenkins-x-charts/athens-proxy:
+  - agent: tekton
+    context: tekton
+    name: tekton
+    branches:
+    - master
+  jenkins-x-charts/vault-operator:
+  - agent: tekton
+    context: tekton
+    name: tekton
+    branches:
+    - master
+  jenkins-x-charts/knative-build:
+  - agent: tekton
+    context: tekton
+    name: tekton
+    branches:
+    - master
+  jenkins-x-charts/jx-build-templates:
+  - agent: tekton
+    context: tekton
+    name: tekton
+    branches:
+    - master
+  jenkins-x-charts/environment-controller:
+  - agent: tekton
+    context: tekton
+    name: tekton
+    branches:
+    - master
+  jenkins-x-charts/prow:
+  - agent: tekton
+    context: tekton
+    name: tekton
+    branches:
+    - master
+  jenkins-x-charts/kubernetes-replicator:
+  - agent: tekton
+    context: tekton
+    name: tekton
+    branches:
+    - master
+  jenkins-x/dev-env:
+  - agent: tekton
+    context: tekton
+    name: tekton
+    branches:
+    - master
+  jenkins-x/dev-env-base:
+  - agent: tekton
+    context: tekton
+    name: tekton
+    branches:
+    - master
+  cloudbees/jx-tenant-service:
+  - agent: tekton
+    context: tekton
+    name: tekton
+    branches:
+    - master
+  jenkins-x/updatebot:
+  - agent: tekton
+    context: tekton
+    name: tekton
+    branches:
+    - master
+  jenkins-x/ext-java-code-quality:
+  - agent: tekton
+    context: tekton
+    name: tekton
+    branches:
+    - master
+  jenkins-x/jx:
+  - agent: tekton
+    name: release
+    branches:
+    - master
+  jenkins-x/jx-datadog:
+  - agent: tekton
+    context: tekton
+    name: tekton
+    branches:
+    - master
+  jenkins-x/jx-docs:
+  - agent: tekton
+    context: tekton
+    name: tekton
+    branches:
+    - master
+  jenkins-x/jx-tutorial:
+  - agent: tekton
+    context: tekton
+    name: tekton
+    branches:
+    - master
+  jenkins-x/jenkins-x-builders-base-image:
+  - agent: tekton
+    context: tekton
+    name: tekton
+    branches:
+    - master
+  jenkins-x/jenkins-x-builders-base:
+  - agent: tekton
+    context: tekton
+    name: tekton
+    branches:
+    - master
+  jenkins-x/jenkins-x-builders:
+  - agent: tekton
+    context: tekton
+    name: tekton
+    branches:
+    - master
+  jenkins-x/jenkins-x-serverless-filerunner:
+  - agent: tekton
+    context: tekton
+    name: tekton
+    branches:
+    - master
+  jenkins-x/jenkins-x-serverless:
+  - agent: tekton
+    context: tekton
+    name: tekton
+    branches:
+    - master
+  jenkins-x/homebrew-jx:
+  - agent: tekton
+    context: tekton
+    name: tekton
+    branches:
+    - master
+  jenkins-x/jenkins-x-image:
+  - agent: tekton
+    context: tekton
+    name: tekton
+    branches:
+    - master
+  jenkins-x/jenkins-x-platform:
+  - agent: tekton
+    context: tekton
+    name: tekton
+    branches:
+    - master
+  jenkins-x/jx-ts-client:
+  - agent: tekton
+    context: tekton
+    name: tekton
+    branches:
+    - master
+  jenkins-x/sso-operator:
+  - agent: tekton
+    context: tekton
+    name: tekton
+    branches:
+    - master
+  jenkins-x/exposecontroller:
+  - agent: tekton
+    context: tekton
+    name: tekton
+    branches:
+    - master
+  jenkins-x/bucketrepo:
+  - agent: tekton
+    context: tekton
+    name: tekton
+    branches:
+    - master
+  cloudbees/cb-app-slack:
+  - agent: tekton
+    context: tekton
+    name: tekton
+    branches:
+    - master
+presubmits:
+  cloudbees/jxui-backend:
+  - agent: tekton
+    always_run: true
+    context: tekton
+    name: tekton
+    rerun_command: /test this
+    trigger: (?m)^/test( all| this),?(s+|$)
+  cloudbees/jxui-ts-client:
+  - agent: tekton
+    always_run: true
+    context: tekton
+    name: tekton
+    rerun_command: /test this
+    trigger: (?m)^/test( all| this),?(s+|$)
+  cloudbees/jxui-frontend:
+  - agent: tekton
+    always_run: true
+    context: tekton
+    name: tekton
+    rerun_command: /test this
+    trigger: (?m)^/test( all| this),?(s+|$)
+  jenkins-x/jenkins-x-versions:
+  - agent: tekton
+    always_run: false
+    context: static
+    name: static
+    rerun_command: /test static
+    trigger: (?m)^/test( all| this| static),?(s+|$)
+  - agent: tekton
+    always_run: false
+    context: tiller
+    name: tiller
+    rerun_command: /test tiller
+    trigger: (?m)^/test( all| this| tiller),?(s+|$)
+  - agent: tekton
+    always_run: false
+    context: prow
+    name: prow
+    rerun_command: /test prow
+    trigger: (?m)^/test( all| this| prow),?(s+|$)
+  - agent: tekton
+    always_run: false
+    context: gitops
+    name: gitops
+    rerun_command: /test gitops
+    trigger: (?m)^/test( all| gitops),?(s+|$)
+  - agent: tekton
+    always_run: false
+    context: tekton
+    name: tekton
+    rerun_command: /test tekton
+    trigger: (?m)^/test( all| tekton),?(s+|$)
+  - agent: tekton
+    always_run: false
+    context: ekstekton
+    name: ekstekton
+    rerun_command: /test ekstekton
+    trigger: (?m)^/test( ekstekton),?(s+|$)
+  - agent: tekton
+    always_run: false
+    context: eksclassic
+    name: eksclassic
+    rerun_command: /test eksclassic
+    trigger: (?m)^/test( eksclassic),?(s+|$)
+  - agent: tekton
+    always_run: false
+    context: ng
+    name: ng
+    rerun_command: /test ng
+    trigger: (?m)^/test( all| ng),?(s+|$)
+  - agent: tekton
+    always_run: false
+    context: static-gke-us-east1-b
+    name: static-gke-us-east1-b
+    rerun_command: /test static-gke-us-east1-b
+    trigger: (?m)^/test static-gke-us-east1-b,?(s+|$)
+  - agent: tekton
+    always_run: false
+    context: helm3
+    name: helm3
+    rerun_command: /test helm3
+    trigger: (?m)^/test( helm3),?(s+|$)
+  - agent: tekton
+    always_run: false
+    context: terraform
+    name: terraform
+    rerun_command: /test terraform
+    trigger: (?m)^/test( terraform),?(s+|$)
+  jenkins-x/environment-tekton-mole-dev:
+  - agent: tekton
+    always_run: true
+    context: promotion-build
+    name: promotion-build
+    rerun_command: /test this
+    trigger: (?m)^/test( all| this),?(\s+|$)
+  jenkins-x/environment-tekton-mole-production:
+  - agent: tekton
+    always_run: true
+    context: promotion-build
+    name: promotion-build
+    rerun_command: /test this
+    trigger: (?m)^/test( all| this),?(\s+|$)
+  jenkins-x/environment-tekton-mole-staging:
+  - agent: tekton
+    always_run: true
+    context: promotion-build
+    name: promotion-build
+    rerun_command: /test this
+    trigger: (?m)^/test( all| this),?(\s+|$)
+  jenkins-x-apps/jx-app-sonarqube:
+  - agent: tekton
+    always_run: true
+    context: tekton
+    name: tekton
+    rerun_command: /test this
+    trigger: (?m)^/test( all| this),?(s+|$)
+  jenkins-x-apps/jx-app-cheese:
+  - agent: tekton
+    always_run: true
+    context: tekton
+    name: tekton
+    rerun_command: /test this
+    trigger: (?m)^/test( all| this),?(s+|$)
+  jenkins-x-apps/jx-app-grafana:
+  - agent: tekton
+    always_run: true
+    context: tekton
+    name: tekton
+    rerun_command: /test this
+    trigger: (?m)^/test( all| this),?(s+|$)
+  jenkins-x-apps/jx-app-datadog:
+  - agent: tekton
+    always_run: true
+    context: tekton
+    name: tekton
+    rerun_command: /test this
+    trigger: (?m)^/test( all| this),?(s+|$)
+  jenkins-x-apps/jx-app-istio:
+  - agent: tekton
+    always_run: true
+    context: tekton
+    name: tekton
+    rerun_command: /test this
+    trigger: (?m)^/test( all| this),?(s+|$)
+  jenkins-x-apps/jx-app-gitea:
+  - agent: tekton
+    always_run: true
+    context: tekton
+    name: tekton
+    rerun_command: /test this
+    trigger: (?m)^/test( all| this),?(s+|$)
+  jenkins-x-apps/jx-app-jenkins:
+  - agent: tekton
+    always_run: true
+    context: tekton
+    name: tekton
+    rerun_command: /test this
+    trigger: (?m)^/test( all| this),?(s+|$)
+  jenkins-x-apps/jx-app-anchore:
+  - agent: tekton
+    always_run: true
+    context: tekton
+    name: tekton
+    rerun_command: /test this
+    trigger: (?m)^/test( all| this),?(s+|$)
+  jenkins-x-apps/jx-app-ambassador:
+  - agent: tekton
+    always_run: true
+    context: tekton
+    name: tekton
+    rerun_command: /test this
+    trigger: (?m)^/test( all| this),?(s+|$)
+  jenkins-x-apps/jx-app-test-lifecycle:
+  - agent: tekton
+    always_run: true
+    context: tekton
+    name: tekton
+    rerun_command: /test this
+    trigger: (?m)^/test( all| this),?(s+|$)
+  jenkins-x-apps/jx-app-athens:
+  - agent: tekton
+    always_run: true
+    context: tekton
+    name: tekton
+    rerun_command: /test this
+    trigger: (?m)^/test( all| this),?(s+|$)
+  jenkins-x-apps/jx-app-sso:
+  - agent: tekton
+    always_run: true
+    context: tekton
+    name: tekton
+    rerun_command: /test this
+    trigger: (?m)^/test( all| this),?(s+|$)
+  jenkins-x-apps/jx-app-cert-manager:
+  - agent: tekton
+    always_run: true
+    context: tekton
+    name: tekton
+    rerun_command: /test this
+    trigger: (?m)^/test( all| this),?(s+|$)
+  cloudbees/cb-app-slack:
+  - agent: tekton
+    always_run: true
+    context: tekton
+    name: tekton
+    rerun_command: /test this
+    trigger: (?m)^/test( all| this),?(s+|$)
+  jenkins-x-apps/jx-app-jacoco:
+  - agent: tekton
+    always_run: true
+    context: tekton
+    name: tekton
+    rerun_command: /test this
+    trigger: (?m)^/test( all| this),?(s+|$)
+  jenkins-x-apps/jx-app-prometheus:
+  - agent: tekton
+    always_run: true
+    context: tekton
+    name: tekton
+    rerun_command: /test this
+    trigger: (?m)^/test( all| this),?(s+|$)
+  jenkins-x-charts/hey:
+  - agent: tekton
+    always_run: true
+    context: tekton
+    name: tekton
+    rerun_command: /test this
+    trigger: (?m)^/test( all| this),?(s+|$)
+  jenkins-x-charts/jenkins-x-minimal:
+  - agent: tekton
+    always_run: true
+    context: tekton
+    name: tekton
+    rerun_command: /test this
+    trigger: (?m)^/test( all| this),?(s+|$)
+  jenkins-x-charts/nexus:
+  - agent: tekton
+    always_run: true
+    context: tekton
+    name: tekton
+    rerun_command: /test this
+    trigger: (?m)^/test( all| this),?(s+|$)
+  jenkins-x-charts/tekton:
+  - agent: tekton
+    always_run: true
+    context: tekton
+    name: tekton
+    rerun_command: /test this
+    trigger: (?m)^/test( all| this),?(s+|$)
+  jenkins-x-charts/openshift-namespace-rbac-chart:
+  - agent: tekton
+    always_run: true
+    context: tekton
+    name: tekton
+    rerun_command: /test this
+    trigger: (?m)^/test( all| this),?(s+|$)
+  jenkins-x-charts/athens-proxy:
+  - agent: tekton
+    always_run: true
+    context: tekton
+    name: tekton
+    rerun_command: /test this
+    trigger: (?m)^/test( all| this),?(s+|$)
+  jenkins-x-charts/vault-operator:
+  - agent: tekton
+    always_run: true
+    context: tekton
+    name: tekton
+    rerun_command: /test this
+    trigger: (?m)^/test( all| this),?(s+|$)
+  jenkins-x-charts/knative-build:
+  - agent: tekton
+    always_run: true
+    context: tekton
+    name: tekton
+    rerun_command: /test this
+    trigger: (?m)^/test( all| this),?(s+|$)
+  jenkins-x-charts/jx-build-templates:
+  - agent: tekton
+    always_run: true
+    context: tekton
+    name: tekton
+    rerun_command: /test this
+    trigger: (?m)^/test( all| this),?(s+|$)
+  jenkins-x-charts/environment-controller:
+  - agent: tekton
+    always_run: true
+    context: tekton
+    name: tekton
+    rerun_command: /test this
+    trigger: (?m)^/test( all| this),?(s+|$)
+  jenkins-x-charts/prow:
+  - agent: tekton
+    always_run: true
+    context: tekton
+    name: tekton
+    rerun_command: /test this
+    trigger: (?m)^/test( all| this),?(s+|$)
+  jenkins-x-charts/kubernetes-replicator:
+  - agent: tekton
+    always_run: true
+    context: tekton
+    name: tekton
+    rerun_command: /test this
+    trigger: (?m)^/test( all| this),?(s+|$)
+  jenkins-x/jx:
+  - agent: tekton
+    always_run: true
+    context: bdd
+    name: bdd
+    rerun_command: /test bdd
+    trigger: (?m)^/test( all| bdd),?(s+|$)
+  - agent: tekton
+    always_run: false
+    context: images
+    name: images
+    rerun_command: /test images
+    trigger: (?m)^/test images,?(s+|$)
+  - agent: tekton
+    always_run: true
+    context: integration
+    name: integration
+    rerun_command: /test integration
+    trigger: (?m)^/test( all| integration),?(s+|$)
+  - agent: tekton
+    always_run: true
+    context: lint
+    name: lint
+    rerun_command: /test lint
+    trigger: (?m)^/test( all| lint),?(s+|$)
+  - agent: tekton
+    always_run: false
+    context: tekton
+    name: tekton
+    rerun_command: /test tekton
+    trigger: (?m)^/test( tekton),?(s+|$)
+  jenkins-x/jx-datadog:
+  - agent: tekton
+    always_run: true
+    context: tekton
+    name: tekton
+    rerun_command: /test this
+    trigger: (?m)^/test( all| this),?(s+|$)
+  jenkins-x/jx-docs:
+  - agent: tekton
+    always_run: true
+    context: tekton
+    name: tekton
+    rerun_command: /test this
+    trigger: (?m)^/test( all| this),?(s+|$)
+  jenkins-x/jx-tutorial:
+  - agent: tekton
+    always_run: true
+    context: tekton
+    name: tekton
+    rerun_command: /test this
+    trigger: (?m)^/test( all| this),?(s+|$)
+  jenkins-x/dev-env:
+  - agent: tekton
+    always_run: true
+    context: tekton
+    name: tekton
+    rerun_command: /test tekton
+    trigger: (?m)^/test( all| tekton),?(s+|$)
+  jenkins-x/dev-env-base:
+  - agent: tekton
+    always_run: true
+    context: tekton
+    name: tekton
+    rerun_command: /test tekton
+    trigger: (?m)^/test( all| tekton),?(s+|$)
+  cloudbees/jx-tenant-service :
+  - agent: tekton
+    always_run: true
+    context: tekton
+    name: tekton
+    rerun_command: /test tekton
+    trigger: (?m)^/test( all| tekton),?(s+|$)
+  jenkins-x/updatebot:
+  - agent: tekton
+    always_run: true
+    context: tekton
+    name: tekton
+    rerun_command: /test tekton
+    trigger: (?m)^/test( all| tekton),?(s+|$)
+  jenkins-x/ext-java-code-quality:
+  - agent: tekton
+    always_run: true
+    context: tekton
+    name: tekton
+    rerun_command: /test this
+    trigger: (?m)^/test( all| this),?(s+|$)
+  jenkins-x/jenkins-x-builders-base-image:
+  - agent: tekton
+    always_run: true
+    context: tekton
+    name: tekton
+    rerun_command: /test this
+    trigger: (?m)^/test( all| this),?(s+|$)
+  jenkins-x/jenkins-x-builders-base:
+  - agent: tekton
+    always_run: true
+    context: tekton
+    name: tekton
+    rerun_command: /test this
+    trigger: (?m)^/test( all| this),?(s+|$)
+  jenkins-x/jenkins-x-builders:
+  - agent: tekton
+    always_run: true
+    context: tekton
+    name: tekton
+    rerun_command: /test this
+    trigger: (?m)^/test( all| this),?(s+|$)
+  jenkins-x/jenkins-x-serverless-filerunner:
+  - agent: tekton
+    always_run: true
+    context: tekton
+    name: tekton
+    rerun_command: /test this
+    trigger: (?m)^/test( all| this),?(s+|$)
+  jenkins-x/jenkins-x-serverless:
+  - agent: tekton
+    always_run: true
+    context: tekton
+    name: tekton
+    rerun_command: /test this
+    trigger: (?m)^/test( all| this),?(s+|$)
+  jenkins-x/homebrew-jx:
+  - agent: tekton
+    always_run: true
+    context: tekton
+    name: tekton
+    rerun_command: /test this
+    trigger: (?m)^/test( all| this),?(s+|$)
+  jenkins-x/jenkins-x-image:
+  - agent: tekton
+    always_run: true
+    context: tekton
+    name: tekton
+    rerun_command: /test this
+    trigger: (?m)^/test( all| this),?(s+|$)
+  jenkins-x/jenkins-x-platform:
+  - agent: tekton
+    always_run: true
+    context: tekton
+    name: tekton
+    rerun_command: /test this
+    trigger: (?m)^/test( all| this),?(s+|$)
+  jenkins-x/jx-ts-client:
+  - agent: tekton
+    always_run: true
+    context: tekton
+    name: tekton
+    rerun_command: /test this
+    trigger: (?m)^/test( all| this),?(s+|$)
+  jenkins-x/sso-operator:
+  - agent: tekton
+    always_run: true
+    context: tekton
+    name: tekton
+    rerun_command: /test this
+    trigger: (?m)^/test( all| this),?(s+|$)
+  jenkins-x/exposecontroller:
+  - agent: tekton
+    always_run: true
+    context: tekton
+    name: tekton
+    rerun_command: /test this
+    trigger: (?m)^/test( all| this),?(s+|$)
+  jenkins-x/bucketrepo:
+  - agent: tekton
+    always_run: true
+    context: tekton
+    name: tekton
+    rerun_command: /test this
+    trigger: (?m)^/test( all| this),?(s+|$)
+prowjob_namespace: jx
+push_gateway: {}
+sinker: {}
+tide:
+  merge_method:
+    cloudbees/cb-app-slack: merge
+    cloudbees/jx-tenant-service: merge
+    cloudbees/jxui-backend: merge
+    cloudbees/jxui-frontend: merge
+    cloudbees/jxui-ts-client: merge
+    jenkins-x-apps/jx-app-ambassador: merge
+    jenkins-x-apps/jx-app-anchore: merge
+    jenkins-x-apps/jx-app-athens: merge
+    jenkins-x-apps/jx-app-cert-manager: merge
+    jenkins-x-apps/jx-app-cheese: merge
+    jenkins-x-apps/jx-app-datadog: merge
+    jenkins-x-apps/jx-app-gitea: merge
+    jenkins-x-apps/jx-app-grafana: merge
+    jenkins-x-apps/jx-app-istio: merge
+    jenkins-x-apps/jx-app-jacoco: rebase
+    jenkins-x-apps/jx-app-jenkins: merge
+    jenkins-x-apps/jx-app-prometheus: merge
+    jenkins-x-apps/jx-app-sonarqube: merge
+    jenkins-x-apps/jx-app-sso: merge
+    jenkins-x-apps/jx-app-test-lifecycle: rebase
+    jenkins-x-charts/athens-proxy: merge
+    jenkins-x-charts/environment-controller: merge
+    jenkins-x-charts/hey: merge
+    jenkins-x-charts/jenkins-x-minimal: merge
+    jenkins-x-charts/jx-build-templates: merge
+    jenkins-x-charts/knative-build: merge
+    jenkins-x-charts/kubernetes-replicator: merge
+    jenkins-x-charts/nexus: merge
+    jenkins-x-charts/openshift-namespace-rbac-chart: merge
+    jenkins-x-charts/prow: merge
+    jenkins-x-charts/tekton: merge
+    jenkins-x-charts/vault-operator: merge
+    jenkins-x/bucketrepo: merge
+    jenkins-x/dev-env: merge
+    jenkins-x/dev-env-base: merge
+    jenkins-x/environment-tekton-mole-dev: merge
+    jenkins-x/environment-tekton-mole-production: merge
+    jenkins-x/environment-tekton-mole-staging: merge
+    jenkins-x/exposecontroller: merge
+    jenkins-x/ext-java-code-quality: merge
+    jenkins-x/homebrew-jx: merge
+    jenkins-x/jenkins-x-builders: merge
+    jenkins-x/jenkins-x-builders-base: merge
+    jenkins-x/jenkins-x-builders-base-image: merge
+    jenkins-x/jenkins-x-image: merge
+    jenkins-x/jenkins-x-platform: merge
+    jenkins-x/jenkins-x-serverless: merge
+    jenkins-x/jenkins-x-serverless-filerunner: merge
+    jenkins-x/jenkins-x-versions: merge
+    jenkins-x/jx: squash
+    jenkins-x/jx-datadog: merge
+    jenkins-x/jx-docs: merge
+    jenkins-x/jx-ts-client: merge
+    jenkins-x/jx-tutorial: merge
+    jenkins-x/sso-operator: merge
+    jenkins-x/updatebot: merge
+  context_options:
+    from-branch-protection: true
+    required-if-present-contexts: null
+    skip-unknown-contexts: false
+    orgs:
+      jenkins-x:
+        repos:
+          jx:
+            required-if-present-contexts:
+            - images
+            optional-contexts:
+            - codecov/project
+            - codecov/patch
+            required-contexts:
+            - integration
+            - lint
+            - bdd
+            - Hound
+  queries:
+  - labels:
+    - approved
+    - lgtm
+    missingLabels:
+    - do-not-merge
+    - do-not-merge/hold
+    - do-not-merge/work-in-progress
+    - needs-ok-to-test
+    - needs-rebase
+    repos:
+    - jenkins-x/jx
+    - jenkins-x/environment-tekton-mole-production
+    - jenkins-x/environment-tekton-mole-staging
+  - labels:
+    - updatebot
+    missingLabels:
+    - do-not-merge
+    - do-not-merge/hold
+    - do-not-merge/work-in-progress
+    - needs-ok-to-test
+    - needs-rebase
+    repos:
+    - jenkins-x/environment-tekton-mole-dev
+    - cloudbees/jxui-backend
+    - cloudbees/jxui-frontend
+    - cloudbees/jxui-ts-client
+    - cloudbees/cb-app-slack
+    - cloudbees/jx-tenant-service
+    - jenkins-x-apps/jx-app-sonarqube
+    - jenkins-x-apps/jx-app-cheese
+    - jenkins-x-apps/jx-app-grafana
+    - jenkins-x-apps/jx-app-datadog
+    - jenkins-x-apps/jx-app-istio
+    - jenkins-x-apps/jx-app-gitea
+    - jenkins-x-apps/jx-app-jenkins
+    - jenkins-x-apps/jx-app-anchore
+    - jenkins-x-apps/jx-app-ambassador
+    - jenkins-x-apps/jx-app-test-lifecycle
+    - jenkins-x-apps/jx-app-athens
+    - jenkins-x-apps/jx-app-sso
+    - jenkins-x-apps/jx-app-cert-manager
+    - jenkins-x-apps/jx-app-jacoco
+    - jenkins-x-apps/jx-app-prometheus
+    - jenkins-x-charts/hey
+    - jenkins-x-charts/jenkins-x-minimal
+    - jenkins-x-charts/nexus
+    - jenkins-x-charts/tekton
+    - jenkins-x-charts/openshift-namespace-rbac-chart
+    - jenkins-x-charts/athens-proxy
+    - jenkins-x-charts/vault-operator
+    - jenkins-x-charts/knative-build
+    - jenkins-x-charts/jx-build-templates
+    - jenkins-x-charts/environment-controller
+    - jenkins-x-charts/prow
+    - jenkins-x-charts/kubernetes-replicator
+    - jenkins-x/jx-datadog
+    - jenkins-x/jx-docs
+    - jenkins-x/jx-tutorial
+    - jenkins-x/jenkins-x-builders
+    - jenkins-x/jenkins-x-builders-base
+    - jenkins-x/jenkins-x-builders-base-image
+    - jenkins-x/jenkins-x-serverless-filerunner
+    - jenkins-x/jenkins-x-serverless
+    - jenkins-x/homebrew-jx
+    - jenkins-x/dev-env
+    - jenkins-x/dev-env-base
+    - jenkins-x/updatebot
+    - jenkins-x/ext-java-code-quality
+    - jenkins-x/jenkins-x-platform
+    - jenkins-x/jx-ts-client
+    - jenkins-x/jenkins-x-image
+    - jenkins-x/exposecontroller
+    - jenkins-x/sso-operator
+    - jenkins-x/bucketrepo
+  - labels:
+    - approved
+    missingLabels:
+    - do-not-merge
+    - do-not-merge/hold
+    - do-not-merge/work-in-progress
+    - needs-ok-to-test
+    - needs-rebase
+    repos:
+    - cloudbees/jxui-backend
+    - cloudbees/jxui-frontend
+    - cloudbees/jxui-ts-client
+    - cloudbees/cb-app-slack
+    - cloudbees/jx-tenant-service
+    - jenkins-x-apps/jx-app-sonarqube
+    - jenkins-x-apps/jx-app-cheese
+    - jenkins-x-apps/jx-app-grafana
+    - jenkins-x-apps/jx-app-datadog
+    - jenkins-x-apps/jx-app-istio
+    - jenkins-x-apps/jx-app-gitea
+    - jenkins-x-apps/jx-app-jenkins
+    - jenkins-x-apps/jx-app-anchore
+    - jenkins-x-apps/jx-app-ambassador
+    - jenkins-x-apps/jx-app-test-lifecycle
+    - jenkins-x-apps/jx-app-athens
+    - jenkins-x-apps/jx-app-sso
+    - jenkins-x-apps/jx-app-cert-manager
+    - jenkins-x-apps/jx-app-jacoco
+    - jenkins-x-apps/jx-app-prometheus
+    - jenkins-x-charts/hey
+    - jenkins-x-charts/jenkins-x-minimal
+    - jenkins-x-charts/nexus
+    - jenkins-x-charts/tekton
+    - jenkins-x-charts/openshift-namespace-rbac-chart
+    - jenkins-x-charts/athens-proxy
+    - jenkins-x-charts/vault-operator
+    - jenkins-x-charts/knative-build
+    - jenkins-x-charts/jx-build-templates
+    - jenkins-x-charts/environment-controller
+    - jenkins-x-charts/prow
+    - jenkins-x-charts/kubernetes-replicator
+    - jenkins-x/jx-datadog
+    - jenkins-x/jx-docs
+    - jenkins-x/jx-tutorial
+    - jenkins-x/jenkins-x-builders
+    - jenkins-x/jenkins-x-builders-base
+    - jenkins-x/jenkins-x-builders-base-image
+    - jenkins-x/jenkins-x-serverless-filerunner
+    - jenkins-x/jenkins-x-serverless
+    - jenkins-x/homebrew-jx
+    - jenkins-x/dev-env
+    - jenkins-x/dev-env-base
+    - jenkins-x/updatebot
+    - jenkins-x/ext-java-code-quality
+    - jenkins-x/jenkins-x-platform
+    - jenkins-x/jx-ts-client
+    - jenkins-x/jenkins-x-image
+    - jenkins-x/environment-tekton-mole-dev
+    - jenkins-x/sso-operator
+    - jenkins-x/exposecontroller
+    - jenkins-x/bucketrepo
+  target_url: https://deck.infra.jrawlings.co.uk

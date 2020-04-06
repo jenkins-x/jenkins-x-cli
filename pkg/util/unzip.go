@@ -74,7 +74,7 @@ func UnzipSpecificFiles(src, dest string, onlyFiles ...string) error {
 
 // extract the specific file into the destination directory.
 func extractFile(dest string, f *zip.File) error {
-	name := filepath.Join(dest, f.Name)
+	name := filepath.Join(dest, f.Name) // #nosec
 	// We need to be secure to prevent attacks like
 	// https://snyk.io/blog/zip-slip-vulnerability
 	// the result is already 'Clean'ed so we only need to check the string starts

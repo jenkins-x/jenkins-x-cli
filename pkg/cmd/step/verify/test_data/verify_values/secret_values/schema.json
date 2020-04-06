@@ -1,0 +1,148 @@
+{
+  "$id": "https:/jenkins-x.io/tests/descriptionAndTitle.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "install values.yaml",
+  "type": "object",
+  "properties": {
+    "adminUser": {
+      "type": "object",
+      "required": [
+        "username",
+        "password"
+      ],
+      "properties": {
+        "username": {
+          "type": "string",
+          "title": "Jenkins X Admin Username",
+          "description": "The Admin Username will be used by all services installed by Jenkins X",
+          "default": "admin"
+        },
+        "password": {
+          "type": "string",
+          "format": "password",
+          "title": "Jenkins X Admin Password",
+          "description": "The Admin Password will be used by all services installed by Jenkins X"
+        }
+      }
+    },
+    "pipelineUser": {
+      "type": "object",
+      "required": [
+        "username",
+        "email",
+        "token"
+      ],
+      "properties": {
+        "username": {
+          "type": "string",
+          "title": "Pipeline bot Git username",
+          "description": "The Git user that will perform git operations inside a pipeline. It should be a user within the Git organisation/owner where environment repositories will live. This is normally a bot."
+        },
+        "email": {
+          "type": "string",
+          "title": "Pipeline bot Git email address",
+          "description": "The email address of the Git user that will perform git operations inside a pipeline."
+        },
+{{- if eq .GitKind "github" }}
+        "token": {
+          "type": "string",
+          "format": "token",
+          "title": "Pipeline bot Git token",
+          "description": "A token for the Git user that will perform git operations inside a pipeline. This includes environment repository creation, and so this token should have full repository permissions. To create a token go to {{ .GitServer }}/settings/tokens/new?scopes=repo,read:user,read:org,user:email,write:repo_hook,delete_repo then enter a name, click Generate token, and copy and paste the token into this prompt.",
+          "minLength": 40,
+          "maxLength": 40,
+          "pattern": "^[0-9a-f]{40}$"
+        }
+{{- else if eq .GitKind "bitbucketserver" }}
+        "token": {
+          "type": "string",
+          "format": "token",
+          "title": "Pipeline bot Git token",
+          "description": "A token for the Git user that will perform git operations inside a pipeline. This includes environment repository creation, and so this token should have full repository permissions. To create a token go to {{ .GitServer }}/plugins/servlet/access-tokens/manage then enter a name, click Generate token, and copy and paste the token into this prompt.",
+          "minLength": 8,
+          "maxLength": 50
+        }
+{{- else if eq .GitKind "gitlab" }}
+        "token": {
+          "type": "string",
+          "format": "token",
+          "title": "Pipeline bot Git token",
+          "description": "A token for the Git user that will perform git operations inside a pipeline. This includes environment repository creation, and so this token should have full repository permissions. To create a token go to {{ .GitServer }}/profile/personal_access_tokens then enter a name, click Generate token, and copy and paste the token into this prompt.",
+          "minLength": 8,
+          "maxLength": 50
+        }
+{{- else }}
+        "token": {
+          "type": "string",
+          "format": "token",
+          "title": "Pipeline bot Git token",
+          "description": "A token for the Git user that will perform git operations inside a pipeline. This includes environment repository creation, and so this token should have full repository permissions. To create a token go to {{ .GitServer }}/settings/tokens/new?scopes=repo,read:user,read:org,user:email,write:repo_hook,delete_repo then enter a name, click Generate token, and copy and paste the token into this prompt.",
+          "minLength": 8,
+          "maxLength": 50
+        }
+{{- end }}
+      }
+    },
+    "prow": {
+      "type": "object",
+      "properties": {
+        "hmacToken": {
+          "type": "string",
+          "format": "token",
+          "title": "HMAC token, used to validate incoming webhooks. Press enter to use the generated token",
+          "description": "The HMAC token is used by the Git Provider to create a hash signature for each webhook, and by Jenkins X to validate that the signature is from a trusted source. It's normally best to have Jenkins X generate a token for you if you don't already have one. You'll need to save it and use it with all the webhooks configured in your git provider for Jenkins X. For more detail see: https://en.wikipedia.org/wiki/HMAC",
+          "default": "<generated:hmac>"
+        }
+      }
+    },
+    "enableDocker": {
+      "type": "boolean",
+      "title": "Do you want to configure an external Docker Registry?",
+      "description": "By default Jenkins X will use the docker registry from the cloud provider. If you want to configure an external docker registry such as Docker Hub or your own existing docker registry enter Y"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "enableDocker": {
+            "const": "true",
+            "type": "boolean"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "docker": {
+            "type": "object",
+            "required": [
+              "url",
+              "username",
+              "password"
+            ],
+            "properties": {
+              "url": {
+                "type": "string",
+                "title": "Docker Registry Url",
+                "default": "https://index.docker.io/v1/",
+                "description": "The URL of the external docker registry",
+                "format": "uri"
+              },
+              "username": {
+                "type": "string",
+                "title": "Docker Registry username",
+                "description": "The username used to access the external docker registry"
+              },
+              "password": {
+                "type": "string",
+                "format": "password",
+                "title": "Docker Registry password",
+                "description": "The password used to access the external docker registry"
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

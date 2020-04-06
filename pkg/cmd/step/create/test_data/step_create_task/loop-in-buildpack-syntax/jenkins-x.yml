@@ -1,0 +1,31 @@
+pipelineConfig:
+  env:
+    - name: FRUIT
+      value: BANANA
+    - name: GIT_AUTHOR_NAME
+      value: somebodyelse
+  pipelines:
+    release:
+      build:
+        preSteps:
+          - loop:
+              variable: ARCH
+              values:
+                - arch-1
+                - arch-2
+              steps:
+                - command: echo
+                  args:
+                    - hello
+                    - world
+                - loop:
+                    variable: BROWSER
+                    values:
+                      - firefox
+                      - chrome
+                    steps:
+                      - command: echo
+                        args:
+                          - ${BROWSER}
+                          - "on"
+                          - ${ARCH}

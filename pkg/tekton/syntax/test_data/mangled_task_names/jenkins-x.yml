@@ -1,0 +1,13 @@
+pipelineConfig:
+  pipelines:
+    release:
+      pipeline:
+        agent:
+          image: some-image
+        stages:
+          - name: . -a- .
+            steps:
+              - command: ls
+          - name: Wööh!!!! - This is cool.
+            steps:
+              - command: ls

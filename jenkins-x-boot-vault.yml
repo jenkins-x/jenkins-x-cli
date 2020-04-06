@@ -1,0 +1,194 @@
+buildPack: none
+pipelineConfig:
+  pipelines:
+    pullRequest:
+      pipeline:
+        agent:
+          image: gcr.io/kaniko-project/executor:9912ccbf8d22bbafbf971124600fbb0b13b9cbd6
+        options:
+          containerOptions:
+            resources:
+              limits:
+                cpu: 4
+                memory: 6144Mi
+              requests:
+                cpu: 1
+                memory: 2048Mi
+        stages:
+          - name: build
+            environment:
+              - name: GIT_COMMITTER_EMAIL
+                value: jenkins-x@googlegroups.com
+              - name: GIT_AUTHOR_EMAIL
+                value: jenkins-x@googlegroups.com
+              - name: GIT_AUTHOR_NAME
+                value: jenkins-x-bot
+              - name: GIT_COMMITTER_NAME
+                value: jenkins-x-bot
+              - name: BASE_WORKSPACE
+                value: /workspace/source
+              - name: GOPROXY
+                value: http://jenkins-x-athens-proxy:80
+              - name: PARALLEL_BUILDS
+                value: "2"
+              - name: GOOGLE_APPLICATION_CREDENTIALS
+                value: /secrets/kaniko/kaniko-secret.json
+              - name: DISABLE_TEST_CACHING
+                value: "true"
+            options:
+              volumes:
+                - name: kaniko-secret
+                  secret:
+                    secretName: kaniko-secret
+                    items:
+                      - key: kaniko-secret
+                        path: kaniko/kaniko-secret.json
+              containerOptions:
+                volumeMounts:
+                  - name: kaniko-secret
+                    mountPath: /secrets
+
+            steps:
+              - name: build-binary
+                image: docker.io/golang:1.12.4
+                command: make
+                args: ['linux']
+
+              - name: validate-binary
+                image: docker.io/golang:1.12.4
+                command: "./build/linux/jx"
+                args: ['help']
+
+              - name: build-and-push-image
+                command: /kaniko/executor
+                args:
+                  - --dockerfile=/workspace/source/Dockerfile.builder-jx
+                  - --destination=gcr.io/jenkinsxio/builder-jx:${inputs.params.version}
+                  - --context=/workspace/source
+                  - --cache-repo=jenkins-x-docker-registry.jx.svc.cluster.local:5000/
+                  - --cache=true
+                  - --cache-dir=/workspace
+                  - --skip-tls-verify-registry=jenkins-x-docker-registry.jx.svc.cluster.local:5000
+
+              - name: build-and-push-nodejs
+                command: /kaniko/executor
+                args:
+                  - --dockerfile=/workspace/source/Dockerfile.builder-nodejs
+                  - --destination=gcr.io/jenkinsxio/builder-nodejs:${inputs.params.version}
+                  - --context=/workspace/source
+                  - --cache-repo=jenkins-x-docker-registry.jx.svc.cluster.local:5000/
+                  - --cache=true
+                  - --cache-dir=/workspace
+                  - --skip-tls-verify-registry=jenkins-x-docker-registry.jx.svc.cluster.local:5000
+
+              - name: build-and-push-maven
+                command: /kaniko/executor
+                args:
+                  - --dockerfile=/workspace/source/Dockerfile.builder-maven
+                  - --destination=gcr.io/jenkinsxio/builder-maven:${inputs.params.version}
+                  - --context=/workspace/source
+                  - --cache-repo=jenkins-x-docker-registry.jx.svc.cluster.local:5000/
+                  - --cache=true
+                  - --cache-dir=/workspace
+                  - --skip-tls-verify-registry=jenkins-x-docker-registry.jx.svc.cluster.local:5000
+
+              - name: build-and-push-go
+                command: /kaniko/executor
+                args:
+                  - --dockerfile=/workspace/source/Dockerfile.builder-go
+                  - --destination=gcr.io/jenkinsxio/builder-go:${inputs.params.version}
+                  - --context=/workspace/source
+                  - --cache-repo=jenkins-x-docker-registry.jx.svc.cluster.local:5000/
+                  - --cache=true
+                  - --cache-dir=/workspace
+                  - --skip-tls-verify-registry=jenkins-x-docker-registry.jx.svc.cluster.local:5000
+
+              - name: build-and-push-go-nodejs
+                command: /kaniko/executor
+                args:
+                  - --dockerfile=/workspace/source/Dockerfile.builder-go-nodejs
+                  - --destination=gcr.io/jenkinsxio/builder-go-nodejs:${inputs.params.version}
+                  - --context=/workspace/source
+                  - --cache-repo=jenkins-x-docker-registry.jx.svc.cluster.local:5000/
+                  - --cache=true
+                  - --cache-dir=/workspace
+                  - --skip-tls-verify-registry=jenkins-x-docker-registry.jx.svc.cluster.local:5000
+
+          - name: e2e-tests
+            options:
+              volumes:
+                - name: sa
+                  secret:
+                    secretName: bdd-secret
+                    items:
+                      - key: bdd-credentials.json
+                        path: bdd/sa.json
+              containerOptions:
+                volumeMounts:
+                  - mountPath: /secrets
+                    name: sa
+            environment:
+              - name: GKE_SA
+                value: /secrets/bdd/sa.json
+              - name: GIT_COMMITTER_EMAIL
+                value: jenkins-x@googlegroups.com
+              - name: GIT_AUTHOR_EMAIL
+                value: jenkins-x@googlegroups.com
+              - name: GIT_AUTHOR_NAME
+                value: jenkins-x-bot
+              - name: GIT_COMMITTER_NAME
+                value: jenkins-x-bot
+              - name: BASE_WORKSPACE
+                value: /workspace/source
+              - name: GOPROXY
+                value: http://jenkins-x-athens-proxy:80
+              - name: PARALLEL_BUILDS
+                value: "2"
+              - name: GH_ACCESS_TOKEN 
+                valueFrom:
+                  secretKeyRef:
+                    name: jenkins-x-bot-test-github
+                    key: password
+              - name: JENKINS_PASSWORD
+                valueFrom:
+                  secretKeyRef:
+                    name: test-jenkins-user 
+                    key: password
+            steps:
+              - name: boot-vault-e2e-tests
+                image: gcr.io/jenkinsxio/builder-go-nodejs:${inputs.params.version}
+                command: ./jx/bdd/boot-vault/ci.sh
+
+              - name: generate-report
+                image: gcr.io/jenkinsxio/builder-nodejs10x:0.1.607
+                command: jx
+                args:
+                  - step
+                  - report
+                  - --in-dir
+                  - /workspace/source/build/reports
+                  - --target-report
+                  - create_spring_application.junit.xml
+                  - --merge
+                  - --out-dir
+                  - /workspace/source/build/reports
+                  - --output-name
+                  - junit.html
+                  - --suite-name
+                  - "BDD_Boot_Vault_Tests"
+
+              - name: clear-kubeconfig
+                image: gcr.io/jenkinsxio/builder-go:${inputs.params.version}
+                command: rm ~/.kube/config
+
+              - name: stash_html_report
+                image: gcr.io/jenkinsxio/builder-go:${inputs.params.version}
+                command: jx
+                args:
+                  - step
+                  - stash
+                  - -c
+                  - e2e-tests
+                  - -p
+                  - "/workspace/source/build/reports/junit.html"
+                  - --bucket-url gs://jx-prod-logs

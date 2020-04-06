@@ -1,0 +1,29 @@
+pipelineConfig:
+  pipelines:
+    release:
+      pipeline:
+        agent:
+          image: some-image
+        options:
+          timeout:
+            time: 50
+            unit: minutes
+          retry: 3
+        stages:
+          - name: A Working Stage
+            options:
+              timeout:
+                time: 5
+                unit: seconds
+              retry: 4
+              stash:
+                name: Some Files
+                files: "somedir/**/*"
+              unstash:
+                name: Earlier Files
+                dir: some/sub/dir
+            steps:
+              - command: echo
+                args:
+                  - hello
+                  - world

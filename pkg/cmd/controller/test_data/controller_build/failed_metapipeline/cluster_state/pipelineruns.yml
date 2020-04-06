@@ -1,0 +1,93 @@
+apiVersion: tekton.dev/v1alpha1
+items:
+- apiVersion: tekton.dev/v1alpha1
+  kind: PipelineRun
+  metadata:
+    creationTimestamp: "2019-09-10T17:07:08Z"
+    generation: 1
+    labels:
+      branch: master
+      build: "1"
+      created-by-prow: "true"
+      owner: cb-kubecd
+      jenkins.io/pipelineType: meta
+      prowJobName: 6bae4c2b-d3ed-11e9-b0c6-72256f93bb5c
+      repository: bdd-spring-1568135191
+      tekton.dev/pipeline: meta-cb-kubecd-bdd-spring-15681-1
+    name: meta-cb-kubecd-bdd-spring-15681-1
+    namespace: jx
+    resourceVersion: "3572"
+    selfLink: /apis/tekton.dev/v1alpha1/namespaces/jx/pipelineruns/meta-cb-kubecd-bdd-spring-15681-1
+    uid: 6c44d166-d3ed-11e9-8142-42010a840094
+  spec:
+    pipelineRef:
+      apiVersion: tekton.dev/v1alpha1
+      name: meta-cb-kubecd-bdd-spring-15681-1
+    resources:
+    - name: meta-cb-kubecd-bdd-spring-15681
+      resourceRef:
+        apiVersion: tekton.dev/v1alpha1
+        name: meta-cb-kubecd-bdd-spring-15681
+    serviceAccount: tekton-bot
+    timeout: 240h0m0s
+  status:
+    completionTime: "2019-09-10T17:08:23Z"
+    conditions:
+    - lastTransitionTime: "2019-09-10T17:08:23Z"
+      message: TaskRun meta-cb-kubecd-bdd-spring-15681-1-meta-pipeline-rwb55 has failed
+      reason: Failed
+      status: "False"
+      type: Succeeded
+    startTime: "2019-09-10T17:07:08Z"
+    taskRuns:
+      meta-cb-kubecd-bdd-spring-15681-1-meta-pipeline-rwb55:
+        pipelineTaskName: meta-pipeline
+        status:
+          completionTime: "2019-09-10T17:08:21Z"
+          conditions:
+          - lastTransitionTime: "2019-09-10T17:08:21Z"
+            message: Something broke
+            status: "False"
+            type: Succeeded
+          podName: meta-cb-kubecd-bdd-spring-15681-1-meta-pipeline-rwb55-pod-e44008
+          startTime: "2019-09-10T17:07:08Z"
+          steps:
+          - name: git-merge
+            terminated:
+              containerID: docker://2f94880db188f839b490cecf829c5552f9bc656330f4385ca3c1fcb029989b17
+              exitCode: 0
+              finishedAt: "2019-09-10T17:07:30Z"
+              reason: Completed
+              startedAt: "2019-09-10T17:07:26Z"
+          - name: merge-pull-refs
+            terminated:
+              containerID: docker://ae5aff984092e048febc28df550c7f795ef07f701f6c48a160b08808332e3f94
+              exitCode: 0
+              finishedAt: "2019-09-10T17:07:30Z"
+              reason: Completed
+              startedAt: "2019-09-10T17:07:26Z"
+          - name: create-effective-pipeline
+            terminated:
+              containerID: docker://58e2714e5547bc1e5228a3a20670f0a5de34b9ccf21b995136cfa96870240909
+              exitCode: 1
+              finishedAt: "2019-09-10T17:07:35Z"
+              reason: Error
+              startedAt: "2019-09-10T17:07:26Z"
+          - name: create-tekton-crds
+            terminated:
+              containerID: docker://a0f8fbbfd6ab4080db9276e0aaedb3df941b6a0e99f24d693f9429c1d4f88094
+              exitCode: 0
+              finishedAt: "2019-09-10T17:08:20Z"
+              reason: Completed
+              startedAt: "2019-09-10T17:07:27Z"
+          - name: git-source-meta-cb-kubecd-bdd-spring-15681-d925z
+            terminated:
+              containerID: docker://911ee8a7611dc4e3f158e9d2d6269c4476bbaa603c04f0a72ee770e8b5d30a52
+              exitCode: 0
+              finishedAt: "2019-09-10T17:07:30Z"
+              reason: Completed
+              startedAt: "2019-09-10T17:07:19Z"
+kind: List
+metadata:
+  resourceVersion: ""
+  selfLink: ""

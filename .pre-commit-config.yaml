@@ -1,0 +1,13 @@
+repos:
+- repo: git@github.com:Yelp/detect-secrets
+  rev: v0.12.4
+  hooks:
+    - id: detect-secrets
+      args: ['--baseline', '.secrets.baseline']
+      exclude: .*/tests/.*
+- repo: local
+  hooks:
+  - id: linter
+    name: Linter
+    entry: ./hack/linter.sh
+    language: script

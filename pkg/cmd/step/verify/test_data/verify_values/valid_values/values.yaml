@@ -1,0 +1,10 @@
+adminUser:
+  password: password
+  username: test
+enableDocker: false
+pipelineUser:
+  token: "aaaaa12345bbbbb12345ccccc12345ddddd12345" 
+  email: test@test.org
+  username: test
+prow:
+  hmacToken: hmacToken

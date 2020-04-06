@@ -1,0 +1,40 @@
+pipelineConfig:
+  env:
+    - name: FRUIT
+      value: BANANA
+  pipelines:
+    default:
+      env:
+        - name: GIT_AUTHOR_NAME
+          value: somebodyelse
+      options:
+        containerOptions:
+          resources:
+            requests:
+              cpu: 0.1
+              memory: 64Mi
+      agent:
+        image: nodejs
+      stages:
+        - name: Build-a-really-long-stage-name-please-but-not-too-long-thanks
+          steps:
+            - command: echo
+              args:
+                - hello world
+            - command: ls
+              args:
+                - -la
+              env:
+                - name: ANOTHER_VAR
+                  value: Another value
+        - name: Second
+          steps:
+            - command: echo
+              args:
+                - hi ${FRUIT}
+          options:
+            containerOptions:
+              resources:
+                limits:
+                  cpu: 0.4
+                  memory: 256Mi

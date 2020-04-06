@@ -1,0 +1,46 @@
+gitops: true
+cluster:
+  clusterName: bdd-boot-lh-ghe
+  environmentGitOwner: dev1
+  gitKind: github
+  gitName: ghe
+  gitServer: https://github.beescloud.com
+  project: jenkins-x-bdd3
+  provider: gke
+  zone: europe-west1-c
+environments:
+  - key: dev
+    owner: ""
+    repository: ""
+  - key: staging
+    owner: ""
+    repository: ""
+  - key: production
+    owner: ""
+    repository: ""
+ingress:
+  domain: ""
+  externalDNS: false
+  tls:
+    email: ""
+    enabled: false
+    production: false
+kaniko: true
+secretStorage: vault
+storage:
+  logs:
+    enabled: false
+    url: ""
+  reports:
+    enabled: false
+    url: ""
+  repository:
+    enabled: false
+    url: ""
+webhook: lighthouse
+vault:
+  disableURLDiscovery: true
+versionStream:
+  ref: "master"
+  url: https://github.com/jenkins-x/jenkins-x-versions.git
+

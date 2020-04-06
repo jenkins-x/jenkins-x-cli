@@ -5,8 +5,6 @@ import (
 )
 
 const (
-	additionalNodePolicies = `[{"Action":["ecr:InitiateLayerUpload","ecr:UploadLayerPart","ecr:CompleteLayerUpload","ecr:PutImage"],"Effect":"Allow","Resource":["*"],"Sid":"kopsK8sECRwrite"}]`
-
 	nodeJson = `[
       {
         "Effect": "Allow",

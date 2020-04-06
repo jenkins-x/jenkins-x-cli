@@ -1,0 +1,772 @@
+items:
+- apiVersion: tekton.dev/v1alpha1
+  kind: Task
+  metadata:
+    creationTimestamp: null
+    labels:
+      branch: master
+      build: "1"
+      jenkins.io/pipelineType: build
+      jenkins.io/task-stage-name: from-build-pack
+      owner: abayer
+      repository: jx-demo-qs
+    name: abayer-jx-demo-qs-master-cmg46-from-build-pack-1
+    namespace: jx
+  spec:
+    inputs:
+      params:
+      - default: 0.0.1
+        description: the version number for this pipeline which is used as a tag on
+          docker images and helm charts
+        name: version
+        type: string
+      resources:
+      - name: workspace
+        targetPath: source
+        type: git
+    steps:
+    - args:
+      - step
+      - git
+      - merge
+      - --verbose
+      command:
+      - jx
+      env:
+      - name: DOCKER_CONFIG
+        value: /home/jenkins/.docker/
+      - name: DOCKER_REGISTRY
+        valueFrom:
+          configMapKeyRef:
+            key: docker.registry
+            name: jenkins-x-docker-registry
+      - name: FRUIT
+        value: BANANA
+      - name: GIT_AUTHOR_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_AUTHOR_NAME
+        value: somebodyelse
+      - name: GIT_COMMITTER_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_COMMITTER_NAME
+        value: jenkins-x-bot
+      - name: TILLER_NAMESPACE
+        value: kube-system
+      - name: XDG_CONFIG_HOME
+        value: /workspace/xdg_config
+      - name: _JAVA_OPTIONS
+        value: something else
+      - name: BUILD_NUMBER
+        value: "1"
+      - name: PIPELINE_KIND
+        value: release
+      - name: REPO_OWNER
+        value: abayer
+      - name: REPO_NAME
+        value: jx-demo-qs
+      - name: JOB_NAME
+        value: abayer/jx-demo-qs/master
+      - name: APP_NAME
+        value: jx-demo-qs
+      - name: BRANCH_NAME
+        value: master
+      - name: JX_BATCH_MODE
+        value: "true"
+      - name: VERSION
+        value: $(inputs.params.version)
+      - name: PREVIEW_VERSION
+        value: $(inputs.params.version)
+      image: gcr.io/jenkinsxio/builder-jx:0.1.527
+      name: git-merge
+      resources:
+        requests:
+          cpu: 400m
+          memory: 512Mi
+      securityContext:
+        privileged: true
+      volumeMounts:
+      - mountPath: /home/jenkins
+        name: workspace-volume
+      - mountPath: /var/run/docker.sock
+        name: docker-daemon
+      - mountPath: /root/.m2/
+        name: volume-0
+      - mountPath: /home/jenkins/.docker
+        name: volume-1
+      - mountPath: /home/jenkins/.gnupg
+        name: volume-2
+      - mountPath: /etc/podinfo
+        name: podinfo
+        readOnly: true
+      workingDir: /workspace/source
+    - args:
+      - jx step git credentials
+      command:
+      - /bin/sh
+      - -c
+      env:
+      - name: DOCKER_CONFIG
+        value: /home/jenkins/.docker/
+      - name: DOCKER_REGISTRY
+        valueFrom:
+          configMapKeyRef:
+            key: docker.registry
+            name: jenkins-x-docker-registry
+      - name: FRUIT
+        value: BANANA
+      - name: GIT_AUTHOR_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_AUTHOR_NAME
+        value: somebodyelse
+      - name: GIT_COMMITTER_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_COMMITTER_NAME
+        value: jenkins-x-bot
+      - name: TILLER_NAMESPACE
+        value: kube-system
+      - name: XDG_CONFIG_HOME
+        value: /workspace/xdg_config
+      - name: _JAVA_OPTIONS
+        value: something else
+      - name: BUILD_NUMBER
+        value: "1"
+      - name: PIPELINE_KIND
+        value: release
+      - name: REPO_OWNER
+        value: abayer
+      - name: REPO_NAME
+        value: jx-demo-qs
+      - name: JOB_NAME
+        value: abayer/jx-demo-qs/master
+      - name: APP_NAME
+        value: jx-demo-qs
+      - name: BRANCH_NAME
+        value: master
+      - name: JX_BATCH_MODE
+        value: "true"
+      - name: VERSION
+        value: $(inputs.params.version)
+      - name: PREVIEW_VERSION
+        value: $(inputs.params.version)
+      image: jenkinsxio/builder-maven-java11:0.1.235
+      name: setup-jx-git-credentials
+      resources:
+        requests:
+          cpu: 400m
+          memory: 512Mi
+      securityContext:
+        privileged: true
+      volumeMounts:
+      - mountPath: /home/jenkins
+        name: workspace-volume
+      - mountPath: /var/run/docker.sock
+        name: docker-daemon
+      - mountPath: /root/.m2/
+        name: volume-0
+      - mountPath: /home/jenkins/.docker
+        name: volume-1
+      - mountPath: /home/jenkins/.gnupg
+        name: volume-2
+      - mountPath: /etc/podinfo
+        name: podinfo
+        readOnly: true
+      workingDir: /workspace/source
+    - args:
+      - mvn clean deploy
+      command:
+      - /bin/sh
+      - -c
+      env:
+      - name: DOCKER_CONFIG
+        value: /home/jenkins/.docker/
+      - name: DOCKER_REGISTRY
+        valueFrom:
+          configMapKeyRef:
+            key: docker.registry
+            name: jenkins-x-docker-registry
+      - name: FRUIT
+        value: BANANA
+      - name: GIT_AUTHOR_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_AUTHOR_NAME
+        value: somebodyelse
+      - name: GIT_COMMITTER_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_COMMITTER_NAME
+        value: jenkins-x-bot
+      - name: TILLER_NAMESPACE
+        value: kube-system
+      - name: XDG_CONFIG_HOME
+        value: /workspace/xdg_config
+      - name: _JAVA_OPTIONS
+        value: something else
+      - name: BUILD_NUMBER
+        value: "1"
+      - name: PIPELINE_KIND
+        value: release
+      - name: REPO_OWNER
+        value: abayer
+      - name: REPO_NAME
+        value: jx-demo-qs
+      - name: JOB_NAME
+        value: abayer/jx-demo-qs/master
+      - name: APP_NAME
+        value: jx-demo-qs
+      - name: BRANCH_NAME
+        value: master
+      - name: JX_BATCH_MODE
+        value: "true"
+      - name: VERSION
+        value: $(inputs.params.version)
+      - name: PREVIEW_VERSION
+        value: $(inputs.params.version)
+      image: jenkinsxio/builder-maven-java11:0.1.235
+      name: build-mvn-deploy
+      resources:
+        requests:
+          cpu: 400m
+          memory: 512Mi
+      securityContext:
+        privileged: true
+      volumeMounts:
+      - mountPath: /home/jenkins
+        name: workspace-volume
+      - mountPath: /var/run/docker.sock
+        name: docker-daemon
+      - mountPath: /root/.m2/
+        name: volume-0
+      - mountPath: /home/jenkins/.docker
+        name: volume-1
+      - mountPath: /home/jenkins/.gnupg
+        name: volume-2
+      - mountPath: /etc/podinfo
+        name: podinfo
+        readOnly: true
+      workingDir: /workspace/source
+    - args:
+      - skaffold version
+      command:
+      - /bin/sh
+      - -c
+      env:
+      - name: DOCKER_CONFIG
+        value: /home/jenkins/.docker/
+      - name: DOCKER_REGISTRY
+        valueFrom:
+          configMapKeyRef:
+            key: docker.registry
+            name: jenkins-x-docker-registry
+      - name: FRUIT
+        value: BANANA
+      - name: GIT_AUTHOR_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_AUTHOR_NAME
+        value: somebodyelse
+      - name: GIT_COMMITTER_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_COMMITTER_NAME
+        value: jenkins-x-bot
+      - name: TILLER_NAMESPACE
+        value: kube-system
+      - name: XDG_CONFIG_HOME
+        value: /workspace/xdg_config
+      - name: _JAVA_OPTIONS
+        value: something else
+      - name: BUILD_NUMBER
+        value: "1"
+      - name: PIPELINE_KIND
+        value: release
+      - name: REPO_OWNER
+        value: abayer
+      - name: REPO_NAME
+        value: jx-demo-qs
+      - name: JOB_NAME
+        value: abayer/jx-demo-qs/master
+      - name: APP_NAME
+        value: jx-demo-qs
+      - name: BRANCH_NAME
+        value: master
+      - name: JX_BATCH_MODE
+        value: "true"
+      - name: VERSION
+        value: $(inputs.params.version)
+      - name: PREVIEW_VERSION
+        value: $(inputs.params.version)
+      image: jenkinsxio/builder-maven-java11:0.1.235
+      name: build-skaffold-version
+      resources:
+        requests:
+          cpu: 400m
+          memory: 512Mi
+      securityContext:
+        privileged: true
+      volumeMounts:
+      - mountPath: /home/jenkins
+        name: workspace-volume
+      - mountPath: /var/run/docker.sock
+        name: docker-daemon
+      - mountPath: /root/.m2/
+        name: volume-0
+      - mountPath: /home/jenkins/.docker
+        name: volume-1
+      - mountPath: /home/jenkins/.gnupg
+        name: volume-2
+      - mountPath: /etc/podinfo
+        name: podinfo
+        readOnly: true
+      workingDir: /workspace/source
+    - args:
+      - skaffold build -f skaffold.yaml
+      command:
+      - /bin/sh
+      - -c
+      env:
+      - name: DOCKER_CONFIG
+        value: /home/jenkins/.docker/
+      - name: DOCKER_REGISTRY
+        valueFrom:
+          configMapKeyRef:
+            key: docker.registry
+            name: jenkins-x-docker-registry
+      - name: FRUIT
+        value: BANANA
+      - name: GIT_AUTHOR_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_AUTHOR_NAME
+        value: somebodyelse
+      - name: GIT_COMMITTER_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_COMMITTER_NAME
+        value: jenkins-x-bot
+      - name: TILLER_NAMESPACE
+        value: kube-system
+      - name: XDG_CONFIG_HOME
+        value: /workspace/xdg_config
+      - name: _JAVA_OPTIONS
+        value: something else
+      - name: BUILD_NUMBER
+        value: "1"
+      - name: PIPELINE_KIND
+        value: release
+      - name: REPO_OWNER
+        value: abayer
+      - name: REPO_NAME
+        value: jx-demo-qs
+      - name: JOB_NAME
+        value: abayer/jx-demo-qs/master
+      - name: APP_NAME
+        value: jx-demo-qs
+      - name: BRANCH_NAME
+        value: master
+      - name: JX_BATCH_MODE
+        value: "true"
+      - name: VERSION
+        value: $(inputs.params.version)
+      - name: PREVIEW_VERSION
+        value: $(inputs.params.version)
+      image: jenkinsxio/builder-maven-java11:0.1.235
+      name: build-container-build
+      resources:
+        requests:
+          cpu: 400m
+          memory: 512Mi
+      securityContext:
+        privileged: true
+      volumeMounts:
+      - mountPath: /home/jenkins
+        name: workspace-volume
+      - mountPath: /var/run/docker.sock
+        name: docker-daemon
+      - mountPath: /root/.m2/
+        name: volume-0
+      - mountPath: /home/jenkins/.docker
+        name: volume-1
+      - mountPath: /home/jenkins/.gnupg
+        name: volume-2
+      - mountPath: /etc/podinfo
+        name: podinfo
+        readOnly: true
+      workingDir: /workspace/source
+    - args:
+      - jx step post build --image $DOCKER_REGISTRY/$ORG/$APP_NAME:${VERSION}
+      command:
+      - /bin/sh
+      - -c
+      env:
+      - name: DOCKER_CONFIG
+        value: /home/jenkins/.docker/
+      - name: DOCKER_REGISTRY
+        valueFrom:
+          configMapKeyRef:
+            key: docker.registry
+            name: jenkins-x-docker-registry
+      - name: FRUIT
+        value: BANANA
+      - name: GIT_AUTHOR_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_AUTHOR_NAME
+        value: somebodyelse
+      - name: GIT_COMMITTER_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_COMMITTER_NAME
+        value: jenkins-x-bot
+      - name: TILLER_NAMESPACE
+        value: kube-system
+      - name: XDG_CONFIG_HOME
+        value: /workspace/xdg_config
+      - name: _JAVA_OPTIONS
+        value: something else
+      - name: BUILD_NUMBER
+        value: "1"
+      - name: PIPELINE_KIND
+        value: release
+      - name: REPO_OWNER
+        value: abayer
+      - name: REPO_NAME
+        value: jx-demo-qs
+      - name: JOB_NAME
+        value: abayer/jx-demo-qs/master
+      - name: APP_NAME
+        value: jx-demo-qs
+      - name: BRANCH_NAME
+        value: master
+      - name: JX_BATCH_MODE
+        value: "true"
+      - name: VERSION
+        value: $(inputs.params.version)
+      - name: PREVIEW_VERSION
+        value: $(inputs.params.version)
+      image: jenkinsxio/builder-maven-java11:0.1.235
+      name: build-post-build
+      resources:
+        requests:
+          cpu: 400m
+          memory: 512Mi
+      securityContext:
+        privileged: true
+      volumeMounts:
+      - mountPath: /home/jenkins
+        name: workspace-volume
+      - mountPath: /var/run/docker.sock
+        name: docker-daemon
+      - mountPath: /root/.m2/
+        name: volume-0
+      - mountPath: /home/jenkins/.docker
+        name: volume-1
+      - mountPath: /home/jenkins/.gnupg
+        name: volume-2
+      - mountPath: /etc/podinfo
+        name: podinfo
+        readOnly: true
+      workingDir: /workspace/source
+    - args:
+      - cd /workspace/source/charts/jx-demo-qs && jx step changelog --version v${VERSION}
+      command:
+      - /bin/sh
+      - -c
+      env:
+      - name: DOCKER_CONFIG
+        value: /home/jenkins/.docker/
+      - name: DOCKER_REGISTRY
+        valueFrom:
+          configMapKeyRef:
+            key: docker.registry
+            name: jenkins-x-docker-registry
+      - name: FRUIT
+        value: BANANA
+      - name: GIT_AUTHOR_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_AUTHOR_NAME
+        value: somebodyelse
+      - name: GIT_COMMITTER_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_COMMITTER_NAME
+        value: jenkins-x-bot
+      - name: TILLER_NAMESPACE
+        value: kube-system
+      - name: XDG_CONFIG_HOME
+        value: /workspace/xdg_config
+      - name: _JAVA_OPTIONS
+        value: something else
+      - name: BUILD_NUMBER
+        value: "1"
+      - name: PIPELINE_KIND
+        value: release
+      - name: REPO_OWNER
+        value: abayer
+      - name: REPO_NAME
+        value: jx-demo-qs
+      - name: JOB_NAME
+        value: abayer/jx-demo-qs/master
+      - name: APP_NAME
+        value: jx-demo-qs
+      - name: BRANCH_NAME
+        value: master
+      - name: JX_BATCH_MODE
+        value: "true"
+      - name: VERSION
+        value: $(inputs.params.version)
+      - name: PREVIEW_VERSION
+        value: $(inputs.params.version)
+      image: jenkinsxio/builder-maven-java11:0.1.235
+      name: promote-changelog
+      resources:
+        requests:
+          cpu: 400m
+          memory: 512Mi
+      securityContext:
+        privileged: true
+      volumeMounts:
+      - mountPath: /home/jenkins
+        name: workspace-volume
+      - mountPath: /var/run/docker.sock
+        name: docker-daemon
+      - mountPath: /root/.m2/
+        name: volume-0
+      - mountPath: /home/jenkins/.docker
+        name: volume-1
+      - mountPath: /home/jenkins/.gnupg
+        name: volume-2
+      - mountPath: /etc/podinfo
+        name: podinfo
+        readOnly: true
+      workingDir: /workspace/source
+    - args:
+      - cd /workspace/source/charts/jx-demo-qs && jx step helm release
+      command:
+      - /bin/sh
+      - -c
+      env:
+      - name: DOCKER_CONFIG
+        value: /home/jenkins/.docker/
+      - name: DOCKER_REGISTRY
+        valueFrom:
+          configMapKeyRef:
+            key: docker.registry
+            name: jenkins-x-docker-registry
+      - name: FRUIT
+        value: BANANA
+      - name: GIT_AUTHOR_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_AUTHOR_NAME
+        value: somebodyelse
+      - name: GIT_COMMITTER_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_COMMITTER_NAME
+        value: jenkins-x-bot
+      - name: TILLER_NAMESPACE
+        value: kube-system
+      - name: XDG_CONFIG_HOME
+        value: /workspace/xdg_config
+      - name: _JAVA_OPTIONS
+        value: something else
+      - name: BUILD_NUMBER
+        value: "1"
+      - name: PIPELINE_KIND
+        value: release
+      - name: REPO_OWNER
+        value: abayer
+      - name: REPO_NAME
+        value: jx-demo-qs
+      - name: JOB_NAME
+        value: abayer/jx-demo-qs/master
+      - name: APP_NAME
+        value: jx-demo-qs
+      - name: BRANCH_NAME
+        value: master
+      - name: JX_BATCH_MODE
+        value: "true"
+      - name: VERSION
+        value: $(inputs.params.version)
+      - name: PREVIEW_VERSION
+        value: $(inputs.params.version)
+      image: jenkinsxio/builder-maven-java11:0.1.235
+      name: promote-helm-release
+      resources:
+        requests:
+          cpu: 400m
+          memory: 512Mi
+      securityContext:
+        privileged: true
+      volumeMounts:
+      - mountPath: /home/jenkins
+        name: workspace-volume
+      - mountPath: /var/run/docker.sock
+        name: docker-daemon
+      - mountPath: /root/.m2/
+        name: volume-0
+      - mountPath: /home/jenkins/.docker
+        name: volume-1
+      - mountPath: /home/jenkins/.gnupg
+        name: volume-2
+      - mountPath: /etc/podinfo
+        name: podinfo
+        readOnly: true
+      workingDir: /workspace/source
+    - args:
+      - cd /workspace/source/charts/jx-demo-qs && jx promote -b --all-auto --timeout
+        1h --version ${VERSION}
+      command:
+      - /bin/sh
+      - -c
+      env:
+      - name: DOCKER_CONFIG
+        value: /home/jenkins/.docker/
+      - name: DOCKER_REGISTRY
+        valueFrom:
+          configMapKeyRef:
+            key: docker.registry
+            name: jenkins-x-docker-registry
+      - name: FRUIT
+        value: BANANA
+      - name: GIT_AUTHOR_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_AUTHOR_NAME
+        value: somebodyelse
+      - name: GIT_COMMITTER_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_COMMITTER_NAME
+        value: jenkins-x-bot
+      - name: TILLER_NAMESPACE
+        value: kube-system
+      - name: XDG_CONFIG_HOME
+        value: /workspace/xdg_config
+      - name: _JAVA_OPTIONS
+        value: something else
+      - name: BUILD_NUMBER
+        value: "1"
+      - name: PIPELINE_KIND
+        value: release
+      - name: REPO_OWNER
+        value: abayer
+      - name: REPO_NAME
+        value: jx-demo-qs
+      - name: JOB_NAME
+        value: abayer/jx-demo-qs/master
+      - name: APP_NAME
+        value: jx-demo-qs
+      - name: BRANCH_NAME
+        value: master
+      - name: JX_BATCH_MODE
+        value: "true"
+      - name: VERSION
+        value: $(inputs.params.version)
+      - name: PREVIEW_VERSION
+        value: $(inputs.params.version)
+      image: jenkinsxio/builder-maven-java11:0.1.235
+      name: promote-jx-promote
+      resources:
+        requests:
+          cpu: 400m
+          memory: 512Mi
+      securityContext:
+        privileged: true
+      volumeMounts:
+      - mountPath: /home/jenkins
+        name: workspace-volume
+      - mountPath: /var/run/docker.sock
+        name: docker-daemon
+      - mountPath: /root/.m2/
+        name: volume-0
+      - mountPath: /home/jenkins/.docker
+        name: volume-1
+      - mountPath: /home/jenkins/.gnupg
+        name: volume-2
+      - mountPath: /etc/podinfo
+        name: podinfo
+        readOnly: true
+      workingDir: /workspace/source
+    - args:
+      - echo "FRUIT is ${FRUIT}"
+      command:
+      - /bin/sh
+      - -c
+      env:
+      - name: DOCKER_CONFIG
+        value: /home/jenkins/.docker/
+      - name: DOCKER_REGISTRY
+        valueFrom:
+          configMapKeyRef:
+            key: docker.registry
+            name: jenkins-x-docker-registry
+      - name: FRUIT
+        value: BANANA
+      - name: GIT_AUTHOR_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_AUTHOR_NAME
+        value: somebodyelse
+      - name: GIT_COMMITTER_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_COMMITTER_NAME
+        value: jenkins-x-bot
+      - name: TILLER_NAMESPACE
+        value: kube-system
+      - name: XDG_CONFIG_HOME
+        value: /workspace/xdg_config
+      - name: _JAVA_OPTIONS
+        value: something else
+      - name: BUILD_NUMBER
+        value: "1"
+      - name: PIPELINE_KIND
+        value: release
+      - name: REPO_OWNER
+        value: abayer
+      - name: REPO_NAME
+        value: jx-demo-qs
+      - name: JOB_NAME
+        value: abayer/jx-demo-qs/master
+      - name: APP_NAME
+        value: jx-demo-qs
+      - name: BRANCH_NAME
+        value: master
+      - name: JX_BATCH_MODE
+        value: "true"
+      - name: VERSION
+        value: $(inputs.params.version)
+      - name: PREVIEW_VERSION
+        value: $(inputs.params.version)
+      image: jenkinsxio/builder-maven-java11:0.1.235
+      name: promote-step10
+      resources:
+        requests:
+          cpu: 400m
+          memory: 512Mi
+      securityContext:
+        privileged: true
+      volumeMounts:
+      - mountPath: /home/jenkins
+        name: workspace-volume
+      - mountPath: /var/run/docker.sock
+        name: docker-daemon
+      - mountPath: /root/.m2/
+        name: volume-0
+      - mountPath: /home/jenkins/.docker
+        name: volume-1
+      - mountPath: /home/jenkins/.gnupg
+        name: volume-2
+      - mountPath: /etc/podinfo
+        name: podinfo
+        readOnly: true
+      workingDir: /workspace/source
+    volumes:
+    - hostPath:
+        path: /var/run/docker.sock
+      name: docker-daemon
+    - name: volume-0
+      secret:
+        secretName: jenkins-maven-settings
+    - name: volume-1
+      secret:
+        secretName: jenkins-docker-cfg
+    - name: volume-2
+      secret:
+        secretName: jenkins-release-gpg
+    - emptyDir: {}
+      name: workspace-volume
+    - downwardAPI:
+        items:
+        - fieldRef:
+            fieldPath: metadata.labels
+          path: labels
+      name: podinfo
+metadata: {}

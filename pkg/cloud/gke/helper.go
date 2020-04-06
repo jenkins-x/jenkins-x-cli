@@ -4,6 +4,8 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/pkg/errors"
+
 	"github.com/jenkins-x/jx/pkg/util"
 )
 
@@ -28,7 +30,7 @@ func GetGoogleZones(project string) ([]string, error) {
 		return nil, err
 	}
 
-	for _, item := range strings.Split(string(out), "\n") {
+	for _, item := range strings.Split(out, "\n") {
 		zone := strings.Split(item, " ")[0]
 		if strings.Contains(zone, "-") {
 			zones = append(zones, zone)
@@ -36,6 +38,36 @@ func GetGoogleZones(project string) ([]string, error) {
 		sort.Strings(zones)
 	}
 	return zones, nil
+}
+
+func GetGoogleRegions(project string) ([]string, error) {
+	var regions []string
+	args := []string{"compute", "regions", "list"}
+
+	if "" != project {
+		args = append(args, "--project")
+		args = append(args, project)
+	}
+
+	cmd := util.Command{
+		Name: "gcloud",
+		Args: args,
+	}
+
+	out, err := cmd.RunWithoutRetry()
+	if err != nil {
+		return nil, err
+	}
+
+	regions = append(regions, "none")
+	for _, item := range strings.Split(out, "\n") {
+		region := strings.Split(item, " ")[0]
+		if strings.Contains(region, "-") {
+			regions = append(regions, region)
+		}
+		sort.Strings(regions)
+	}
+	return regions, nil
 }
 
 func GetGoogleProjects() ([]string, error) {
@@ -52,7 +84,7 @@ func GetGoogleProjects() ([]string, error) {
 		return []string{}, nil
 	}
 
-	lines := strings.Split(string(out), "\n")
+	lines := strings.Split(out, "\n")
 	var existingProjects []string
 	for _, l := range lines {
 		if strings.Contains(l, PROJECT_LIST_HEADER) {
@@ -62,6 +94,24 @@ func GetGoogleProjects() ([]string, error) {
 		existingProjects = append(existingProjects, fields[0])
 	}
 	return existingProjects, nil
+}
+
+func GetCurrentProject() (string, error) {
+	cmd := util.Command{
+		Name: "gcloud",
+		Args: []string{"config", "get-value", "project"},
+	}
+	out, err := cmd.RunWithoutRetry()
+	if err != nil {
+		return "", err
+	}
+
+	index := strings.LastIndex(out, "\n")
+	if index >= 0 {
+		return out[index+1:], nil
+	}
+
+	return out, nil
 }
 
 func GetGoogleMachineTypes() []string {
@@ -91,4 +141,13 @@ func GetGoogleMachineTypes() []string {
 		"n1-highcpu-64",
 		"n1-highcpu-96",
 	}
+}
+
+// ParseContext parses the context string for GKE and gets the GKE project, GKE zone and cluster name
+func ParseContext(context string) (string, string, string, error) {
+	parts := strings.Split(context, "_")
+	if len(parts) != 4 {
+		return "", "", "", errors.Errorf("unable to parse %s as <project id>_<zone>_<cluster name>", context)
+	}
+	return parts[1], parts[2], parts[3], nil
 }

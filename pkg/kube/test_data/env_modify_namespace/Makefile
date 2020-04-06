@@ -8,7 +8,7 @@ build: clean
 	helm version
 	helm init
 	helm repo add releases ${CHART_REPO}
-	helm repo add jenkins-x http://chartmuseum.jenkins-x.io
+	helm repo add jenkins-x https://storage.googleapis.com/chartmuseum.jenkins-x.io
 	helm dependency build ${DIR}
 	helm lint ${DIR}
 

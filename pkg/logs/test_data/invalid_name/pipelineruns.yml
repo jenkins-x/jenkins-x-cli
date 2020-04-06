@@ -1,0 +1,88 @@
+apiVersion: tekton.dev/v1alpha1
+kind: PipelineRunList
+metadata: {}
+items:
+- metadata:
+    creationTimestamp: "2020-01-15T09:55:50Z"
+    generation: 1
+    labels:
+      branch: PR-2
+      build: "1"
+      context: fakecontext
+      created-by-prow: "true"
+      jenkins.io/pipelineType: build
+      owner: myself
+      prowJobName: 1e897d5c-377d-11ea-b5b3-c25f558c47ed
+      repository: My_Awesome_Project.org
+      tekton.dev/pipeline: myself-my-awesome-project-org-5p6j6-1
+    name: myself-my-awesome-project-org-5p6j6-1
+    namespace: jx
+    resourceVersion: "30292258"
+    selfLink: /apis/tekton.dev/v1alpha1/namespaces/jx/pipelineruns/myself-my-awesome-project-org-5p6j6-1
+    uid: 35baea13-377d-11ea-a7cc-42010a94005e
+  spec:
+    params:
+    - name: version
+      value: 0.0.0-SNAPSHOT-PR-2-1
+    - name: build_id
+      value: "1"
+    pipelineRef:
+      apiVersion: tekton.dev/v1alpha1
+      name: myself-my-awesome-project-org-5p6j6-1
+    resources:
+    - name: myself-my-awesome-project-org
+      resourceRef:
+        apiVersion: tekton.dev/v1alpha1
+        name: myself-my-awesome-project-org
+    serviceAccount: tekton-bot
+    timeout: 240h0m0s
+  status:
+    conditions:
+    - lastTransitionTime: "2020-01-15T09:55:50Z"
+      message: Not all Tasks in the Pipeline have finished executing
+      reason: Running
+      status: Unknown
+      type: Succeeded
+    startTime: "2020-01-15T09:55:50Z"
+    taskRuns:
+      myself-my-awesome-project-org-5p6j6-1-from-build-pack-5nm9n:
+        pipelineTaskName: from-build-pack
+        status:
+          conditions:
+          - lastTransitionTime: "2020-01-15T09:56:05Z"
+            message: Not all Steps in the Task have finished executing
+            reason: Building
+            status: Unknown
+            type: Succeeded
+          podName: myself-my-awesome-project-org-5p6j6-1-from-build-pack-5nm9n-pod-2c6480
+          startTime: "2020-01-15T09:55:50Z"
+          steps:
+          - name: git-merge
+            terminated:
+              containerID: docker://8f6b0372ae2cb4e429911ddc1e3c5905a4ae6f817e57e49f0a3836440496ecd1
+              exitCode: 0
+              finishedAt: "2020-01-15T09:56:05Z"
+              reason: Completed
+              startedAt: "2020-01-15T09:55:55Z"
+          - name: build-make-linux
+            running:
+              startedAt: "2020-01-15T09:55:56Z"
+          - name: build-container-build
+            running:
+              startedAt: "2020-01-15T09:55:56Z"
+          - name: postbuild-post-build
+            running:
+              startedAt: "2020-01-15T09:55:56Z"
+          - name: promote-make-preview
+            running:
+              startedAt: "2020-01-15T09:55:57Z"
+          - name: promote-jx-preview
+            running:
+              startedAt: "2020-01-15T09:55:57Z"
+          - name: git-source-myself-my-awesome-project-org-27pv2
+            terminated:
+              containerID: docker://d338f3322f21d56c4a54368efe2ed73470ff7ddbc61799b5af980a750802f3ec
+              exitCode: 0
+              finishedAt: "2020-01-15T09:56:02Z"
+              reason: Completed
+              startedAt: "2020-01-15T09:55:55Z"

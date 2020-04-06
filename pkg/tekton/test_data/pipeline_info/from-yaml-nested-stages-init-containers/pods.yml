@@ -1,0 +1,1003 @@
+apiVersion: v1
+items:
+- apiVersion: v1
+  kind: Pod
+  metadata:
+    annotations:
+      sidecar.istio.io/inject: "false"
+    creationTimestamp: 2019-02-21T22:07:36Z
+    labels:
+      branch: nested
+      build-number: "1"
+      jenkins.io/task-stage-name: build
+      owner: abayer
+      repo: js-test-repo
+      tekton.dev/pipeline: abayer-js-test-repo-nested
+      tekton.dev/pipelineRun: abayer-js-test-repo-nested-1
+      tekton.dev/task: abayer-js-test-repo-nested-build
+      tekton.dev/taskRun: abayer-js-test-repo-nested-1-build-hpqp5
+    name: abayer-js-test-repo-nested-1-build-hpqp5-pod-7a19f8
+    namespace: jx
+    ownerReferences:
+    - apiVersion: tekton.dev/v1alpha1
+      blockOwnerDeletion: true
+      controller: true
+      kind: TaskRun
+      name: abayer-js-test-repo-nested-1-build-hpqp5
+      uid: 18bc5840-3625-11e9-b776-42010a8a00ac
+    resourceVersion: "7125"
+    selfLink: /api/v1/namespaces/jx/pods/abayer-js-test-repo-nested-1-build-hpqp5-pod-7a19f8
+    uid: 18d74c66-3625-11e9-b776-42010a8a00ac
+  spec:
+    containers:
+    - image: gcr.io/knative-nightly/github.com/knative/build-pipeline/cmd/nop:v20190221-c649b42c
+      imagePullPolicy: IfNotPresent
+      name: nop
+      resources: {}
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: tekton-bot-token-b99pf
+        readOnly: true
+    dnsPolicy: ClusterFirst
+    initContainers:
+    - env:
+      - name: HOME
+        value: /builder/home
+      image: gcr.io/knative-nightly/github.com/knative/build-pipeline/cmd/creds-init:v20190221-c649b42c
+      imagePullPolicy: IfNotPresent
+      name: build-step-credential-initializer-2f77p
+      resources: {}
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /workspace
+        name: workspace
+      - mountPath: /builder/home
+        name: home
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: tekton-bot-token-b99pf
+        readOnly: true
+      workingDir: /workspace
+    - args:
+      - -url
+      - https://github.com/abayer/js-test-repo
+      - -revision
+      - master
+      - -path
+      - /workspace/workspace
+      env:
+      - name: HOME
+        value: /builder/home
+      image: gcr.io/knative-nightly/github.com/knative/build-pipeline/cmd/git-init:v20190221-c649b42c
+      imagePullPolicy: IfNotPresent
+      name: build-step-git-source-abayer-js-test-repo-nested-x7vxn
+      resources: {}
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /workspace
+        name: workspace
+      - mountPath: /builder/home
+        name: home
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: tekton-bot-token-b99pf
+        readOnly: true
+      workingDir: /workspace
+    - args:
+      - /entrypoint
+      - /tools/entrypoint
+      command:
+      - /bin/cp
+      env:
+      - name: HOME
+        value: /builder/home
+      image: gcr.io/k8s-prow/entrypoint@sha256:7c7cd8906ce4982ffee326218e9fc75da2d4896d53cabc9833b9cc8d2d6b2b8f
+      imagePullPolicy: IfNotPresent
+      name: build-step-place-tools
+      resources: {}
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /tools
+        name: tools
+      - mountPath: /workspace
+        name: workspace
+      - mountPath: /builder/home
+        name: home
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: tekton-bot-token-b99pf
+        readOnly: true
+      workingDir: /workspace
+    - command:
+      - /tools/entrypoint
+      env:
+      - name: HOME
+        value: /builder/home
+      - name: DOCKER_REGISTRY
+        value: 10.3.245.235:5000
+      - name: PIPELINE_KIND
+        value: release
+      - name: REPO_OWNER
+        value: abayer
+      - name: REPO_NAME
+        value: js-test-repo
+      - name: JOB_NAME
+        value: abayer/js-test-repo/nested
+      - name: BRANCH_NAME
+        value: nested
+      - name: JX_BATCH_MODE
+        value: "true"
+      - name: ENTRYPOINT_OPTIONS
+        value: '{"args":["/bin/sh","-c","echo hello world"],"process_log":"/tools/process-log.txt","marker_file":"/tools/marker-file.txt"}'
+      image: jenkinsxio/builder-nodejs:0.1.235
+      imagePullPolicy: IfNotPresent
+      name: build-step-step2
+      resources:
+        requests:
+          cpu: 400m
+          memory: 512Mi
+      securityContext:
+        privileged: true
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /home/jenkins
+        name: workspace-volume
+      - mountPath: /var/run/docker.sock
+        name: docker-daemon
+      - mountPath: /home/jenkins/.docker
+        name: volume-0
+      - mountPath: /etc/podinfo
+        name: podinfo
+        readOnly: true
+      - mountPath: /tools
+        name: tools
+      - mountPath: /workspace
+        name: workspace
+      - mountPath: /builder/home
+        name: home
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: tekton-bot-token-b99pf
+        readOnly: true
+      workingDir: /workspace/workspace
+    - command:
+      - /tools/entrypoint
+      env:
+      - name: HOME
+        value: /builder/home
+      - name: DOCKER_REGISTRY
+        value: 10.3.245.235:5000
+      - name: PIPELINE_KIND
+        value: release
+      - name: REPO_OWNER
+        value: abayer
+      - name: REPO_NAME
+        value: js-test-repo
+      - name: JOB_NAME
+        value: abayer/js-test-repo/nested
+      - name: BRANCH_NAME
+        value: nested
+      - name: JX_BATCH_MODE
+        value: "true"
+      - name: ENTRYPOINT_OPTIONS
+        value: '{"args":["/bin/sh","-c","ls -la"],"process_log":"/tools/process-log.txt","marker_file":"/tools/marker-file.txt"}'
+      image: jenkinsxio/builder-nodejs:0.1.235
+      imagePullPolicy: IfNotPresent
+      name: build-step-step3
+      resources:
+        requests:
+          cpu: 400m
+          memory: 512Mi
+      securityContext:
+        privileged: true
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /home/jenkins
+        name: workspace-volume
+      - mountPath: /var/run/docker.sock
+        name: docker-daemon
+      - mountPath: /home/jenkins/.docker
+        name: volume-0
+      - mountPath: /etc/podinfo
+        name: podinfo
+        readOnly: true
+      - mountPath: /tools
+        name: tools
+      - mountPath: /workspace
+        name: workspace
+      - mountPath: /builder/home
+        name: home
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: tekton-bot-token-b99pf
+        readOnly: true
+      workingDir: /workspace/workspace
+    - command:
+      - /tools/entrypoint
+      env:
+      - name: HOME
+        value: /builder/home
+      - name: DOCKER_REGISTRY
+        value: 10.3.245.235:5000
+      - name: PIPELINE_KIND
+        value: release
+      - name: REPO_OWNER
+        value: abayer
+      - name: REPO_NAME
+        value: js-test-repo
+      - name: JOB_NAME
+        value: abayer/js-test-repo/nested
+      - name: BRANCH_NAME
+        value: nested
+      - name: JX_BATCH_MODE
+        value: "true"
+      - name: ENTRYPOINT_OPTIONS
+        value: '{"args":["/bin/sh","-c","sleep 5"],"process_log":"/tools/process-log.txt","marker_file":"/tools/marker-file.txt"}'
+      image: jenkinsxio/builder-nodejs:0.1.235
+      imagePullPolicy: IfNotPresent
+      name: build-step-step4
+      resources:
+        requests:
+          cpu: 400m
+          memory: 512Mi
+      securityContext:
+        privileged: true
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /home/jenkins
+        name: workspace-volume
+      - mountPath: /var/run/docker.sock
+        name: docker-daemon
+      - mountPath: /home/jenkins/.docker
+        name: volume-0
+      - mountPath: /etc/podinfo
+        name: podinfo
+        readOnly: true
+      - mountPath: /tools
+        name: tools
+      - mountPath: /workspace
+        name: workspace
+      - mountPath: /builder/home
+        name: home
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: tekton-bot-token-b99pf
+        readOnly: true
+      workingDir: /workspace/workspace
+    - args:
+      - -args
+      - mkdir -p /pvc/build/workspace
+      env:
+      - name: HOME
+        value: /builder/home
+      image: gcr.io/knative-nightly/github.com/knative/build-pipeline/cmd/bash:v20190221-c649b42c
+      imagePullPolicy: IfNotPresent
+      name: build-step-source-mkdir-abayer-js-test-repo-nested-4z4x9
+      resources: {}
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /pvc
+        name: abayer-js-test-repo-nested-1-pvc
+      - mountPath: /workspace
+        name: workspace
+      - mountPath: /builder/home
+        name: home
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: tekton-bot-token-b99pf
+        readOnly: true
+      workingDir: /workspace
+    - args:
+      - -args
+      - cp -r /workspace/workspace/. /pvc/build/workspace
+      env:
+      - name: HOME
+        value: /builder/home
+      image: gcr.io/knative-nightly/github.com/knative/build-pipeline/cmd/bash:v20190221-c649b42c
+      imagePullPolicy: IfNotPresent
+      name: build-step-source-copy-abayer-js-test-repo-nested-w9wfh
+      resources: {}
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /pvc
+        name: abayer-js-test-repo-nested-1-pvc
+      - mountPath: /workspace
+        name: workspace
+      - mountPath: /builder/home
+        name: home
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: tekton-bot-token-b99pf
+        readOnly: true
+      workingDir: /workspace
+    nodeName: gke-abayer-test-cluster-default-pool-33b76534-1wj7
+    priority: 0
+    restartPolicy: Never
+    schedulerName: default-scheduler
+    securityContext: {}
+    serviceAccount: tekton-bot
+    serviceAccountName: tekton-bot
+    terminationGracePeriodSeconds: 30
+    tolerations:
+    - effect: NoExecute
+      key: node.kubernetes.io/not-ready
+      operator: Exists
+      tolerationSeconds: 300
+    - effect: NoExecute
+      key: node.kubernetes.io/unreachable
+      operator: Exists
+      tolerationSeconds: 300
+    volumes:
+    - emptyDir: {}
+      name: workspace-volume
+    - hostPath:
+        path: /var/run/docker.sock
+        type: ""
+      name: docker-daemon
+    - name: volume-0
+      secret:
+        defaultMode: 420
+        secretName: jenkins-docker-cfg
+    - downwardAPI:
+        defaultMode: 420
+        items:
+        - fieldRef:
+            apiVersion: v1
+            fieldPath: metadata.labels
+          path: labels
+      name: podinfo
+    - emptyDir: {}
+      name: tools
+    - name: abayer-js-test-repo-nested-1-pvc
+      persistentVolumeClaim:
+        claimName: abayer-js-test-repo-nested-1-pvc
+    - emptyDir: {}
+      name: workspace
+    - emptyDir: {}
+      name: home
+    - name: tekton-bot-token-b99pf
+      secret:
+        defaultMode: 420
+        secretName: tekton-bot-token-b99pf
+  status:
+    conditions:
+    - lastProbeTime: null
+      lastTransitionTime: 2019-02-21T22:08:05Z
+      reason: PodCompleted
+      status: "True"
+      type: Initialized
+    - lastProbeTime: null
+      lastTransitionTime: 2019-02-21T22:07:39Z
+      reason: PodCompleted
+      status: "False"
+      type: Ready
+    - lastProbeTime: null
+      lastTransitionTime: null
+      reason: PodCompleted
+      status: "False"
+      type: ContainersReady
+    - lastProbeTime: null
+      lastTransitionTime: 2019-02-21T22:07:39Z
+      status: "True"
+      type: PodScheduled
+    containerStatuses:
+    - containerID: docker://b212c138e54490096f776e0efa19997c8924d4b1ac55565a12a6f3615de5121d
+      image: gcr.io/knative-nightly/github.com/knative/build-pipeline/cmd/nop:v20190221-c649b42c
+      imageID: docker-pullable://gcr.io/knative-nightly/github.com/knative/build-pipeline/cmd/nop@sha256:2ba919f86b96665fd39b561f14751243a2e6721debe039a65adad18ca7beecb7
+      lastState: {}
+      name: nop
+      ready: false
+      restartCount: 0
+      state:
+        terminated:
+          containerID: docker://b212c138e54490096f776e0efa19997c8924d4b1ac55565a12a6f3615de5121d
+          exitCode: 0
+          finishedAt: 2019-02-21T22:08:05Z
+          reason: Completed
+          startedAt: 2019-02-21T22:08:05Z
+    hostIP: 10.138.15.201
+    initContainerStatuses:
+    - containerID: docker://7fc30db0c0165426239630e54a7f6a6131c492e616377347b341887b71bef442
+      image: gcr.io/knative-nightly/github.com/knative/build-pipeline/cmd/creds-init:v20190221-c649b42c
+      imageID: docker-pullable://gcr.io/knative-nightly/github.com/knative/build-pipeline/cmd/creds-init@sha256:693a03112e2660c4c4aacc83be27b762627a364fd7e6374f44a5ee254d128699
+      lastState: {}
+      name: build-step-credential-initializer-2f77p
+      ready: true
+      restartCount: 0
+      state:
+        terminated:
+          containerID: docker://7fc30db0c0165426239630e54a7f6a6131c492e616377347b341887b71bef442
+          exitCode: 0
+          finishedAt: 2019-02-21T22:07:50Z
+          reason: Completed
+          startedAt: 2019-02-21T22:07:50Z
+    - containerID: docker://68a22c83dff530574256b40e45baad20ea43f47a74646131cffaddb1289b0e2a
+      image: gcr.io/knative-nightly/github.com/knative/build-pipeline/cmd/git-init:v20190221-c649b42c
+      imageID: docker-pullable://gcr.io/knative-nightly/github.com/knative/build-pipeline/cmd/git-init@sha256:5b8e5f00e807b21f8d0657aef9333c6474362e83c6d09a386c6dccd04655d764
+      lastState: {}
+      name: build-step-git-source-abayer-js-test-repo-nested-x7vxn
+      ready: true
+      restartCount: 0
+      state:
+        terminated:
+          containerID: docker://68a22c83dff530574256b40e45baad20ea43f47a74646131cffaddb1289b0e2a
+          exitCode: 0
+          finishedAt: 2019-02-21T22:07:52Z
+          reason: Completed
+          startedAt: 2019-02-21T22:07:52Z
+    - containerID: docker://cb86c44d8acb9c6a79967216e6142967c0dee23fd7b6715ae979c0df120e1c2d
+      image: sha256:df99192de7956f58328aa53f0dac5f2615290064a54f0b7caa9b14e7f1050b23
+      imageID: docker-pullable://gcr.io/k8s-prow/entrypoint@sha256:7c7cd8906ce4982ffee326218e9fc75da2d4896d53cabc9833b9cc8d2d6b2b8f
+      lastState: {}
+      name: build-step-place-tools
+      ready: true
+      restartCount: 0
+      state:
+        terminated:
+          containerID: docker://cb86c44d8acb9c6a79967216e6142967c0dee23fd7b6715ae979c0df120e1c2d
+          exitCode: 0
+          finishedAt: 2019-02-21T22:07:54Z
+          reason: Completed
+          startedAt: 2019-02-21T22:07:54Z
+    - containerID: docker://8c13cf936c022c6ec09f499f29472b5280287fc43059a15ab3625bb1c45cd279
+      image: jenkinsxio/builder-nodejs:0.1.235
+      imageID: docker-pullable://jenkinsxio/builder-nodejs@sha256:bd4259986c32ba90c5cc9012cb933096ea9e8c1806502dbae6a9309a5fee5c03
+      lastState: {}
+      name: build-step-step2
+      ready: true
+      restartCount: 0
+      state:
+        terminated:
+          containerID: docker://8c13cf936c022c6ec09f499f29472b5280287fc43059a15ab3625bb1c45cd279
+          exitCode: 0
+          finishedAt: 2019-02-21T22:07:55Z
+          reason: Completed
+          startedAt: 2019-02-21T22:07:55Z
+    - containerID: docker://2381c51e7848096cc148d3bee66f6c17d65e60f56e93f847250fc5cfbb597046
+      image: jenkinsxio/builder-nodejs:0.1.235
+      imageID: docker-pullable://jenkinsxio/builder-nodejs@sha256:bd4259986c32ba90c5cc9012cb933096ea9e8c1806502dbae6a9309a5fee5c03
+      lastState: {}
+      name: build-step-step3
+      ready: true
+      restartCount: 0
+      state:
+        terminated:
+          containerID: docker://2381c51e7848096cc148d3bee66f6c17d65e60f56e93f847250fc5cfbb597046
+          exitCode: 0
+          finishedAt: 2019-02-21T22:07:56Z
+          reason: Completed
+          startedAt: 2019-02-21T22:07:56Z
+    - containerID: docker://46ff2e0ca92d4c49fcb3de5a91dcf16aa455952503c452245d6093d23b1ace78
+      image: jenkinsxio/builder-nodejs:0.1.235
+      imageID: docker-pullable://jenkinsxio/builder-nodejs@sha256:bd4259986c32ba90c5cc9012cb933096ea9e8c1806502dbae6a9309a5fee5c03
+      lastState: {}
+      name: build-step-step4
+      ready: true
+      restartCount: 0
+      state:
+        terminated:
+          containerID: docker://46ff2e0ca92d4c49fcb3de5a91dcf16aa455952503c452245d6093d23b1ace78
+          exitCode: 0
+          finishedAt: 2019-02-21T22:08:02Z
+          reason: Completed
+          startedAt: 2019-02-21T22:07:57Z
+    - containerID: docker://3fc5435ebe81ec2328a1d8c160779c2447446aeafb07c207a709a9aa1a856358
+      image: gcr.io/knative-nightly/github.com/knative/build-pipeline/cmd/bash:v20190221-c649b42c
+      imageID: docker-pullable://gcr.io/knative-nightly/github.com/knative/build-pipeline/cmd/bash@sha256:967289610161e64fbce38c955b7b12cd844f18c665b6dd6d0f9481968be4cbab
+      lastState: {}
+      name: build-step-source-mkdir-abayer-js-test-repo-nested-4z4x9
+      ready: true
+      restartCount: 0
+      state:
+        terminated:
+          containerID: docker://3fc5435ebe81ec2328a1d8c160779c2447446aeafb07c207a709a9aa1a856358
+          exitCode: 0
+          finishedAt: 2019-02-21T22:08:03Z
+          reason: Completed
+          startedAt: 2019-02-21T22:08:03Z
+    - containerID: docker://8daed959ed9fd64eaa3c0df3008407506ad6e353f603951972f86ac1f5c53a4b
+      image: gcr.io/knative-nightly/github.com/knative/build-pipeline/cmd/bash:v20190221-c649b42c
+      imageID: docker-pullable://gcr.io/knative-nightly/github.com/knative/build-pipeline/cmd/bash@sha256:967289610161e64fbce38c955b7b12cd844f18c665b6dd6d0f9481968be4cbab
+      lastState: {}
+      name: build-step-source-copy-abayer-js-test-repo-nested-w9wfh
+      ready: true
+      restartCount: 0
+      state:
+        terminated:
+          containerID: docker://8daed959ed9fd64eaa3c0df3008407506ad6e353f603951972f86ac1f5c53a4b
+          exitCode: 0
+          finishedAt: 2019-02-21T22:08:04Z
+          reason: Completed
+          startedAt: 2019-02-21T22:08:04Z
+    phase: Succeeded
+    podIP: 10.0.2.21
+    qosClass: BestEffort
+    startTime: 2019-02-21T22:07:39Z
+- apiVersion: v1
+  kind: Pod
+  metadata:
+    annotations:
+      sidecar.istio.io/inject: "false"
+    creationTimestamp: 2019-02-21T22:08:54Z
+    labels:
+      branch: nested
+      build-number: "1"
+      jenkins.io/task-stage-name: second
+      owner: abayer
+      repo: js-test-repo
+      tekton.dev/pipeline: abayer-js-test-repo-nested
+      tekton.dev/pipelineRun: abayer-js-test-repo-nested-1
+      tekton.dev/task: abayer-js-test-repo-nested-second
+      tekton.dev/taskRun: abayer-js-test-repo-nested-1-second-bxxzl
+    name: abayer-js-test-repo-nested-1-second-bxxzl-pod-a32406
+    namespace: jx
+    ownerReferences:
+    - apiVersion: tekton.dev/v1alpha1
+      blockOwnerDeletion: true
+      controller: true
+      kind: TaskRun
+      name: abayer-js-test-repo-nested-1-second-bxxzl
+      uid: 46ff1811-3625-11e9-b776-42010a8a00ac
+    resourceVersion: "7388"
+    selfLink: /api/v1/namespaces/jx/pods/abayer-js-test-repo-nested-1-second-bxxzl-pod-a32406
+    uid: 471c0785-3625-11e9-b776-42010a8a00ac
+  spec:
+    containers:
+    - image: gcr.io/knative-nightly/github.com/knative/build-pipeline/cmd/nop:v20190221-c649b42c
+      imagePullPolicy: IfNotPresent
+      name: nop
+      resources: {}
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: tekton-bot-token-b99pf
+        readOnly: true
+    dnsPolicy: ClusterFirst
+    initContainers:
+    - env:
+      - name: HOME
+        value: /builder/home
+      image: gcr.io/knative-nightly/github.com/knative/build-pipeline/cmd/creds-init:v20190221-c649b42c
+      imagePullPolicy: IfNotPresent
+      name: build-step-credential-initializer-5hlqz
+      resources: {}
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /workspace
+        name: workspace
+      - mountPath: /builder/home
+        name: home
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: tekton-bot-token-b99pf
+        readOnly: true
+      workingDir: /workspace
+    - args:
+      - -args
+      - mkdir -p /workspace/workspace
+      env:
+      - name: HOME
+        value: /builder/home
+      image: gcr.io/knative-nightly/github.com/knative/build-pipeline/cmd/bash:v20190221-c649b42c
+      imagePullPolicy: IfNotPresent
+      name: build-step-create-dir-workspace-58tvt
+      resources: {}
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /workspace
+        name: workspace
+      - mountPath: /builder/home
+        name: home
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: tekton-bot-token-b99pf
+        readOnly: true
+      workingDir: /workspace
+    - args:
+      - -args
+      - cp -r /pvc/build/workspace/. /workspace/workspace
+      env:
+      - name: HOME
+        value: /builder/home
+      image: gcr.io/knative-nightly/github.com/knative/build-pipeline/cmd/bash:v20190221-c649b42c
+      imagePullPolicy: IfNotPresent
+      name: build-step-source-copy-workspace-0-5292z
+      resources: {}
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /pvc
+        name: abayer-js-test-repo-nested-1-pvc
+      - mountPath: /workspace
+        name: workspace
+      - mountPath: /builder/home
+        name: home
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: tekton-bot-token-b99pf
+        readOnly: true
+      workingDir: /workspace
+    - args:
+      - /entrypoint
+      - /tools/entrypoint
+      command:
+      - /bin/cp
+      env:
+      - name: HOME
+        value: /builder/home
+      image: gcr.io/k8s-prow/entrypoint@sha256:7c7cd8906ce4982ffee326218e9fc75da2d4896d53cabc9833b9cc8d2d6b2b8f
+      imagePullPolicy: IfNotPresent
+      name: build-step-place-tools
+      resources: {}
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /tools
+        name: tools
+      - mountPath: /workspace
+        name: workspace
+      - mountPath: /builder/home
+        name: home
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: tekton-bot-token-b99pf
+        readOnly: true
+      workingDir: /workspace
+    - command:
+      - /tools/entrypoint
+      env:
+      - name: HOME
+        value: /builder/home
+      - name: DOCKER_REGISTRY
+        value: 10.3.245.235:5000
+      - name: PIPELINE_KIND
+        value: release
+      - name: REPO_OWNER
+        value: abayer
+      - name: REPO_NAME
+        value: js-test-repo
+      - name: JOB_NAME
+        value: abayer/js-test-repo/nested
+      - name: BRANCH_NAME
+        value: nested
+      - name: JX_BATCH_MODE
+        value: "true"
+      - name: ENTRYPOINT_OPTIONS
+        value: '{"args":["/bin/sh","-c","echo hi everybody"],"process_log":"/tools/process-log.txt","marker_file":"/tools/marker-file.txt"}'
+      image: jenkinsxio/builder-nodejs:0.1.235
+      imagePullPolicy: IfNotPresent
+      name: build-step-step2
+      resources:
+        requests:
+          cpu: 400m
+          memory: 512Mi
+      securityContext:
+        privileged: true
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /home/jenkins
+        name: workspace-volume
+      - mountPath: /var/run/docker.sock
+        name: docker-daemon
+      - mountPath: /home/jenkins/.docker
+        name: volume-0
+      - mountPath: /etc/podinfo
+        name: podinfo
+        readOnly: true
+      - mountPath: /tools
+        name: tools
+      - mountPath: /workspace
+        name: workspace
+      - mountPath: /builder/home
+        name: home
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: tekton-bot-token-b99pf
+        readOnly: true
+      workingDir: /workspace/workspace
+    - command:
+      - /tools/entrypoint
+      env:
+      - name: HOME
+        value: /builder/home
+      - name: DOCKER_REGISTRY
+        value: 10.3.245.235:5000
+      - name: PIPELINE_KIND
+        value: release
+      - name: REPO_OWNER
+        value: abayer
+      - name: REPO_NAME
+        value: js-test-repo
+      - name: JOB_NAME
+        value: abayer/js-test-repo/nested
+      - name: BRANCH_NAME
+        value: nested
+      - name: JX_BATCH_MODE
+        value: "true"
+      - name: ENTRYPOINT_OPTIONS
+        value: '{"args":["/bin/sh","-c","sleep 5"],"process_log":"/tools/process-log.txt","marker_file":"/tools/marker-file.txt"}'
+      image: jenkinsxio/builder-nodejs:0.1.235
+      imagePullPolicy: IfNotPresent
+      name: build-step-step3
+      resources:
+        requests:
+          cpu: 400m
+          memory: 512Mi
+      securityContext:
+        privileged: true
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /home/jenkins
+        name: workspace-volume
+      - mountPath: /var/run/docker.sock
+        name: docker-daemon
+      - mountPath: /home/jenkins/.docker
+        name: volume-0
+      - mountPath: /etc/podinfo
+        name: podinfo
+        readOnly: true
+      - mountPath: /tools
+        name: tools
+      - mountPath: /workspace
+        name: workspace
+      - mountPath: /builder/home
+        name: home
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: tekton-bot-token-b99pf
+        readOnly: true
+      workingDir: /workspace/workspace
+    - args:
+      - -args
+      - mkdir -p /pvc/second/workspace
+      env:
+      - name: HOME
+        value: /builder/home
+      image: gcr.io/knative-nightly/github.com/knative/build-pipeline/cmd/bash:v20190221-c649b42c
+      imagePullPolicy: IfNotPresent
+      name: build-step-source-mkdir-abayer-js-test-repo-nested-47ds2
+      resources: {}
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /pvc
+        name: abayer-js-test-repo-nested-1-pvc
+      - mountPath: /workspace
+        name: workspace
+      - mountPath: /builder/home
+        name: home
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: tekton-bot-token-b99pf
+        readOnly: true
+      workingDir: /workspace
+    - args:
+      - -args
+      - cp -r /workspace/workspace/. /pvc/second/workspace
+      env:
+      - name: HOME
+        value: /builder/home
+      image: gcr.io/knative-nightly/github.com/knative/build-pipeline/cmd/bash:v20190221-c649b42c
+      imagePullPolicy: IfNotPresent
+      name: build-step-source-copy-abayer-js-test-repo-nested-bfzqd
+      resources: {}
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /pvc
+        name: abayer-js-test-repo-nested-1-pvc
+      - mountPath: /workspace
+        name: workspace
+      - mountPath: /builder/home
+        name: home
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: tekton-bot-token-b99pf
+        readOnly: true
+      workingDir: /workspace
+    nodeName: gke-abayer-test-cluster-default-pool-33b76534-1wj7
+    priority: 0
+    restartPolicy: Never
+    schedulerName: default-scheduler
+    securityContext: {}
+    serviceAccount: tekton-bot
+    serviceAccountName: tekton-bot
+    terminationGracePeriodSeconds: 30
+    tolerations:
+    - effect: NoExecute
+      key: node.kubernetes.io/not-ready
+      operator: Exists
+      tolerationSeconds: 300
+    - effect: NoExecute
+      key: node.kubernetes.io/unreachable
+      operator: Exists
+      tolerationSeconds: 300
+    volumes:
+    - emptyDir: {}
+      name: workspace-volume
+    - hostPath:
+        path: /var/run/docker.sock
+        type: ""
+      name: docker-daemon
+    - name: volume-0
+      secret:
+        defaultMode: 420
+        secretName: jenkins-docker-cfg
+    - downwardAPI:
+        defaultMode: 420
+        items:
+        - fieldRef:
+            apiVersion: v1
+            fieldPath: metadata.labels
+          path: labels
+      name: podinfo
+    - emptyDir: {}
+      name: tools
+    - name: abayer-js-test-repo-nested-1-pvc
+      persistentVolumeClaim:
+        claimName: abayer-js-test-repo-nested-1-pvc
+    - emptyDir: {}
+      name: workspace
+    - emptyDir: {}
+      name: home
+    - name: tekton-bot-token-b99pf
+      secret:
+        defaultMode: 420
+        secretName: tekton-bot-token-b99pf
+  status:
+    conditions:
+    - lastProbeTime: null
+      lastTransitionTime: 2019-02-21T22:09:18Z
+      reason: PodCompleted
+      status: "True"
+      type: Initialized
+    - lastProbeTime: null
+      lastTransitionTime: 2019-02-21T22:08:54Z
+      reason: PodCompleted
+      status: "False"
+      type: Ready
+    - lastProbeTime: null
+      lastTransitionTime: null
+      reason: PodCompleted
+      status: "False"
+      type: ContainersReady
+    - lastProbeTime: null
+      lastTransitionTime: 2019-02-21T22:08:54Z
+      status: "True"
+      type: PodScheduled
+    containerStatuses:
+    - containerID: docker://cac4b58d0ff4b65df1755ea3770df1640c83b5f3fa1e0b43c7b5e58b9cd5085e
+      image: gcr.io/knative-nightly/github.com/knative/build-pipeline/cmd/nop:v20190221-c649b42c
+      imageID: docker-pullable://gcr.io/knative-nightly/github.com/knative/build-pipeline/cmd/nop@sha256:2ba919f86b96665fd39b561f14751243a2e6721debe039a65adad18ca7beecb7
+      lastState: {}
+      name: nop
+      ready: false
+      restartCount: 0
+      state:
+        terminated:
+          containerID: docker://cac4b58d0ff4b65df1755ea3770df1640c83b5f3fa1e0b43c7b5e58b9cd5085e
+          exitCode: 0
+          finishedAt: 2019-02-21T22:09:18Z
+          reason: Completed
+          startedAt: 2019-02-21T22:09:18Z
+    hostIP: 10.138.15.201
+    initContainerStatuses:
+    - containerID: docker://d4a9796a6163df2b98da1a9f165cfe442d97a73b3919873d95d66d0e7f57a26e
+      image: gcr.io/knative-nightly/github.com/knative/build-pipeline/cmd/creds-init:v20190221-c649b42c
+      imageID: docker-pullable://gcr.io/knative-nightly/github.com/knative/build-pipeline/cmd/creds-init@sha256:693a03112e2660c4c4aacc83be27b762627a364fd7e6374f44a5ee254d128699
+      lastState: {}
+      name: build-step-credential-initializer-5hlqz
+      ready: true
+      restartCount: 0
+      state:
+        terminated:
+          containerID: docker://d4a9796a6163df2b98da1a9f165cfe442d97a73b3919873d95d66d0e7f57a26e
+          exitCode: 0
+          finishedAt: 2019-02-21T22:09:05Z
+          reason: Completed
+          startedAt: 2019-02-21T22:09:05Z
+    - containerID: docker://68ca0553b9bafb3fa8d3ac0a48c7c71cc8a7eef0ebb242579b5658e9de6ba015
+      image: gcr.io/knative-nightly/github.com/knative/build-pipeline/cmd/bash:v20190221-c649b42c
+      imageID: docker-pullable://gcr.io/knative-nightly/github.com/knative/build-pipeline/cmd/bash@sha256:967289610161e64fbce38c955b7b12cd844f18c665b6dd6d0f9481968be4cbab
+      lastState: {}
+      name: build-step-create-dir-workspace-58tvt
+      ready: true
+      restartCount: 0
+      state:
+        terminated:
+          containerID: docker://68ca0553b9bafb3fa8d3ac0a48c7c71cc8a7eef0ebb242579b5658e9de6ba015
+          exitCode: 0
+          finishedAt: 2019-02-21T22:09:06Z
+          reason: Completed
+          startedAt: 2019-02-21T22:09:06Z
+    - containerID: docker://a5973f7e56214414269f7fb4a76e8d4b730de71fedc561388cb62a7041c35dbb
+      image: gcr.io/knative-nightly/github.com/knative/build-pipeline/cmd/bash:v20190221-c649b42c
+      imageID: docker-pullable://gcr.io/knative-nightly/github.com/knative/build-pipeline/cmd/bash@sha256:967289610161e64fbce38c955b7b12cd844f18c665b6dd6d0f9481968be4cbab
+      lastState: {}
+      name: build-step-source-copy-workspace-0-5292z
+      ready: true
+      restartCount: 0
+      state:
+        terminated:
+          containerID: docker://a5973f7e56214414269f7fb4a76e8d4b730de71fedc561388cb62a7041c35dbb
+          exitCode: 0
+          finishedAt: 2019-02-21T22:09:07Z
+          reason: Completed
+          startedAt: 2019-02-21T22:09:07Z
+    - containerID: docker://326470b66abbc90bbfa191a977c04d083afb127990475f4cb80295bc11563b63
+      image: sha256:df99192de7956f58328aa53f0dac5f2615290064a54f0b7caa9b14e7f1050b23
+      imageID: docker-pullable://gcr.io/k8s-prow/entrypoint@sha256:7c7cd8906ce4982ffee326218e9fc75da2d4896d53cabc9833b9cc8d2d6b2b8f
+      lastState: {}
+      name: build-step-place-tools
+      ready: true
+      restartCount: 0
+      state:
+        terminated:
+          containerID: docker://326470b66abbc90bbfa191a977c04d083afb127990475f4cb80295bc11563b63
+          exitCode: 0
+          finishedAt: 2019-02-21T22:09:08Z
+          reason: Completed
+          startedAt: 2019-02-21T22:09:08Z
+    - containerID: docker://8b405c8dc3f0af155d2dcec43a3dda185c267c12682ae52635a9e69295eb6062
+      image: jenkinsxio/builder-nodejs:0.1.235
+      imageID: docker-pullable://jenkinsxio/builder-nodejs@sha256:bd4259986c32ba90c5cc9012cb933096ea9e8c1806502dbae6a9309a5fee5c03
+      lastState: {}
+      name: build-step-step2
+      ready: true
+      restartCount: 0
+      state:
+        terminated:
+          containerID: docker://8b405c8dc3f0af155d2dcec43a3dda185c267c12682ae52635a9e69295eb6062
+          exitCode: 0
+          finishedAt: 2019-02-21T22:09:09Z
+          reason: Completed
+          startedAt: 2019-02-21T22:09:09Z
+    - containerID: docker://c91ee0373888814e68374c5350a7aa301eb7bb436ecc6414d592dfaf2600715f
+      image: jenkinsxio/builder-nodejs:0.1.235
+      imageID: docker-pullable://jenkinsxio/builder-nodejs@sha256:bd4259986c32ba90c5cc9012cb933096ea9e8c1806502dbae6a9309a5fee5c03
+      lastState: {}
+      name: build-step-step3
+      ready: true
+      restartCount: 0
+      state:
+        terminated:
+          containerID: docker://c91ee0373888814e68374c5350a7aa301eb7bb436ecc6414d592dfaf2600715f
+          exitCode: 0
+          finishedAt: 2019-02-21T22:09:15Z
+          reason: Completed
+          startedAt: 2019-02-21T22:09:10Z
+    - containerID: docker://018db1d199fce127a8ef61b55fa3d432284dff2dd508f105e3902c05ef67ba17
+      image: gcr.io/knative-nightly/github.com/knative/build-pipeline/cmd/bash:v20190221-c649b42c
+      imageID: docker-pullable://gcr.io/knative-nightly/github.com/knative/build-pipeline/cmd/bash@sha256:967289610161e64fbce38c955b7b12cd844f18c665b6dd6d0f9481968be4cbab
+      lastState: {}
+      name: build-step-source-mkdir-abayer-js-test-repo-nested-47ds2
+      ready: true
+      restartCount: 0
+      state:
+        terminated:
+          containerID: docker://018db1d199fce127a8ef61b55fa3d432284dff2dd508f105e3902c05ef67ba17
+          exitCode: 0
+          finishedAt: 2019-02-21T22:09:16Z
+          reason: Completed
+          startedAt: 2019-02-21T22:09:16Z
+    - containerID: docker://5e61d0e99c4ed611244e88803112cd580f406c70bd50f14c74c90c530719504b
+      image: gcr.io/knative-nightly/github.com/knative/build-pipeline/cmd/bash:v20190221-c649b42c
+      imageID: docker-pullable://gcr.io/knative-nightly/github.com/knative/build-pipeline/cmd/bash@sha256:967289610161e64fbce38c955b7b12cd844f18c665b6dd6d0f9481968be4cbab
+      lastState: {}
+      name: build-step-source-copy-abayer-js-test-repo-nested-bfzqd
+      ready: true
+      restartCount: 0
+      state:
+        terminated:
+          containerID: docker://5e61d0e99c4ed611244e88803112cd580f406c70bd50f14c74c90c530719504b
+          exitCode: 0
+          finishedAt: 2019-02-21T22:09:17Z
+          reason: Completed
+          startedAt: 2019-02-21T22:09:17Z
+    phase: Succeeded
+    podIP: 10.0.2.22
+    qosClass: BestEffort
+    startTime: 2019-02-21T22:08:54Z
+kind: List
+metadata:
+  resourceVersion: ""
+  selfLink: ""

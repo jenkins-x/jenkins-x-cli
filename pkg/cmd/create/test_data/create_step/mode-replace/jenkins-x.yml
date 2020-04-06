@@ -1,0 +1,7 @@
+buildPack: maven
+pipelineConfig:
+  pipelines:
+    release:
+      build:
+        steps:
+        - command: echo goodbye world

@@ -1,0 +1,137 @@
+apiVersion: tekton.dev/v1alpha1
+kind: PipelineRun
+metadata:
+  creationTimestamp: 2019-02-21T22:10:48Z
+  generation: 1
+  labels:
+    branch: master
+    build-number: "1"
+    owner: abayer
+    repo: jx-demo-qs
+    tekton.dev/pipeline: abayer-jx-demo-qs-master
+  name: abayer-jx-demo-qs-master-1
+  namespace: jx
+  ownerReferences:
+  - apiVersion: tekton.dev/v1alpha1
+    kind: Pipeline
+    name: abayer-jx-demo-qs-master
+    uid: 8ac56b37-3625-11e9-b776-42010a8a00ac
+  resourceVersion: "8367"
+  selfLink: /apis/tekton.dev/v1alpha1/namespaces/jx/pipelineruns/abayer-jx-demo-qs-master-1
+  uid: 8ad48748-3625-11e9-b776-42010a8a00ac
+spec:
+  Status: ""
+  params: null
+  pipelineRef:
+    name: abayer-jx-demo-qs-master
+  resources:
+  - name: abayer-jx-demo-qs-master
+    resourceRef:
+      apiVersion: tekton.dev/v1alpha1
+      name: abayer-jx-demo-qs-master
+  serviceAccount: tekton-bot
+  trigger:
+    type: manual
+status:
+  conditions:
+  - lastTransitionTime: 2019-02-21T22:10:48Z
+    message: Not all Tasks in the Pipeline have finished executing
+    reason: Running
+    status: Unknown
+    type: Succeeded
+  startTime: 2019-02-21T22:10:48Z
+  taskRuns:
+    abayer-jx-demo-qs-master-1-build-vhz8d:
+      conditions:
+      - lastTransitionTime: 2019-02-21T22:13:24Z
+        message: 'pod status "Initialized":"False"; message: "containers with incomplete
+          status: [build-step-promote-helm-release build-step-promote-jx-promote]"'
+        reason: Pending
+        status: Unknown
+        type: Succeeded
+      podName: abayer-jx-demo-qs-master-1-build-vhz8d-pod-cd8cba
+      startTime: 2019-02-21T22:10:48Z
+      steps:
+      - logsURL: ""
+        terminated:
+          containerID: docker://2c185fa1ae1ab01ba584c8c2f1eb1c7a17b2baed60750e2b41827e11099cb134
+          exitCode: 0
+          finishedAt: 2019-02-21T22:10:52Z
+          reason: Completed
+          startedAt: 2019-02-21T22:10:51Z
+      - logsURL: ""
+        terminated:
+          containerID: docker://4f38dfd1b2ff697c66fb01e1d6e0f158cf920c8cbab5c67e7aa9bb1e6cfc1d13
+          exitCode: 0
+          finishedAt: 2019-02-21T22:10:52Z
+          reason: Completed
+          startedAt: 2019-02-21T22:10:52Z
+      - logsURL: ""
+        terminated:
+          containerID: docker://4e7c58be78c5b85a93016b83370ef5752d24b4d1de09143032e6424b1ce68037
+          exitCode: 0
+          finishedAt: 2019-02-21T22:11:14Z
+          reason: Completed
+          startedAt: 2019-02-21T22:11:13Z
+      - logsURL: ""
+        terminated:
+          containerID: docker://b8f8d49835529a44e7ae28222addcf3d18a0a67df33c4706c31c9d3465c6f679
+          exitCode: 0
+          finishedAt: 2019-02-21T22:11:17Z
+          reason: Completed
+          startedAt: 2019-02-21T22:11:16Z
+      - logsURL: ""
+        terminated:
+          containerID: docker://fcb691f0fe7ca61bbaa132dccf109c6c79d441390f37d77d8e6b6e70ce4c2868
+          exitCode: 0
+          finishedAt: 2019-02-21T22:11:58Z
+          reason: Completed
+          startedAt: 2019-02-21T22:11:18Z
+      - logsURL: ""
+        terminated:
+          containerID: docker://24e153f8ce6ed20ddf096d55626e4e654ca102715849da24d8f7b8a90c621c25
+          exitCode: 0
+          finishedAt: 2019-02-21T22:12:04Z
+          reason: Completed
+          startedAt: 2019-02-21T22:11:59Z
+      - logsURL: ""
+        terminated:
+          containerID: docker://16c0ce957328d44abc091efc766e041b774f46ef2c03205d821e04fe02bd3165
+          exitCode: 0
+          finishedAt: 2019-02-21T22:12:54Z
+          reason: Completed
+          startedAt: 2019-02-21T22:12:05Z
+      - logsURL: ""
+        terminated:
+          containerID: docker://d17bf96649888a05925bd6dcfc247846eee63b4529e25d4f3d3f356fcf668d09
+          exitCode: 0
+          finishedAt: 2019-02-21T22:12:55Z
+          reason: Completed
+          startedAt: 2019-02-21T22:12:55Z
+      - logsURL: ""
+        terminated:
+          containerID: docker://a130cfd577767170e45402eda56410377a5fe70c68464e0116d052a98cb97127
+          exitCode: 0
+          finishedAt: 2019-02-21T22:13:13Z
+          reason: Completed
+          startedAt: 2019-02-21T22:12:56Z
+      - logsURL: ""
+        terminated:
+          containerID: docker://da815b55aff74013ec49d60ef27d0461e023455dcd399c67dc9d51fab7f17a14
+          exitCode: 0
+          finishedAt: 2019-02-21T22:13:14Z
+          reason: Completed
+          startedAt: 2019-02-21T22:13:14Z
+      - logsURL: ""
+        terminated:
+          containerID: docker://bff5ea3b32b41215d3922058ce713dc27ae1197b1f1f0920e52f9843d81a357b
+          exitCode: 0
+          finishedAt: 2019-02-21T22:13:19Z
+          reason: Completed
+          startedAt: 2019-02-21T22:13:15Z
+      - logsURL: ""
+        running:
+          startedAt: 2019-02-21T22:13:20Z
+      - logsURL: ""
+        waiting:
+          reason: PodInitializing

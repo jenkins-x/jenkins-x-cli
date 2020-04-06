@@ -1,0 +1,41 @@
+agent:
+  label: jenkins-maven
+  container: maven
+pipelines:
+  pullRequest:
+    pipeline:
+      agent:
+        image:
+          maven
+      stages:
+        - name: build
+          steps:
+            - command: source /root/.bashrc && flake8
+              name: flake8
+              image: maven
+              dir: /workspace/source/REPLACE_ME_APP_NAME
+  release:
+    pipeline:
+      agent:
+        image:
+          maven
+      stages:
+        - name: build
+          steps:
+            - command: source /root/.bashrc && flake8
+              name: flake8
+              image: maven
+              dir: /workspace/source/REPLACE_ME_APP_NAME
+        - name: promote
+          dir: charts/REPLACE_ME_APP_NAME
+          steps:
+            - command: jx step changelog --version v${inputs.params.version}
+              name: changelog
+            - command: jx step helm release
+              name: helm-release
+            - command: jx promote -b --all-auto --timeout 1h --version ${inputs.params.version}
+              name: jx-promote
+              dir: /workspace/source
+
+
+

@@ -1,12 +1,15 @@
+// +build unit
+
 package util
 
 import (
-	"github.com/stretchr/testify/assert"
 	"net"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 // transport for testing, using easy to spot values
@@ -30,8 +33,8 @@ func TestGetClient(t *testing.T) {
 	assert.Equal(t, time.Duration(getIntFromEnv("DEFAULT_HTTP_REQUEST_TIMEOUT", 30))*time.Second, myClient.Timeout)
 
 	// verify that it times out properly
-	timeoutClient := GetClientWithTimeout(time.Duration(3 * time.Second))
-	assert.Equal(t, time.Duration(3 * time.Second), timeoutClient.Timeout)
+	timeoutClient := GetClientWithTimeout(3 * time.Second)
+	assert.Equal(t, 3*time.Second, timeoutClient.Timeout)
 
 	handlerFunc := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		time.Sleep(10 * time.Second)
@@ -50,7 +53,7 @@ func TestGetClient(t *testing.T) {
 
 	// verify using custom Transport
 	customClient := GetCustomClient(testTransport, 7)
-	assert.Equal(t, time.Duration(7)*time.Second, customClient.Timeout)
+	assert.Equal(t, 7*time.Second, customClient.Timeout)
 	//assert.Equal(t, customClient.Transport.(http.Transport).MaxIdleConns, 7)
 	response, err = customClient.Get(backend.URL)
 	if err == nil {

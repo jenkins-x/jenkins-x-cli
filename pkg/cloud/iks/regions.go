@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"strings"
 
+	gohttp "net/http"
+
 	ibmcloud "github.com/IBM-Cloud/bluemix-go"
 	"github.com/IBM-Cloud/bluemix-go/client"
 	"github.com/IBM-Cloud/bluemix-go/http"
 	"github.com/IBM-Cloud/bluemix-go/rest"
-	gohttp "net/http"
 )
 
 const containerEndpointOfPublicBluemix = "https://containers.bluemix.net"

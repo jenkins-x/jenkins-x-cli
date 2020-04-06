@@ -1,0 +1,42 @@
+apiVersion: tekton.dev/v1alpha1
+kind: Pipeline
+metadata:
+  annotations:
+    jenkins.io/last-build-number: "1"
+  creationTimestamp: 2019-03-05T20:06:13Z
+  generation: 1
+  name: abayer-js-test-repo-master
+  namespace: jx
+  resourceVersion: "1421149"
+  selfLink: /apis/tekton.dev/v1alpha1/namespaces/jx/pipelines/abayer-js-test-repo-master
+  uid: 208e0fad-3f82-11e9-bd41-42010a8a00a2
+spec:
+  params: []
+  resources:
+  - name: abayer-js-test-repo-master
+    type: git
+  tasks:
+  - name: build
+    resources:
+      inputs:
+      - name: workspace
+        resource: abayer-js-test-repo-master
+      outputs:
+      - name: workspace
+        resource: abayer-js-test-repo-master
+    taskRef:
+      name: abayer-js-test-repo-master-build
+  - name: second
+    resources:
+      inputs:
+      - from:
+        - build
+        name: workspace
+        resource: abayer-js-test-repo-master
+      outputs:
+      - name: workspace
+        resource: abayer-js-test-repo-master
+    runAfter:
+    - build
+    taskRef:
+      name: abayer-js-test-repo-master-second

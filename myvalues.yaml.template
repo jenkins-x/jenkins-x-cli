@@ -5,32 +5,23 @@ jenkins:
       Maven:
         Containers:
           Maven:
-            Image: jenkinsxio/builder-maven:$VERSION
+            Image: gcr.io/jenkinsxio/builder-maven:$VERSION
+        EnvVars:
+          CODECOV_TOKEN: $CODECOV_TOKEN
       Nodejs:
         Containers:
           Nodejs:
-            Image: jenkinsxio/builder-nodejs:$VERSION
+            Image: gcr.io/jenkinsxio/builder-nodejs:$VERSION
+        EnvVars:
+          CODECOV_TOKEN: $CODECOV_TOKEN
       Go:
         Containers:
           Go:
-            Image: jenkinsxio/builder-go:$VERSION
-
+            Image: gcr.io/jenkinsxio/builder-go:$VERSION
+        EnvVars:
+          CODECOV_TOKEN: $CODECOV_TOKEN
 # disable stuff
 pipelinecontroller:
   enabled: false
 monocular:
   enabled: false
-
-# service link nexus
-nexus:
-  enabled: false
-nexusServiceLink:
-  enabled: true
-  externalName: "nexus.jx.svc.cluster.local"
-
-# service link chartmuseum
-chartmuseum:
-  enabled: false
-chartmuseumServiceLink:
-  enabled: true
-  externalName: "jenkins-x-chartmuseum.jx.svc.cluster.local"

@@ -2,12 +2,13 @@ package amazon
 
 import (
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/jenkins-x/jx/pkg/cloud/amazon/session"
 )
 
 func AvailabilityZones() ([]string, error) {
 	answer := []string{}
 
-	sess, err := NewAwsSessionWithoutOptions()
+	sess, err := session.NewAwsSessionWithoutOptions()
 	if err != nil {
 		return answer, err
 	}

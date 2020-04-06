@@ -1,3 +1,5 @@
+// +build unit
+
 package version_test
 
 import (
@@ -29,7 +31,7 @@ func TestGetSemverVersisonWithNonStandardVersion(t *testing.T) {
 	version.Map["version"] = "1.3.153-dev+7a8285f4"
 	result, err := version.GetSemverVersion()
 
-	prVersions := []semver.PRVersion{semver.PRVersion{VersionStr: "dev"}}
+	prVersions := []semver.PRVersion{{VersionStr: "dev"}}
 	builds := []string{"7a8285f4"}
 	expectedResult := semver.Version{Major: 1, Minor: 3, Patch: 153, Pre: prVersions, Build: builds}
 	assert.NoError(t, err, "GetSemverVersion should exit without failure")

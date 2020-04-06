@@ -1,0 +1,20 @@
+pipelineConfig:
+  env:
+    - name: FRUIT
+      value: BANANA
+    - name: GIT_AUTHOR_NAME
+      value: somebodyelse
+  pipelines:
+    overrides:
+      # Add a volume and mount it
+      - pipeline: release
+        stage: build
+        volumes:
+          - name: top-level-volume
+            persistentVolumeClaim:
+              claimName: top-level-volume
+              readOnly: true
+        containerOptions:
+          volumeMounts:
+            - mountPath: /some/path
+              name: top-level-volume

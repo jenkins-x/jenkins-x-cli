@@ -1,0 +1,23 @@
+dependencies:
+- host: fake.git
+  owner: acme
+  repo: roadrunner
+  sources:
+  - path:
+    - host: fake.git
+      owner: acme
+      repo: wiley
+      url: https://fake.git/acme/wiley.git
+      version: 0.0.2
+      versionURL: https://fake.git/acme/wiley/releases/v0.0.2
+    - host: fake.git
+      owner: acme
+      repo: coyote
+      url: https://fake.git/acme/coyote.git
+      version: 0.0.2
+      versionURL: https://fake.git/acme/coyote/releases/v0.0.2
+    version: 0.0.2
+    versionURL: https://fake.git/acme/roadrunner/releases/v0.0.2
+  url: https://fake.git/acme/roadrunner.git
+  version: 0.0.2
+  versionURL: https://fake.git/acme/roadrunner/releases/v0.0.2

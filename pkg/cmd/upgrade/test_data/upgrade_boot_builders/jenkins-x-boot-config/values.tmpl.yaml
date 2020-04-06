@@ -1,0 +1,169 @@
+cluster:
+  domain: {{ .Requirements.ingress.domain }}
+  namespace: {{ .Requirements.cluster.namespace | default "jx" }}
+  namespaceSubDomain: {{ .Requirements.ingress.namespaceSubDomain | default ".jx." }}
+  {{- if hasKey .Requirements.cluster "project" }}
+projectID: {{ .Requirements.cluster.project }}
+  {{- else }}
+projectID: ""
+  {{- end }}
+  {{- if hasKey .Requirements.cluster "zone" }}
+zone:  {{ .Requirements.cluster.zone }}
+  {{- else }}
+zone: ""
+  {{- end }}
+name: ""
+serverUrl: ""
+  {{- if .Requirements.ingress.tls.enabled }}
+tls: true
+  {{- end }}
+
+gitops:
+  versionStreamUrl: {{ .Requirements.versionStream.url }}
+  versionStreamRef: {{ .Requirements.versionStream.ref }}
+
+  gitKind: {{ .Requirements.cluster.gitKind | default "github" }}
+  gitName: {{ .Requirements.cluster.gitName | default "github" }}
+  server: {{ .Requirements.cluster.gitServer | default "https://github.com" }}
+  owner: {{ .Requirements.cluster.environmentGitOwner }}
+  webhook: {{ .Requirements.webhook | default "prow" | title | quote }}
+  {{- if eq .Requirements.cluster.gitKind "bitbucketserver" }}
+gitUrlPathPrefix: "/scm"
+  {{- else }}
+gitUrlPathPrefix: ""
+  {{- end }}
+
+dev:
+  server: ""
+  {{- if .Requirements.gitops }}
+repo: "{{ .Environments.dev.repository }}"
+owner: "{{ .Environments.dev.owner }}"
+envOrganisation: "{{ .Requirements.cluster.environmentGitOwner }}"
+  {{- else }}
+repo: ""
+owner: ""
+envOrganisation: ""
+  {{- end }}
+  {{- if eq .Requirements.cluster.provider "gke" }}
+dockerRegistryOrg: "{{ .Requirements.cluster.project }}"
+  {{- else }}
+dockerRegistryOrg: ""
+  {{- end }}
+
+
+staging:
+  repo: "{{ .Environments.staging.repository }}"
+  owner: "{{ .Environments.staging.owner | default .Requirements.cluster.environmentGitOwner }}"
+  server: ""
+
+production:
+  repo: "{{ .Environments.production.repository }}"
+  owner: "{{ .Environments.production.owner | default .Requirements.cluster.environmentGitOwner }}"
+  server: ""
+
+storage:
+  logs:
+    url: "{{ .Requirements.storage.logs.url }}"
+  reports:
+    url: "{{ .Requirements.storage.reports.url }}"
+  repository:
+    url: "{{ .Requirements.storage.repository.url }}"
+
+
+  {{- if .Requirements.versionStream.url }}
+versionStream:
+  url: "{{ .Requirements.versionStream.url }}"
+  ref: "{{ .Requirements.versionStream.ref }}"
+  {{- end }}
+
+expose:
+  enabled: false
+
+cleanup:
+  enabled: false
+
+controllerbuild:
+  enabled: true
+controllerteam:
+  enabled: false
+controllerworkflow:
+  enabled: false
+jenkins:
+  enabled: false
+jenkins-x-platform:
+  chartmuseum:
+    enabled: true
+    env:
+      open:
+        AUTH_ANONYMOUS_GET: true
+        DISABLE_API: false
+    #        STORAGE: google
+    #        STORAGE_GOOGLE_BUCKET: chartmuseum.jenkins-x.io
+    #        STORAGE_GOOGLE_PREFIX: charts
+    #    gcp:
+    #      secret:
+    #        enabled: true
+    #        key: gcs-chartmuseum.key.json
+    #        name: gcs-jenkinsx-chartmuseum
+    image:
+      tag: v0.7.1
+  controllerbuild:
+    enabled: true
+  jenkins:
+    Agent:
+      PodTemplates:
+        Go:
+          Containers:
+            Go:
+              Image: jenkinsxio/builder-go:latest
+        Maven:
+          Containers:
+            Maven:
+              Image: jenkinsxio/builder-maven:latest
+          volumes:
+            - mountPath: /root/.m2/
+              secretName: jenkins-maven-settings
+              type: Secret
+            - mountPath: /home/jenkins/.docker
+              secretName: jenkins-docker-cfg
+              type: Secret
+        Nodejs:
+          Containers:
+            Nodejs:
+              Image: jenkinsxio/builder-nodejs:latest
+  monocular:
+    api:
+      livenessProbe:
+        initialDelaySeconds: 1000
+  nexus:
+    persistence:
+      size: 100Gi
+  postinstalljob:
+    enabled: "true"
+
+tekton:
+  webhook:
+    enabled: false
+
+JenkinsXGitHub:
+  username: "{{ .Parameters.pipelineUser.username }}"
+  email: "{{ .Parameters.pipelineUser.email }}"
+  password: "{{ .Parameters.pipelineUser.token }}"
+
+  {{- if .Requirements.ingress.tls }}
+certmanager:
+  production: "{{ .Requirements.ingress.tls.production }}"
+  {{- if .Requirements.ingress.tls.enabled }}
+email:  "{{ .Requirements.ingress.tls.email }}"
+  {{- else }}
+enabled: false
+  {{- end }}
+  {{- end }}
+
+  {{- if .Requirements.autoUpdate }}
+autoUpdate:
+  schedule: {{ .Requirements.autoUpdate.schedule | quote }}
+  enabled: {{ .Requirements.autoUpdate.enabled }}
+  {{- end }}
+
+builderImage: gcr.io/jenkinsxio/builder-go:0.1.760

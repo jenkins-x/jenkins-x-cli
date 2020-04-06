@@ -1,3 +1,5 @@
+// +build unit
+
 package reports_test
 
 import (

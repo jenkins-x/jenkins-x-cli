@@ -10,7 +10,7 @@ import (
 
 // GetOsVersion returns a human friendly string of the current OS
 // in the case of an error this still returns a valid string for the details that can be found.
-func GetOsVersion() (string,  error) {
+func GetOsVersion() (string, error) {
 	retVal := "unknown OSX version"
 
 	// you can not run the command once to get all this :-(
@@ -31,7 +31,6 @@ func GetOsVersion() (string,  error) {
 	}
 	return fmt.Sprintf("%s build %s", retVal, pb), nil
 }
-
 
 func runCommand(command string, args ...string) (string, error) {
 	e := exec.Command(command, args...)

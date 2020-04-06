@@ -1,0 +1,1300 @@
+apiVersion: v1
+kind: List
+metadata:
+  resourceVersion: ""
+  selfLink: ""
+items:
+- apiVersion: v1
+  kind: Pod
+  metadata:
+    annotations:
+      tekton.dev/ready: READY
+    creationTimestamp: "2019-09-06T05:24:17Z"
+    labels:
+      branch: PR-1
+      build: "1"
+      context: pr-build
+      jenkins.io/task-stage-name: from-build-pack
+      owner: cb-kubecd
+      repository: bdd-spring-1567745634
+      tekton.dev/pipeline: cb-kubecd-bdd-spring-1567745634-s92nd-1
+      tekton.dev/pipelineRun: cb-kubecd-bdd-spring-1567745634-s92nd-1
+      tekton.dev/pipelineTask: from-build-pack
+      tekton.dev/task: cb-kubecd-bdd-spring-1567745634-s92nd-from-build-pack-1
+      tekton.dev/taskRun: cb-kubecd-bdd-spring-1567745634-s92nd-1-from-build-pack-x8hsc
+    name: cb-kubecd-bdd-spring-1567745634-s92nd-1-from-build-pack-x8hsc-pod-f15fe6
+    namespace: jx
+    ownerReferences:
+    - apiVersion: tekton.dev/v1alpha1
+      blockOwnerDeletion: true
+      controller: true
+      kind: TaskRun
+      name: cb-kubecd-bdd-spring-1567745634-s92nd-1-from-build-pack-x8hsc
+      uid: 92693a41-d066-11e9-8eea-42010a8400f6
+    resourceVersion: "11957"
+    selfLink: /api/v1/namespaces/jx/pods/cb-kubecd-bdd-spring-1567745634-s92nd-1-from-build-pack-x8hsc-pod-f15fe6
+    uid: 92a3452e-d066-11e9-8eea-42010a8400f6
+  spec:
+    containers:
+    - args:
+      - -wait_file
+      - /builder/downward/ready
+      - -post_file
+      - /builder/tools/0
+      - -wait_file_content
+      - -entrypoint
+      - /ko-app/git-init
+      - --
+      - -url
+      - https://github.com/cb-kubecd/bdd-spring-1567745634.git
+      - -revision
+      - master
+      - -path
+      - /workspace/source
+      command:
+      - /builder/tools/entrypoint
+      env:
+      - name: HOME
+        value: /builder/home
+      image: gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/git-init:v0.5.1
+      imagePullPolicy: IfNotPresent
+      name: step-git-source-cb-kubecd-bdd-spring-1567745634-n49gk
+      resources:
+        requests:
+          cpu: "0"
+          ephemeral-storage: "0"
+          memory: "0"
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /builder/tools
+        name: tools
+      - mountPath: /builder/downward
+        name: downward
+      - mountPath: /workspace
+        name: workspace
+      - mountPath: /builder/home
+        name: home
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: tekton-bot-token-ds8q5
+        readOnly: true
+      workingDir: /workspace
+    - args:
+      - -wait_file
+      - /builder/tools/0
+      - -post_file
+      - /builder/tools/1
+      - -entrypoint
+      - jx
+      - --
+      - step
+      - git
+      - merge
+      - --verbose
+      command:
+      - /builder/tools/entrypoint
+      env:
+      - name: HOME
+        value: /builder/home
+      - name: APP_NAME
+        value: bdd-spring-1567745634
+      - name: BRANCH_NAME
+        value: PR-1
+      - name: BUILD_NUMBER
+        value: "1"
+      - name: JOB_NAME
+        value: cb-kubecd/bdd-spring-1567745634/PR-1
+      - name: JX_LOG_FORMAT
+        value: json
+      - name: PIPELINE_CONTEXT
+        value: pr-build
+      - name: PIPELINE_KIND
+        value: pullrequest
+      - name: PULL_BASE_REF
+        value: master
+      - name: PULL_BASE_SHA
+        value: 441de50841eb31130c8a59ae0edc00d97f6b7b97
+      - name: PULL_REFS
+        value: master:441de50841eb31130c8a59ae0edc00d97f6b7b97,1:c6bd3e0221a122dca3a00e87cb9188daed2e1d44,2:6cf1b84eefb280171676f26dd43adf95a4a0b679
+      - name: REPO_NAME
+        value: bdd-spring-1567745634
+      - name: REPO_OWNER
+        value: cb-kubecd
+      - name: SOURCE_URL
+        value: https://github.com/cb-kubecd/bdd-spring-1567745634.git
+      - name: DOCKER_REGISTRY
+        valueFrom:
+          configMapKeyRef:
+            key: docker.registry
+            name: jenkins-x-docker-registry
+      - name: DOCKER_CONFIG
+        value: /home/jenkins/.docker/
+      - name: GIT_AUTHOR_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_AUTHOR_NAME
+        value: jenkins-x-bot
+      - name: GIT_COMMITTER_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_COMMITTER_NAME
+        value: jenkins-x-bot
+      - name: MAVEN_OPTS
+        value: -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
+      - name: XDG_CONFIG_HOME
+        value: /workspace/xdg_config
+      - name: _JAVA_OPTIONS
+        value: -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -Dsun.zip.disableMemoryMapping=true
+          -XX:+UseParallelGC -XX:MinHeapFreeRatio=5 -XX:MaxHeapFreeRatio=10 -XX:GCTimeRatio=4
+          -XX:AdaptiveSizePolicyWeight=90 -Xms10m -Xmx192m
+      - name: JX_BATCH_MODE
+        value: "true"
+      - name: VERSION
+        value: 0.0.0-SNAPSHOT-PR-1-1
+      - name: BUILD_ID
+        value: "1"
+      - name: PREVIEW_VERSION
+        value: 0.0.0-SNAPSHOT-PR-1-1
+      image: gcr.io/jenkinsxio/builder-jx:0.1.723
+      imagePullPolicy: IfNotPresent
+      name: step-git-merge
+      resources:
+        requests:
+          cpu: 400m
+          ephemeral-storage: "0"
+          memory: 512Mi
+      securityContext:
+        privileged: true
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /home/jenkins
+        name: workspace-volume
+      - mountPath: /var/run/docker.sock
+        name: docker-daemon
+      - mountPath: /root/.m2/
+        name: volume-0
+      - mountPath: /home/jenkins/.docker
+        name: volume-1
+      - mountPath: /home/jenkins/.gnupg
+        name: volume-2
+      - mountPath: /etc/podinfo
+        name: podinfo
+        readOnly: true
+      - mountPath: /builder/tools
+        name: tools
+      - mountPath: /workspace
+        name: workspace
+      - mountPath: /builder/home
+        name: home
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: tekton-bot-token-ds8q5
+        readOnly: true
+      workingDir: /workspace/source
+    - args:
+      - -wait_file
+      - /builder/tools/1
+      - -post_file
+      - /builder/tools/2
+      - -entrypoint
+      - /bin/sh
+      - --
+      - -c
+      - mvn versions:set -DnewVersion=$PREVIEW_VERSION
+      command:
+      - /builder/tools/entrypoint
+      env:
+      - name: HOME
+        value: /builder/home
+      - name: APP_NAME
+        value: bdd-spring-1567745634
+      - name: BRANCH_NAME
+        value: PR-1
+      - name: BUILD_NUMBER
+        value: "1"
+      - name: DOCKER_CONFIG
+        value: /home/jenkins/.docker/
+      - name: DOCKER_REGISTRY
+        valueFrom:
+          configMapKeyRef:
+            key: docker.registry
+            name: jenkins-x-docker-registry
+      - name: GIT_AUTHOR_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_AUTHOR_NAME
+        value: jenkins-x-bot
+      - name: GIT_COMMITTER_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_COMMITTER_NAME
+        value: jenkins-x-bot
+      - name: JOB_NAME
+        value: cb-kubecd/bdd-spring-1567745634/PR-1
+      - name: JX_LOG_FORMAT
+        value: json
+      - name: MAVEN_OPTS
+        value: -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
+      - name: PIPELINE_CONTEXT
+        value: pr-build
+      - name: PIPELINE_KIND
+        value: pullrequest
+      - name: PULL_BASE_REF
+        value: master
+      - name: PULL_BASE_SHA
+        value: 441de50841eb31130c8a59ae0edc00d97f6b7b97
+      - name: PULL_REFS
+        value: master:441de50841eb31130c8a59ae0edc00d97f6b7b97,1:c6bd3e0221a122dca3a00e87cb9188daed2e1d44,2:6cf1b84eefb280171676f26dd43adf95a4a0b679
+      - name: REPO_NAME
+        value: bdd-spring-1567745634
+      - name: REPO_OWNER
+        value: cb-kubecd
+      - name: SOURCE_URL
+        value: https://github.com/cb-kubecd/bdd-spring-1567745634.git
+      - name: XDG_CONFIG_HOME
+        value: /workspace/xdg_config
+      - name: _JAVA_OPTIONS
+        value: -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -Dsun.zip.disableMemoryMapping=true
+          -XX:+UseParallelGC -XX:MinHeapFreeRatio=5 -XX:MaxHeapFreeRatio=10 -XX:GCTimeRatio=4
+          -XX:AdaptiveSizePolicyWeight=90 -Xms10m -Xmx192m
+      - name: JX_BATCH_MODE
+        value: "true"
+      - name: VERSION
+        value: 0.0.0-SNAPSHOT-PR-1-1
+      - name: BUILD_ID
+        value: "1"
+      - name: PREVIEW_VERSION
+        value: 0.0.0-SNAPSHOT-PR-1-1
+      image: gcr.io/jenkinsxio/builder-maven:0.1.723
+      imagePullPolicy: IfNotPresent
+      name: step-build-set-version
+      resources:
+        requests:
+          cpu: "0"
+          ephemeral-storage: "0"
+          memory: "0"
+      securityContext:
+        privileged: true
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /home/jenkins
+        name: workspace-volume
+      - mountPath: /var/run/docker.sock
+        name: docker-daemon
+      - mountPath: /root/.m2/
+        name: volume-0
+      - mountPath: /home/jenkins/.docker
+        name: volume-1
+      - mountPath: /home/jenkins/.gnupg
+        name: volume-2
+      - mountPath: /etc/podinfo
+        name: podinfo
+        readOnly: true
+      - mountPath: /builder/tools
+        name: tools
+      - mountPath: /workspace
+        name: workspace
+      - mountPath: /builder/home
+        name: home
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: tekton-bot-token-ds8q5
+        readOnly: true
+      workingDir: /workspace/source
+    - args:
+      - -wait_file
+      - /builder/tools/2
+      - -post_file
+      - /builder/tools/3
+      - -entrypoint
+      - /bin/sh
+      - --
+      - -c
+      - mvn install
+      command:
+      - /builder/tools/entrypoint
+      env:
+      - name: HOME
+        value: /builder/home
+      - name: APP_NAME
+        value: bdd-spring-1567745634
+      - name: BRANCH_NAME
+        value: PR-1
+      - name: BUILD_NUMBER
+        value: "1"
+      - name: DOCKER_CONFIG
+        value: /home/jenkins/.docker/
+      - name: DOCKER_REGISTRY
+        valueFrom:
+          configMapKeyRef:
+            key: docker.registry
+            name: jenkins-x-docker-registry
+      - name: GIT_AUTHOR_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_AUTHOR_NAME
+        value: jenkins-x-bot
+      - name: GIT_COMMITTER_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_COMMITTER_NAME
+        value: jenkins-x-bot
+      - name: JOB_NAME
+        value: cb-kubecd/bdd-spring-1567745634/PR-1
+      - name: JX_LOG_FORMAT
+        value: json
+      - name: MAVEN_OPTS
+        value: -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
+      - name: PIPELINE_CONTEXT
+        value: pr-build
+      - name: PIPELINE_KIND
+        value: pullrequest
+      - name: PULL_BASE_REF
+        value: master
+      - name: PULL_BASE_SHA
+        value: 441de50841eb31130c8a59ae0edc00d97f6b7b97
+      - name: PULL_REFS
+        value: master:441de50841eb31130c8a59ae0edc00d97f6b7b97,1:c6bd3e0221a122dca3a00e87cb9188daed2e1d44,2:6cf1b84eefb280171676f26dd43adf95a4a0b679
+      - name: REPO_NAME
+        value: bdd-spring-1567745634
+      - name: REPO_OWNER
+        value: cb-kubecd
+      - name: SOURCE_URL
+        value: https://github.com/cb-kubecd/bdd-spring-1567745634.git
+      - name: XDG_CONFIG_HOME
+        value: /workspace/xdg_config
+      - name: _JAVA_OPTIONS
+        value: -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -Dsun.zip.disableMemoryMapping=true
+          -XX:+UseParallelGC -XX:MinHeapFreeRatio=5 -XX:MaxHeapFreeRatio=10 -XX:GCTimeRatio=4
+          -XX:AdaptiveSizePolicyWeight=90 -Xms10m -Xmx192m
+      - name: JX_BATCH_MODE
+        value: "true"
+      - name: VERSION
+        value: 0.0.0-SNAPSHOT-PR-1-1
+      - name: BUILD_ID
+        value: "1"
+      - name: PREVIEW_VERSION
+        value: 0.0.0-SNAPSHOT-PR-1-1
+      image: gcr.io/jenkinsxio/builder-maven:0.1.723
+      imagePullPolicy: IfNotPresent
+      name: step-build-mvn-install
+      resources:
+        requests:
+          cpu: "0"
+          ephemeral-storage: "0"
+          memory: "0"
+      securityContext:
+        privileged: true
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /home/jenkins
+        name: workspace-volume
+      - mountPath: /var/run/docker.sock
+        name: docker-daemon
+      - mountPath: /root/.m2/
+        name: volume-0
+      - mountPath: /home/jenkins/.docker
+        name: volume-1
+      - mountPath: /home/jenkins/.gnupg
+        name: volume-2
+      - mountPath: /etc/podinfo
+        name: podinfo
+        readOnly: true
+      - mountPath: /builder/tools
+        name: tools
+      - mountPath: /workspace
+        name: workspace
+      - mountPath: /builder/home
+        name: home
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: tekton-bot-token-ds8q5
+        readOnly: true
+      workingDir: /workspace/source
+    - args:
+      - -wait_file
+      - /builder/tools/3
+      - -post_file
+      - /builder/tools/4
+      - -entrypoint
+      - /bin/sh
+      - --
+      - -c
+      - skaffold version
+      command:
+      - /builder/tools/entrypoint
+      env:
+      - name: HOME
+        value: /builder/home
+      - name: APP_NAME
+        value: bdd-spring-1567745634
+      - name: BRANCH_NAME
+        value: PR-1
+      - name: BUILD_NUMBER
+        value: "1"
+      - name: DOCKER_CONFIG
+        value: /home/jenkins/.docker/
+      - name: DOCKER_REGISTRY
+        valueFrom:
+          configMapKeyRef:
+            key: docker.registry
+            name: jenkins-x-docker-registry
+      - name: GIT_AUTHOR_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_AUTHOR_NAME
+        value: jenkins-x-bot
+      - name: GIT_COMMITTER_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_COMMITTER_NAME
+        value: jenkins-x-bot
+      - name: JOB_NAME
+        value: cb-kubecd/bdd-spring-1567745634/PR-1
+      - name: JX_LOG_FORMAT
+        value: json
+      - name: MAVEN_OPTS
+        value: -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
+      - name: PIPELINE_CONTEXT
+        value: pr-build
+      - name: PIPELINE_KIND
+        value: pullrequest
+      - name: PULL_BASE_REF
+        value: master
+      - name: PULL_BASE_SHA
+        value: 441de50841eb31130c8a59ae0edc00d97f6b7b97
+      - name: PULL_REFS
+        value: master:441de50841eb31130c8a59ae0edc00d97f6b7b97,1:c6bd3e0221a122dca3a00e87cb9188daed2e1d44,2:6cf1b84eefb280171676f26dd43adf95a4a0b679
+      - name: REPO_NAME
+        value: bdd-spring-1567745634
+      - name: REPO_OWNER
+        value: cb-kubecd
+      - name: SOURCE_URL
+        value: https://github.com/cb-kubecd/bdd-spring-1567745634.git
+      - name: XDG_CONFIG_HOME
+        value: /workspace/xdg_config
+      - name: _JAVA_OPTIONS
+        value: -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -Dsun.zip.disableMemoryMapping=true
+          -XX:+UseParallelGC -XX:MinHeapFreeRatio=5 -XX:MaxHeapFreeRatio=10 -XX:GCTimeRatio=4
+          -XX:AdaptiveSizePolicyWeight=90 -Xms10m -Xmx192m
+      - name: JX_BATCH_MODE
+        value: "true"
+      - name: VERSION
+        value: 0.0.0-SNAPSHOT-PR-1-1
+      - name: BUILD_ID
+        value: "1"
+      - name: PREVIEW_VERSION
+        value: 0.0.0-SNAPSHOT-PR-1-1
+      image: gcr.io/jenkinsxio/builder-maven:0.1.723
+      imagePullPolicy: IfNotPresent
+      name: step-build-skaffold-version
+      resources:
+        requests:
+          cpu: "0"
+          ephemeral-storage: "0"
+          memory: "0"
+      securityContext:
+        privileged: true
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /home/jenkins
+        name: workspace-volume
+      - mountPath: /var/run/docker.sock
+        name: docker-daemon
+      - mountPath: /root/.m2/
+        name: volume-0
+      - mountPath: /home/jenkins/.docker
+        name: volume-1
+      - mountPath: /home/jenkins/.gnupg
+        name: volume-2
+      - mountPath: /etc/podinfo
+        name: podinfo
+        readOnly: true
+      - mountPath: /builder/tools
+        name: tools
+      - mountPath: /workspace
+        name: workspace
+      - mountPath: /builder/home
+        name: home
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: tekton-bot-token-ds8q5
+        readOnly: true
+      workingDir: /workspace/source
+    - args:
+      - -wait_file
+      - /builder/tools/4
+      - -post_file
+      - /builder/tools/5
+      - -entrypoint
+      - /kaniko/executor
+      - --
+      - --cache=true
+      - --cache-dir=/workspace
+      - --context=/workspace/source
+      - --dockerfile=/workspace/source/Dockerfile
+      - --destination=gcr.io/jenkins-x-bdd2/bdd-spring-1567745634:0.0.0-SNAPSHOT-PR-1-1
+      - --cache-repo=gcr.io/jenkins-x-bdd2/cache
+      command:
+      - /builder/tools/entrypoint
+      env:
+      - name: HOME
+        value: /builder/home
+      - name: APP_NAME
+        value: bdd-spring-1567745634
+      - name: BRANCH_NAME
+        value: PR-1
+      - name: BUILD_NUMBER
+        value: "1"
+      - name: DOCKER_CONFIG
+        value: /home/jenkins/.docker/
+      - name: DOCKER_REGISTRY
+        valueFrom:
+          configMapKeyRef:
+            key: docker.registry
+            name: jenkins-x-docker-registry
+      - name: GIT_AUTHOR_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_AUTHOR_NAME
+        value: jenkins-x-bot
+      - name: GIT_COMMITTER_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_COMMITTER_NAME
+        value: jenkins-x-bot
+      - name: JOB_NAME
+        value: cb-kubecd/bdd-spring-1567745634/PR-1
+      - name: JX_LOG_FORMAT
+        value: json
+      - name: MAVEN_OPTS
+        value: -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
+      - name: PIPELINE_CONTEXT
+        value: pr-build
+      - name: PIPELINE_KIND
+        value: pullrequest
+      - name: PULL_BASE_REF
+        value: master
+      - name: PULL_BASE_SHA
+        value: 441de50841eb31130c8a59ae0edc00d97f6b7b97
+      - name: PULL_REFS
+        value: master:441de50841eb31130c8a59ae0edc00d97f6b7b97,1:c6bd3e0221a122dca3a00e87cb9188daed2e1d44,2:6cf1b84eefb280171676f26dd43adf95a4a0b679
+      - name: REPO_NAME
+        value: bdd-spring-1567745634
+      - name: REPO_OWNER
+        value: cb-kubecd
+      - name: SOURCE_URL
+        value: https://github.com/cb-kubecd/bdd-spring-1567745634.git
+      - name: XDG_CONFIG_HOME
+        value: /workspace/xdg_config
+      - name: _JAVA_OPTIONS
+        value: -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -Dsun.zip.disableMemoryMapping=true
+          -XX:+UseParallelGC -XX:MinHeapFreeRatio=5 -XX:MaxHeapFreeRatio=10 -XX:GCTimeRatio=4
+          -XX:AdaptiveSizePolicyWeight=90 -Xms10m -Xmx192m
+      - name: JX_BATCH_MODE
+        value: "true"
+      - name: VERSION
+        value: 0.0.0-SNAPSHOT-PR-1-1
+      - name: BUILD_ID
+        value: "1"
+      - name: GOOGLE_APPLICATION_CREDENTIALS
+        value: /kaniko-secret/secret.json
+      - name: PREVIEW_VERSION
+        value: 0.0.0-SNAPSHOT-PR-1-1
+      image: gcr.io/kaniko-project/executor:v0.19.0
+      imagePullPolicy: IfNotPresent
+      name: step-build-container-build
+      resources:
+        requests:
+          cpu: "0"
+          ephemeral-storage: "0"
+          memory: "0"
+      securityContext:
+        privileged: true
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /home/jenkins
+        name: workspace-volume
+      - mountPath: /var/run/docker.sock
+        name: docker-daemon
+      - mountPath: /root/.m2/
+        name: volume-0
+      - mountPath: /home/jenkins/.docker
+        name: volume-1
+      - mountPath: /home/jenkins/.gnupg
+        name: volume-2
+      - mountPath: /kaniko-secret
+        name: kaniko-secret
+        readOnly: true
+      - mountPath: /etc/podinfo
+        name: podinfo
+        readOnly: true
+      - mountPath: /builder/tools
+        name: tools
+      - mountPath: /workspace
+        name: workspace
+      - mountPath: /builder/home
+        name: home
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: tekton-bot-token-ds8q5
+        readOnly: true
+      workingDir: /workspace/source
+    - args:
+      - -wait_file
+      - /builder/tools/5
+      - -post_file
+      - /builder/tools/6
+      - -entrypoint
+      - /bin/sh
+      - --
+      - -c
+      - jx step post build --image $DOCKER_REGISTRY/$ORG/$APP_NAME:$PREVIEW_VERSION
+      command:
+      - /builder/tools/entrypoint
+      env:
+      - name: HOME
+        value: /builder/home
+      - name: APP_NAME
+        value: bdd-spring-1567745634
+      - name: BRANCH_NAME
+        value: PR-1
+      - name: BUILD_NUMBER
+        value: "1"
+      - name: DOCKER_CONFIG
+        value: /home/jenkins/.docker/
+      - name: DOCKER_REGISTRY
+        valueFrom:
+          configMapKeyRef:
+            key: docker.registry
+            name: jenkins-x-docker-registry
+      - name: GIT_AUTHOR_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_AUTHOR_NAME
+        value: jenkins-x-bot
+      - name: GIT_COMMITTER_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_COMMITTER_NAME
+        value: jenkins-x-bot
+      - name: JOB_NAME
+        value: cb-kubecd/bdd-spring-1567745634/PR-1
+      - name: JX_LOG_FORMAT
+        value: json
+      - name: MAVEN_OPTS
+        value: -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
+      - name: PIPELINE_CONTEXT
+        value: pr-build
+      - name: PIPELINE_KIND
+        value: pullrequest
+      - name: PULL_BASE_REF
+        value: master
+      - name: PULL_BASE_SHA
+        value: 441de50841eb31130c8a59ae0edc00d97f6b7b97
+      - name: PULL_REFS
+        value: master:441de50841eb31130c8a59ae0edc00d97f6b7b97,1:c6bd3e0221a122dca3a00e87cb9188daed2e1d44,2:6cf1b84eefb280171676f26dd43adf95a4a0b679
+      - name: REPO_NAME
+        value: bdd-spring-1567745634
+      - name: REPO_OWNER
+        value: cb-kubecd
+      - name: SOURCE_URL
+        value: https://github.com/cb-kubecd/bdd-spring-1567745634.git
+      - name: XDG_CONFIG_HOME
+        value: /workspace/xdg_config
+      - name: _JAVA_OPTIONS
+        value: -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -Dsun.zip.disableMemoryMapping=true
+          -XX:+UseParallelGC -XX:MinHeapFreeRatio=5 -XX:MaxHeapFreeRatio=10 -XX:GCTimeRatio=4
+          -XX:AdaptiveSizePolicyWeight=90 -Xms10m -Xmx192m
+      - name: JX_BATCH_MODE
+        value: "true"
+      - name: VERSION
+        value: 0.0.0-SNAPSHOT-PR-1-1
+      - name: BUILD_ID
+        value: "1"
+      - name: PREVIEW_VERSION
+        value: 0.0.0-SNAPSHOT-PR-1-1
+      image: gcr.io/jenkinsxio/builder-maven:0.1.723
+      imagePullPolicy: IfNotPresent
+      name: step-postbuild-post-build
+      resources:
+        requests:
+          cpu: "0"
+          ephemeral-storage: "0"
+          memory: "0"
+      securityContext:
+        privileged: true
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /home/jenkins
+        name: workspace-volume
+      - mountPath: /var/run/docker.sock
+        name: docker-daemon
+      - mountPath: /root/.m2/
+        name: volume-0
+      - mountPath: /home/jenkins/.docker
+        name: volume-1
+      - mountPath: /home/jenkins/.gnupg
+        name: volume-2
+      - mountPath: /etc/podinfo
+        name: podinfo
+        readOnly: true
+      - mountPath: /builder/tools
+        name: tools
+      - mountPath: /workspace
+        name: workspace
+      - mountPath: /builder/home
+        name: home
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: tekton-bot-token-ds8q5
+        readOnly: true
+      workingDir: /workspace/source
+    - args:
+      - -wait_file
+      - /builder/tools/6
+      - -post_file
+      - /builder/tools/7
+      - -entrypoint
+      - /bin/sh
+      - --
+      - -c
+      - make preview
+      command:
+      - /builder/tools/entrypoint
+      env:
+      - name: HOME
+        value: /builder/home
+      - name: APP_NAME
+        value: bdd-spring-1567745634
+      - name: BRANCH_NAME
+        value: PR-1
+      - name: BUILD_NUMBER
+        value: "1"
+      - name: DOCKER_CONFIG
+        value: /home/jenkins/.docker/
+      - name: DOCKER_REGISTRY
+        valueFrom:
+          configMapKeyRef:
+            key: docker.registry
+            name: jenkins-x-docker-registry
+      - name: GIT_AUTHOR_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_AUTHOR_NAME
+        value: jenkins-x-bot
+      - name: GIT_COMMITTER_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_COMMITTER_NAME
+        value: jenkins-x-bot
+      - name: JOB_NAME
+        value: cb-kubecd/bdd-spring-1567745634/PR-1
+      - name: JX_LOG_FORMAT
+        value: json
+      - name: MAVEN_OPTS
+        value: -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
+      - name: PIPELINE_CONTEXT
+        value: pr-build
+      - name: PIPELINE_KIND
+        value: pullrequest
+      - name: PULL_BASE_REF
+        value: master
+      - name: PULL_BASE_SHA
+        value: 441de50841eb31130c8a59ae0edc00d97f6b7b97
+      - name: PULL_REFS
+        value: master:441de50841eb31130c8a59ae0edc00d97f6b7b97,1:c6bd3e0221a122dca3a00e87cb9188daed2e1d44,2:6cf1b84eefb280171676f26dd43adf95a4a0b679
+      - name: REPO_NAME
+        value: bdd-spring-1567745634
+      - name: REPO_OWNER
+        value: cb-kubecd
+      - name: SOURCE_URL
+        value: https://github.com/cb-kubecd/bdd-spring-1567745634.git
+      - name: XDG_CONFIG_HOME
+        value: /workspace/xdg_config
+      - name: _JAVA_OPTIONS
+        value: -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -Dsun.zip.disableMemoryMapping=true
+          -XX:+UseParallelGC -XX:MinHeapFreeRatio=5 -XX:MaxHeapFreeRatio=10 -XX:GCTimeRatio=4
+          -XX:AdaptiveSizePolicyWeight=90 -Xms10m -Xmx192m
+      - name: JX_BATCH_MODE
+        value: "true"
+      - name: VERSION
+        value: 0.0.0-SNAPSHOT-PR-1-1
+      - name: BUILD_ID
+        value: "1"
+      - name: PREVIEW_VERSION
+        value: 0.0.0-SNAPSHOT-PR-1-1
+      image: gcr.io/jenkinsxio/builder-maven:0.1.723
+      imagePullPolicy: IfNotPresent
+      name: step-promote-make-preview
+      resources:
+        requests:
+          cpu: "0"
+          ephemeral-storage: "0"
+          memory: "0"
+      securityContext:
+        privileged: true
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /home/jenkins
+        name: workspace-volume
+      - mountPath: /var/run/docker.sock
+        name: docker-daemon
+      - mountPath: /root/.m2/
+        name: volume-0
+      - mountPath: /home/jenkins/.docker
+        name: volume-1
+      - mountPath: /home/jenkins/.gnupg
+        name: volume-2
+      - mountPath: /etc/podinfo
+        name: podinfo
+        readOnly: true
+      - mountPath: /builder/tools
+        name: tools
+      - mountPath: /workspace
+        name: workspace
+      - mountPath: /builder/home
+        name: home
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: tekton-bot-token-ds8q5
+        readOnly: true
+      workingDir: /workspace/source/charts/preview
+    - args:
+      - -wait_file
+      - /builder/tools/7
+      - -post_file
+      - /builder/tools/8
+      - -entrypoint
+      - /bin/sh
+      - --
+      - -c
+      - jx preview --app $APP_NAME --dir ../..
+      command:
+      - /builder/tools/entrypoint
+      env:
+      - name: HOME
+        value: /builder/home
+      - name: APP_NAME
+        value: bdd-spring-1567745634
+      - name: BRANCH_NAME
+        value: PR-1
+      - name: BUILD_NUMBER
+        value: "1"
+      - name: DOCKER_CONFIG
+        value: /home/jenkins/.docker/
+      - name: DOCKER_REGISTRY
+        valueFrom:
+          configMapKeyRef:
+            key: docker.registry
+            name: jenkins-x-docker-registry
+      - name: GIT_AUTHOR_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_AUTHOR_NAME
+        value: jenkins-x-bot
+      - name: GIT_COMMITTER_EMAIL
+        value: jenkins-x@googlegroups.com
+      - name: GIT_COMMITTER_NAME
+        value: jenkins-x-bot
+      - name: JOB_NAME
+        value: cb-kubecd/bdd-spring-1567745634/PR-1
+      - name: JX_LOG_FORMAT
+        value: json
+      - name: MAVEN_OPTS
+        value: -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
+      - name: PIPELINE_CONTEXT
+        value: pr-build
+      - name: PIPELINE_KIND
+        value: pullrequest
+      - name: PULL_BASE_REF
+        value: master
+      - name: PULL_BASE_SHA
+        value: 441de50841eb31130c8a59ae0edc00d97f6b7b97
+      - name: PULL_REFS
+        value: master:441de50841eb31130c8a59ae0edc00d97f6b7b97,1:c6bd3e0221a122dca3a00e87cb9188daed2e1d44,2:6cf1b84eefb280171676f26dd43adf95a4a0b679
+      - name: REPO_NAME
+        value: bdd-spring-1567745634
+      - name: REPO_OWNER
+        value: cb-kubecd
+      - name: SOURCE_URL
+        value: https://github.com/cb-kubecd/bdd-spring-1567745634.git
+      - name: XDG_CONFIG_HOME
+        value: /workspace/xdg_config
+      - name: _JAVA_OPTIONS
+        value: -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -Dsun.zip.disableMemoryMapping=true
+          -XX:+UseParallelGC -XX:MinHeapFreeRatio=5 -XX:MaxHeapFreeRatio=10 -XX:GCTimeRatio=4
+          -XX:AdaptiveSizePolicyWeight=90 -Xms10m -Xmx192m
+      - name: JX_BATCH_MODE
+        value: "true"
+      - name: VERSION
+        value: 0.0.0-SNAPSHOT-PR-1-1
+      - name: BUILD_ID
+        value: "1"
+      - name: PREVIEW_VERSION
+        value: 0.0.0-SNAPSHOT-PR-1-1
+      image: gcr.io/jenkinsxio/builder-maven:0.1.723
+      imagePullPolicy: IfNotPresent
+      name: step-promote-jx-preview
+      resources:
+        requests:
+          cpu: "0"
+          ephemeral-storage: "0"
+          memory: "0"
+      securityContext:
+        privileged: true
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /home/jenkins
+        name: workspace-volume
+      - mountPath: /var/run/docker.sock
+        name: docker-daemon
+      - mountPath: /root/.m2/
+        name: volume-0
+      - mountPath: /home/jenkins/.docker
+        name: volume-1
+      - mountPath: /home/jenkins/.gnupg
+        name: volume-2
+      - mountPath: /etc/podinfo
+        name: podinfo
+        readOnly: true
+      - mountPath: /builder/tools
+        name: tools
+      - mountPath: /workspace
+        name: workspace
+      - mountPath: /builder/home
+        name: home
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: tekton-bot-token-ds8q5
+        readOnly: true
+      workingDir: /workspace/source/charts/preview
+    dnsPolicy: ClusterFirst
+    enableServiceLinks: true
+    initContainers:
+    - args:
+      - -basic-git=knative-git-user-pass=https://github.com
+      command:
+      - /ko-app/creds-init
+      env:
+      - name: HOME
+        value: /builder/home
+      image: gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/creds-init:v0.5.1
+      imagePullPolicy: IfNotPresent
+      name: step-credential-initializer-69f5q
+      resources: {}
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /workspace
+        name: workspace
+      - mountPath: /builder/home
+        name: home
+      - mountPath: /var/build-secrets/knative-git-user-pass
+        name: secret-volume-knative-git-user-pass-z4xdz
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: tekton-bot-token-ds8q5
+        readOnly: true
+      workingDir: /workspace
+    - args:
+      - -args
+      - mkdir -p /workspace/source /workspace/source/charts/preview
+      command:
+      - /ko-app/bash
+      env:
+      - name: HOME
+        value: /builder/home
+      image: gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/bash:v0.5.1
+      imagePullPolicy: IfNotPresent
+      name: step-working-dir-initializer-rx794
+      resources: {}
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /workspace
+        name: workspace
+      - mountPath: /builder/home
+        name: home
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: tekton-bot-token-ds8q5
+        readOnly: true
+      workingDir: /workspace
+    - args:
+      - -c
+      - cp /ko-app/entrypoint /builder/tools/entrypoint
+      command:
+      - /bin/sh
+      env:
+      - name: HOME
+        value: /builder/home
+      image: gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/entrypoint:v0.5.1
+      imagePullPolicy: IfNotPresent
+      name: step-place-tools
+      resources: {}
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /builder/tools
+        name: tools
+      - mountPath: /workspace
+        name: workspace
+      - mountPath: /builder/home
+        name: home
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: tekton-bot-token-ds8q5
+        readOnly: true
+      workingDir: /workspace
+    nodeName: gke-pr-471-8-bdd-boot-lh-default-pool-d743e3cf-f254
+    priority: 0
+    restartPolicy: Never
+    schedulerName: default-scheduler
+    securityContext: {}
+    serviceAccount: tekton-bot
+    serviceAccountName: tekton-bot
+    terminationGracePeriodSeconds: 30
+    tolerations:
+    - effect: NoExecute
+      key: node.kubernetes.io/not-ready
+      operator: Exists
+      tolerationSeconds: 300
+    - effect: NoExecute
+      key: node.kubernetes.io/unreachable
+      operator: Exists
+      tolerationSeconds: 300
+    volumes:
+    - hostPath:
+        path: /var/run/docker.sock
+        type: ""
+      name: docker-daemon
+    - name: volume-0
+      secret:
+        defaultMode: 420
+        secretName: jenkins-maven-settings
+    - name: volume-1
+      secret:
+        defaultMode: 420
+        secretName: jenkins-docker-cfg
+    - name: volume-2
+      secret:
+        defaultMode: 420
+        secretName: jenkins-release-gpg
+    - emptyDir: {}
+      name: workspace-volume
+    - downwardAPI:
+        defaultMode: 420
+        items:
+        - fieldRef:
+            apiVersion: v1
+            fieldPath: metadata.labels
+          path: labels
+      name: podinfo
+    - name: kaniko-secret
+      secret:
+        defaultMode: 420
+        items:
+        - key: kaniko-secret
+          path: secret.json
+        secretName: kaniko-secret
+    - emptyDir: {}
+      name: tools
+    - downwardAPI:
+        defaultMode: 420
+        items:
+        - fieldRef:
+            apiVersion: v1
+            fieldPath: metadata.annotations['tekton.dev/ready']
+          path: ready
+      name: downward
+    - emptyDir: {}
+      name: workspace
+    - emptyDir: {}
+      name: home
+    - name: secret-volume-knative-git-user-pass-z4xdz
+      secret:
+        defaultMode: 420
+        secretName: knative-git-user-pass
+    - name: tekton-bot-token-ds8q5
+      secret:
+        defaultMode: 420
+        secretName: tekton-bot-token-ds8q5
+  status:
+    conditions:
+    - lastProbeTime: null
+      lastTransitionTime: "2019-09-06T05:24:22Z"
+      reason: PodCompleted
+      status: "True"
+      type: Initialized
+    - lastProbeTime: null
+      lastTransitionTime: "2019-09-06T05:24:30Z"
+      reason: PodCompleted
+      status: "False"
+      type: Ready
+    - lastProbeTime: null
+      lastTransitionTime: "2019-09-06T05:24:30Z"
+      reason: PodCompleted
+      status: "False"
+      type: ContainersReady
+    - lastProbeTime: null
+      lastTransitionTime: "2019-09-06T05:24:17Z"
+      status: "True"
+      type: PodScheduled
+    containerStatuses:
+    - containerID: docker://188efb70db9eff223f4882764bc8ae66342073984306bcb1aeca543829bbc643
+      image: gcr.io/kaniko-project/executor:v0.19.0
+      imageID: docker-pullable://gcr.io/kaniko-project/executor@sha256:94c69a4be5eccf88070e640bc682c969a53996c8a4490e39776c9411b974d8fa
+      lastState: {}
+      name: step-build-container-build
+      ready: false
+      restartCount: 0
+      state:
+        terminated:
+          containerID: docker://188efb70db9eff223f4882764bc8ae66342073984306bcb1aeca543829bbc643
+          exitCode: 0
+          finishedAt: "2019-09-06T05:25:31Z"
+          reason: Completed
+          startedAt: "2019-09-06T05:24:25Z"
+    - containerID: docker://032f22674b2ca6474003134872769c707249bcba0e51c5b917951795ddc72f41
+      image: gcr.io/jenkinsxio/builder-maven:0.1.723
+      imageID: docker-pullable://gcr.io/jenkinsxio/builder-maven@sha256:15dd2f148db78162327389198d84fa297670a31d5d9ed4cf958623aaee10e4e9
+      lastState: {}
+      name: step-build-mvn-install
+      ready: false
+      restartCount: 0
+      state:
+        terminated:
+          containerID: docker://032f22674b2ca6474003134872769c707249bcba0e51c5b917951795ddc72f41
+          exitCode: 0
+          finishedAt: "2019-09-06T05:25:19Z"
+          reason: Completed
+          startedAt: "2019-09-06T05:24:25Z"
+    - containerID: docker://580f57695b1c9155fdd635fabf037f113030fa05a56bafeee98569cf20bbece6
+      image: gcr.io/jenkinsxio/builder-maven:0.1.723
+      imageID: docker-pullable://gcr.io/jenkinsxio/builder-maven@sha256:15dd2f148db78162327389198d84fa297670a31d5d9ed4cf958623aaee10e4e9
+      lastState: {}
+      name: step-build-set-version
+      ready: false
+      restartCount: 0
+      state:
+        terminated:
+          containerID: docker://580f57695b1c9155fdd635fabf037f113030fa05a56bafeee98569cf20bbece6
+          exitCode: 0
+          finishedAt: "2019-09-06T05:24:50Z"
+          reason: Completed
+          startedAt: "2019-09-06T05:24:24Z"
+    - containerID: docker://d1328db81230b79abf8f46be14ef1cdb213cb7dfcf241a4010e4fd13281e1e8a
+      image: gcr.io/jenkinsxio/builder-maven:0.1.723
+      imageID: docker-pullable://gcr.io/jenkinsxio/builder-maven@sha256:15dd2f148db78162327389198d84fa297670a31d5d9ed4cf958623aaee10e4e9
+      lastState: {}
+      name: step-build-skaffold-version
+      ready: false
+      restartCount: 0
+      state:
+        terminated:
+          containerID: docker://d1328db81230b79abf8f46be14ef1cdb213cb7dfcf241a4010e4fd13281e1e8a
+          exitCode: 0
+          finishedAt: "2019-09-06T05:25:20Z"
+          reason: Completed
+          startedAt: "2019-09-06T05:24:25Z"
+    - containerID: docker://4f933ae1b4e5172fb11995bd8bed81e5aba99ddbefb01cca6b164efdae57f2a8
+      image: gcr.io/jenkinsxio/builder-jx:0.1.723
+      imageID: docker-pullable://gcr.io/jenkinsxio/builder-jx@sha256:4b006bcb7d76360c770dfebfa60ad7cf9642190a30d1950f5dfe79d6f170cdae
+      lastState: {}
+      name: step-git-merge
+      ready: false
+      restartCount: 0
+      state:
+        terminated:
+          containerID: docker://4f933ae1b4e5172fb11995bd8bed81e5aba99ddbefb01cca6b164efdae57f2a8
+          exitCode: 0
+          finishedAt: "2019-09-06T05:24:32Z"
+          reason: Completed
+          startedAt: "2019-09-06T05:24:23Z"
+    - containerID: docker://956dd16fa58197fa0bad42cfe88db473916649c625253c237c801fb58555762f
+      image: gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/git-init:v0.5.1
+      imageID: docker-pullable://gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/git-init@sha256:7bb771b0f12a6c5495a3ae750e28330dcf01124ea29d628cabeb2b371ead8d2b
+      lastState: {}
+      name: step-git-source-cb-kubecd-bdd-spring-1567745634-n49gk
+      ready: false
+      restartCount: 0
+      state:
+        terminated:
+          containerID: docker://956dd16fa58197fa0bad42cfe88db473916649c625253c237c801fb58555762f
+          exitCode: 0
+          finishedAt: "2019-09-06T05:24:30Z"
+          reason: Completed
+          startedAt: "2019-09-06T05:24:22Z"
+    - containerID: docker://050c60a8d8513484a496e7a3f0f777e086ec4a8d7582493074887ba554be3a00
+      image: gcr.io/jenkinsxio/builder-maven:0.1.723
+      imageID: docker-pullable://gcr.io/jenkinsxio/builder-maven@sha256:15dd2f148db78162327389198d84fa297670a31d5d9ed4cf958623aaee10e4e9
+      lastState: {}
+      name: step-postbuild-post-build
+      ready: false
+      restartCount: 0
+      state:
+        terminated:
+          containerID: docker://050c60a8d8513484a496e7a3f0f777e086ec4a8d7582493074887ba554be3a00
+          exitCode: 0
+          finishedAt: "2019-09-06T05:25:31Z"
+          reason: Completed
+          startedAt: "2019-09-06T05:24:26Z"
+    - containerID: docker://fb5e6440b3f7f891b2ca1b4140421c4ea6f81bf2d7e47a80140b6b4fdc2b958b
+      image: gcr.io/jenkinsxio/builder-maven:0.1.723
+      imageID: docker-pullable://gcr.io/jenkinsxio/builder-maven@sha256:15dd2f148db78162327389198d84fa297670a31d5d9ed4cf958623aaee10e4e9
+      lastState: {}
+      name: step-promote-jx-preview
+      ready: false
+      restartCount: 0
+      state:
+        terminated:
+          containerID: docker://fb5e6440b3f7f891b2ca1b4140421c4ea6f81bf2d7e47a80140b6b4fdc2b958b
+          exitCode: 0
+          finishedAt: "2019-09-06T05:26:56Z"
+          reason: Completed
+          startedAt: "2019-09-06T05:24:27Z"
+    - containerID: docker://255cf699720dee1d4f262b4301cbdaf5ad6b3a945e1431be47ca5ecc6f6d5109
+      image: gcr.io/jenkinsxio/builder-maven:0.1.723
+      imageID: docker-pullable://gcr.io/jenkinsxio/builder-maven@sha256:15dd2f148db78162327389198d84fa297670a31d5d9ed4cf958623aaee10e4e9
+      lastState: {}
+      name: step-promote-make-preview
+      ready: false
+      restartCount: 0
+      state:
+        terminated:
+          containerID: docker://255cf699720dee1d4f262b4301cbdaf5ad6b3a945e1431be47ca5ecc6f6d5109
+          exitCode: 0
+          finishedAt: "2019-09-06T05:25:52Z"
+          reason: Completed
+          startedAt: "2019-09-06T05:24:26Z"
+    hostIP: 10.132.0.118
+    initContainerStatuses:
+    - containerID: docker://18ffd5a848da872a61de40b2ed06f31a5ca202166beff33e98a7ea5b0fba1b47
+      image: gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/creds-init:v0.5.1
+      imageID: docker-pullable://gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/creds-init@sha256:17119dde117437d7109622fc38ec046ec05757b336b223777761b841f5e49d8d
+      lastState: {}
+      name: step-credential-initializer-69f5q
+      ready: true
+      restartCount: 0
+      state:
+        terminated:
+          containerID: docker://18ffd5a848da872a61de40b2ed06f31a5ca202166beff33e98a7ea5b0fba1b47
+          exitCode: 0
+          finishedAt: "2019-09-06T05:24:19Z"
+          reason: Completed
+          startedAt: "2019-09-06T05:24:19Z"
+    - containerID: docker://c6bf46e372e0f50b6eae6ba71b62e24a1f8fa779a3dad9639d7268d2ebbd66c7
+      image: gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/bash:v0.5.1
+      imageID: docker-pullable://gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/bash@sha256:16e89d13b266947239e89057d4541e79e4f65211fc215bdbfe4ea8c2c48552aa
+      lastState: {}
+      name: step-working-dir-initializer-rx794
+      ready: true
+      restartCount: 0
+      state:
+        terminated:
+          containerID: docker://c6bf46e372e0f50b6eae6ba71b62e24a1f8fa779a3dad9639d7268d2ebbd66c7
+          exitCode: 0
+          finishedAt: "2019-09-06T05:24:20Z"
+          reason: Completed
+          startedAt: "2019-09-06T05:24:20Z"
+    - containerID: docker://22356453828f5772f39b51c0a94485460d8b5be1a1fd8b125283c167169ffdcd
+      image: gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/entrypoint:v0.5.1
+      imageID: docker-pullable://gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/entrypoint@sha256:1b7f9a621e7a1344fad071f63551b5991e9e9aa6e40ac59557e34e7c2a17bcdf
+      lastState: {}
+      name: step-place-tools
+      ready: true
+      restartCount: 0
+      state:
+        terminated:
+          containerID: docker://22356453828f5772f39b51c0a94485460d8b5be1a1fd8b125283c167169ffdcd
+          exitCode: 0
+          finishedAt: "2019-09-06T05:24:21Z"
+          reason: Completed
+          startedAt: "2019-09-06T05:24:21Z"
+    phase: Succeeded
+    podIP: 10.28.1.16
+    qosClass: Burstable
+    startTime: "2019-09-06T05:24:17Z"

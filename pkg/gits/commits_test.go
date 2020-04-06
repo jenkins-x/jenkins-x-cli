@@ -1,3 +1,5 @@
+// +build unit
+
 package gits_test
 
 import (
@@ -16,14 +18,9 @@ func TestParseCommits(t *testing.T) {
 		Kind:    "feat",
 		Message: "cheese",
 	})
-	assertParseCommit(t, "feat:(beer) wine is good too", &gits.CommitInfo{
+	assertParseCommit(t, "feat(beer): wine is good too", &gits.CommitInfo{
 		Kind:    "feat",
 		Feature: "beer",
-		Message: "wine is good too",
-	})
-	assertParseCommit(t, "feat(beer): wine is good too", &gits.CommitInfo{
-		Kind:    "feat(beer)",
-		Feature: "",
 		Message: "wine is good too",
 	})
 }

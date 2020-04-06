@@ -1,0 +1,10 @@
+adminUser:
+  username: admin
+enableDocker: false
+gitProvider: github
+gpg: {}
+pipelineUser:
+  github:
+    host: github.com
+    username: jenkins-x-bot-test
+    email: jenkins-x@googlegroups.com

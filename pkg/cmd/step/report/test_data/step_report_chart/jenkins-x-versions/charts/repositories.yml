@@ -1,0 +1,14 @@
+repositories:
+  - prefix: bitnami
+    urls:
+      - https://charts.bitnami.com/bitnami
+  - prefix: flagger
+    urls:
+      - https://flagger.app
+  - prefix: jenkins-x
+    urls:
+      - https://storage.googleapis.com/chartmuseum.jenkins-x.io
+      - http://chartmuseum.jenkins-x.io
+  - prefix: stable
+    urls:
+      - https://kubernetes-charts.storage.googleapis.com

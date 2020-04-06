@@ -1,9 +1,12 @@
+// +build unit
+
 package config_test
 
 import (
-	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"testing"
+
+	"github.com/ghodss/yaml"
 
 	"github.com/jenkins-x/jx/pkg/config"
 	"github.com/jenkins-x/jx/pkg/tests"
@@ -21,11 +24,13 @@ func TestAdminSecrets(t *testing.T) {
 
 	service := config.AdminSecretsService{}
 	service.Flags.DefaultAdminPassword = "mysecret"
+	service.Flags.KanikoSecret = "kanikosecret"
+
 	err = service.NewAdminSecretsConfig()
 	assert.NoError(t, err)
 
 	secretsFromService := service.Secrets
-	tests.Debugf("%s", secretsFromService)
+	tests.Debugf("%v", secretsFromService)
 
 	assert.Equal(t, secretsFromFile, secretsFromService, "expected admin secret values do not match")
 }

@@ -7,7 +7,7 @@ import (
 	"github.com/jenkins-x/jx/pkg/util"
 )
 
-// CreateChatProvider represents an integration interface to chat
+// ChatProvider represents an integration interface to chat
 type ChatProvider interface {
 	GetChannelMetrics(name string) (*ChannelMetrics, error)
 }

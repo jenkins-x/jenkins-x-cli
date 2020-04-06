@@ -3,21 +3,21 @@ package config
 import (
 	"fmt"
 
-	"gopkg.in/yaml.v2"
+	"github.com/ghodss/yaml"
 )
 
 type Image struct {
-	Repository string `yaml:"repository,omitempty"`
-	Tag        string `yaml:"tag,omitempty"`
+	Repository string `json:"repository,omitempty"`
+	Tag        string `json:"tag,omitempty"`
 }
 
 type Preview struct {
-	Image *Image `yaml:"image,omitempty"`
+	Image *Image `json:"image,omitempty"`
 }
 
 type PreviewValuesConfig struct {
-	ExposeController *ExposeController `yaml:"expose,omitempty"`
-	Preview          *Preview          `yaml:"preview,omitempty"`
+	ExposeController *ExposeController `json:"expose,omitempty"`
+	Preview          *Preview          `json:"preview,omitempty"`
 }
 
 func (c PreviewValuesConfig) String() (string, error) {

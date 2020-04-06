@@ -1,0 +1,47 @@
+pipelineConfig:
+  env:
+    - name: FRUIT
+      value: BANANA
+    - name: GIT_AUTHOR_NAME
+      value: somebodyelse
+  pipelines:
+    overrides:
+      # Replace set-version on pullRequest in any stage/lifecycle with "echo hello"
+      # This shouldn't affect the release pipeline we actually test with.
+      - pipeline: pullRequest
+        name: skaffold-version
+        step:
+          sh: echo hello
+      # Remove post-build from release in the build stage/lifecycle
+      - pipeline: release
+        stage: build
+        name: post-build
+      # Remove container-build from pullRequest in the build stage/lifecycle
+      # This shouldn't affect the release pipeline we actually test with.
+      - pipeline: pullRequest
+        stage: build
+        name: container-build
+      # Replace set-version on release in any stage/lifecycle with a new step.
+      - pipeline: release
+        name: skaffold-version
+        step:
+          command: echo
+          args: ['goodbye']
+          env:
+            - name: DOCKER_REGISTRY
+              value: overriden.docker.io
+      # Add a step before the mvn-deploy step
+      - pipeline: release
+        name: mvn-deploy
+        type: before
+        steps:
+          - sh: echo before mvn deploy
+            name: before-mvn-deploy
+      # Add a step after the skaffold-version step
+      - pipeline: release
+        name: skaffold-version
+        type: after
+        steps:
+          - sh: echo after skaffold version
+            name: after-skaffold-version
+

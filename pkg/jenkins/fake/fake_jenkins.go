@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/jenkins-x/golang-jenkins"
+	gojenkins "github.com/jenkins-x/golang-jenkins"
 )
 
 // FakeJenkins contains the state of the fake JenkinsClient

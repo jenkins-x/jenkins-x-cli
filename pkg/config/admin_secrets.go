@@ -1,16 +1,19 @@
 package config
 
 import (
-	"crypto/sha1"
-	"encoding/base64"
 	"fmt"
+
+	"github.com/ghodss/yaml"
+
+	"io/ioutil"
+	"strings"
+
 	"github.com/jenkins-x/jx/pkg/log"
+	"github.com/jenkins-x/jx/pkg/util"
 	"github.com/pkg/errors"
 	"github.com/sethvargo/go-password/password"
-	"io/ioutil"
 
 	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v2"
 )
 
 const defaultMavenSettings = `<settings>
@@ -20,25 +23,25 @@ const defaultMavenSettings = `<settings>
       <interactiveMode>false</interactiveMode>
       <mirrors>
           <mirror>
-          <id>nexus</id>
-          <mirrorOf>external:*</mirrorOf>
-          <url>http://nexus/repository/maven-group/</url>
+              <id>nexus</id>
+              <mirrorOf>external:*</mirrorOf>
+              <url>http://nexus/repository/maven-group/</url>
           </mirror>
       </mirrors>
       <servers>
           <server>
-          <id>local-nexus</id>
-          <username>admin</username>
-          <password>%s</password>
+              <id>nexus</id>
+              <username>admin</username>
+              <password>%s</password>
           </server>
       </servers>
       <profiles>
           <profile>
               <id>nexus</id>
               <properties>
-                  <altDeploymentRepository>local-nexus::default::http://nexus/repository/maven-snapshots/</altDeploymentRepository>
-                  <altReleaseDeploymentRepository>local-nexus::default::http://nexus/repository/maven-releases/</altReleaseDeploymentRepository>
-                  <altSnapshotDeploymentRepository>local-nexus::default::http://nexus/repository/maven-snapshots/</altSnapshotDeploymentRepository>
+                  <altDeploymentRepository>nexus::default::http://nexus/repository/maven-snapshots/</altDeploymentRepository>
+                  <altReleaseDeploymentRepository>nexus::default::http://nexus/repository/maven-releases/</altReleaseDeploymentRepository>
+                  <altSnapshotDeploymentRepository>nexus::default::http://nexus/repository/maven-snapshots/</altSnapshotDeploymentRepository>
               </properties>
           </profile>
           <profile>
@@ -56,77 +59,77 @@ const defaultMavenSettings = `<settings>
   </settings>
 `
 
-type IngressBasicAuth struct {
-	JXBasicAuth string `yaml:"JXBasicAuth"`
-}
+const allowedSymbols = "~!#%^_+-=?,."
 
 type ChartMuseum struct {
-	ChartMuseumEnv ChartMuseumEnv `yaml:"env"`
+	ChartMuseumEnv ChartMuseumEnv `json:"env"`
 }
 
 type ChartMuseumEnv struct {
-	ChartMuseumSecret ChartMuseumSecret `yaml:"secret"`
+	ChartMuseumSecret ChartMuseumSecret `json:"secret"`
 }
 
 type ChartMuseumSecret struct {
-	User     string `yaml:"BASIC_AUTH_USER"`
-	Password string `yaml:"BASIC_AUTH_PASS"`
+	User     string `json:"BASIC_AUTH_USER"`
+	Password string `json:"BASIC_AUTH_PASS"`
 }
 
 type Grafana struct {
-	GrafanaSecret GrafanaSecret `yaml:"server"`
+	GrafanaSecret GrafanaSecret `json:"server"`
 }
 
 type GrafanaSecret struct {
-	User     string `yaml:"adminUser"`
-	Password string `yaml:"adminPassword"`
+	User     string `json:"adminUser"`
+	Password string `json:"adminPassword"`
 }
 
 type Jenkins struct {
-	JenkinsSecret JenkinsAdminSecret `yaml:"Master"`
+	JenkinsSecret JenkinsAdminSecret `json:"Master"`
 }
 
 type JenkinsAdminSecret struct {
-	Password string `yaml:"AdminPassword"`
+	Password string `json:"AdminPassword"`
 }
 
 type PipelineSecrets struct {
-	MavenSettingsXML string `yaml:"MavenSettingsXML,omitempty"`
+	MavenSettingsXML string `json:"MavenSettingsXML,omitempty"`
+}
+
+// KanikoSecret store the kaniko service account
+type KanikoSecret struct {
+	Data string `json:"Data,omitempty"`
 }
 
 type AdminSecretsConfig struct {
-	IngressBasicAuth string           `yaml:"JXBasicAuth,omitempty"`
-	ChartMuseum      *ChartMuseum     `yaml:"chartmuseum,omitempty"`
-	Grafana          *Grafana         `yaml:"grafana,omitempty"`
-	Jenkins          *Jenkins         `yaml:"jenkins,omitempty"`
-	Nexus            *Nexus           `yaml:"nexus,omitempty"`
-	PipelineSecrets  *PipelineSecrets `yaml:"PipelineSecrets,omitempty"`
+	IngressBasicAuth string           `json:"JXBasicAuth,omitempty"`
+	ChartMuseum      *ChartMuseum     `json:"chartmuseum,omitempty"`
+	Grafana          *Grafana         `json:"grafana,omitempty"`
+	Jenkins          *Jenkins         `json:"jenkins,omitempty"`
+	Nexus            *Nexus           `json:"nexus,omitempty"`
+	PipelineSecrets  *PipelineSecrets `json:"PipelineSecrets,omitempty"`
+	KanikoSecret     *KanikoSecret    `json:"KanikoSecret,omitempty"`
 }
 
 type Nexus struct {
-	DefaultAdminPassword string `yaml:"defaultAdminPassword,omitempty"`
+	DefaultAdminPassword string `json:"defaultAdminPassword,omitempty"`
 }
 
 type AdminSecretsService struct {
-	FileName string
-	Secrets  AdminSecretsConfig
-	Flags    AdminSecretsFlags
+	FileName    string
+	Secrets     AdminSecretsConfig
+	Flags       AdminSecretsFlags
+	ingressAuth BasicAuth
 }
 
 type AdminSecretsFlags struct {
+	DefaultAdminUsername string
 	DefaultAdminPassword string
+	KanikoSecret         string
 }
 
 func (s *AdminSecretsService) AddAdminSecretsValues(cmd *cobra.Command) {
-	cmd.Flags().StringVarP(&s.Flags.DefaultAdminPassword, "default-admin-password", "", "", "the default admin password to access Jenkins, Kubernetes Dashboard, Chartmuseum and Nexus")
-}
-
-func (c AdminSecretsConfig) String() (string, error) {
-	b, err := yaml.Marshal(c)
-	if err != nil {
-		return "", fmt.Errorf("failed to marshall helm values %v", err)
-	}
-	return string(b), nil
+	cmd.Flags().StringVarP(&s.Flags.DefaultAdminPassword, "default-admin-password", "", "", "the default admin password to access Jenkins, Kubernetes Dashboard, ChartMuseum and Nexus")
+	cmd.Flags().StringVarP(&s.Flags.DefaultAdminUsername, "default-admin-username", "", "admin", "the default admin username to access Jenkins, Kubernetes Dashboard, ChartMuseum and Nexus")
 }
 
 func (s *AdminSecretsService) NewAdminSecretsConfig() error {
@@ -136,47 +139,128 @@ func (s *AdminSecretsService) NewAdminSecretsConfig() error {
 		Jenkins:         &Jenkins{},
 		PipelineSecrets: &PipelineSecrets{},
 		Nexus:           &Nexus{},
+		KanikoSecret:    &KanikoSecret{},
 	}
 
 	if s.Flags.DefaultAdminPassword == "" {
-		log.Infof("No default password set, generating a random one\n")
-		s.Flags.DefaultAdminPassword, _ = password.Generate(20, 4, 2, false, true)
+		log.Logger().Debugf("No default password set, generating a random one")
+
+		input := password.GeneratorInput{
+			Symbols: allowedSymbols,
+		}
+
+		generator, err := password.NewGenerator(&input)
+		if err != nil {
+			return errors.Wrap(err, "unable to create password generator")
+		}
+
+		s.Flags.DefaultAdminPassword, _ = generator.Generate(20, 4, 2, false, true)
 	}
 
+	s.setDefaultSecrets()
+	s.NewMavenSettingsXML()
+	s.newIngressBasicAuth()
+	s.newKanikoSecret()
+
+	return nil
+}
+
+func (s *AdminSecretsService) setDefaultSecrets() error {
 	s.Secrets.Jenkins.JenkinsSecret.Password = s.Flags.DefaultAdminPassword
 	s.Secrets.ChartMuseum.ChartMuseumEnv.ChartMuseumSecret.User = "admin"
 	s.Secrets.ChartMuseum.ChartMuseumEnv.ChartMuseumSecret.Password = s.Flags.DefaultAdminPassword
 	s.Secrets.Grafana.GrafanaSecret.User = "admin"
 	s.Secrets.Grafana.GrafanaSecret.Password = s.Flags.DefaultAdminPassword
 	s.Secrets.Nexus.DefaultAdminPassword = s.Flags.DefaultAdminPassword
-	s.Secrets.PipelineSecrets.MavenSettingsXML = fmt.Sprintf(defaultMavenSettings, s.Flags.DefaultAdminPassword)
-	hash := HashSha(s.Flags.DefaultAdminPassword)
-
-	s.Secrets.IngressBasicAuth = fmt.Sprintf("admin:{SHA}%s", hash)
 	return nil
 }
 
-func (s *AdminSecretsService) NewAdminSecretsConfigFromSecret(decryptedSecrets string) error {
+// NewMavenSettingsXML generates the maven settings
+func (s *AdminSecretsService) NewMavenSettingsXML() error {
+	s.Secrets.PipelineSecrets.MavenSettingsXML = fmt.Sprintf(defaultMavenSettings, s.Flags.DefaultAdminPassword)
+	return nil
+}
+
+func (s *AdminSecretsService) NewAdminSecretsConfigFromSecret(decryptedSecretsFile string) error {
 	a := AdminSecretsConfig{}
 
-	data, err := ioutil.ReadFile(decryptedSecrets)
+	data, err := ioutil.ReadFile(decryptedSecretsFile)
 	if err != nil {
 		return errors.Wrap(err, "unable to read file")
 	}
 
-	err = yaml.Unmarshal([]byte(data), &a)
+	err = yaml.Unmarshal(data, &a)
 	if err != nil {
 		return errors.Wrap(err, "unable to unmarshall secrets")
 	}
 
 	s.Secrets = a
 	s.Flags.DefaultAdminPassword = s.Secrets.Jenkins.JenkinsSecret.Password
+
+	s.setDefaultSecrets()
+	s.updateIngressBasicAuth()
+
 	return nil
 }
 
-func HashSha(password string) string {
-	s := sha1.New()
-	s.Write([]byte(password))
-	passwordSum := s.Sum(nil)
-	return base64.StdEncoding.EncodeToString(passwordSum)
+func (s *AdminSecretsService) newKanikoSecret() {
+	s.Secrets.KanikoSecret.Data = s.Flags.KanikoSecret
+}
+
+func (s *AdminSecretsService) newIngressBasicAuth() {
+	password := s.Flags.DefaultAdminPassword
+	username := "admin"
+	s.ingressAuth = BasicAuth{
+		Username: "admin",
+		Password: password,
+	}
+	hash := util.HashPassword(password)
+	s.Secrets.IngressBasicAuth = fmt.Sprintf("%s:{SHA}%s", username, hash)
+}
+
+func (s *AdminSecretsService) updateIngressBasicAuth() {
+	password := s.Flags.DefaultAdminPassword
+	parts := strings.Split(s.Secrets.IngressBasicAuth, ":")
+	username := parts[0]
+	s.ingressAuth = BasicAuth{
+		Username: username,
+		Password: password,
+	}
+}
+
+// JenkinsAuth returns the current basic auth credentials for Jenkins
+func (s *AdminSecretsService) JenkinsAuth() BasicAuth {
+	return BasicAuth{
+		Username: "admin",
+		Password: s.Secrets.Jenkins.JenkinsSecret.Password,
+	}
+}
+
+// IngressAuth returns the current basic auth credentials for Ingress
+func (s *AdminSecretsService) IngressAuth() BasicAuth {
+	return s.ingressAuth
+}
+
+// ChartMuseumAuth returns the current credentials for ChartMuseum
+func (s *AdminSecretsService) ChartMuseumAuth() BasicAuth {
+	return BasicAuth{
+		Username: s.Secrets.ChartMuseum.ChartMuseumEnv.ChartMuseumSecret.User,
+		Password: s.Secrets.ChartMuseum.ChartMuseumEnv.ChartMuseumSecret.Password,
+	}
+}
+
+// GrafanaAuth returns the current credentials for Grafana
+func (s *AdminSecretsService) GrafanaAuth() BasicAuth {
+	return BasicAuth{
+		Username: s.Secrets.Grafana.GrafanaSecret.User,
+		Password: s.Secrets.Grafana.GrafanaSecret.Password,
+	}
+}
+
+// NexusAuth returns the current credentials for Nexus
+func (s *AdminSecretsService) NexusAuth() BasicAuth {
+	return BasicAuth{
+		Username: "admin",
+		Password: s.Secrets.Nexus.DefaultAdminPassword,
+	}
 }

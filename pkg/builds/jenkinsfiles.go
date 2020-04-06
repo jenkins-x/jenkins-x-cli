@@ -4,9 +4,9 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"strings"
 
 	"github.com/jenkins-x/jx/pkg/config"
+	"github.com/jenkins-x/jx/pkg/jenkinsfile"
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -45,38 +45,54 @@ func (j *JenkinsConverter) ToJenkinsfile() (string, error) {
 
 	j.startBlock("stages")
 
-	for _, branchBuild := range projectConfig.Builds {
-		kind := branchBuild.Kind
-		build := &branchBuild.Build
+	pipelines := projectConfig.PipelineConfig
+	if pipelines != nil {
+		for pipelineKind, pipeline := range pipelines.Pipelines.AllMap() {
+			if pipeline == nil {
+				continue
+			}
+			for _, branchBuild := range pipeline.All() {
+				build := branchBuild.Lifecycle
+				if build == nil {
+					continue
+				}
 
-		name := branchBuild.Name
-		if name == "" {
-			name = strings.Title(kind)
+				branchPattern := ""
+
+				switch pipelineKind {
+				case jenkinsfile.PipelineKindRelease:
+					branchPattern = "master"
+				case jenkinsfile.PipelineKindPullRequest:
+					branchPattern = "PR-*"
+				case jenkinsfile.PipelineKindFeature:
+					branchPattern = "feature*"
+				default:
+					return "", fmt.Errorf("unknown pipeline kind %s", pipelineKind)
+				}
+				j.startBlock(fmt.Sprintf(`stage '%s'`, pipelineKind))
+
+				if branchPattern != "" {
+					j.startBlock("when")
+					j.println(fmt.Sprintf(`branch '%s'`, branchPattern))
+					j.endBlock()
+				}
+				j.environmentBlock(pipelines.Env)
+
+				j.startBlock("step")
+				j.startContainer()
+				for _, step := range build.Steps {
+					cmd := step.GetFullCommand()
+					j.println(fmt.Sprintf(`sh "%s"`, cmd))
+				}
+				j.endContainer()
+
+				j.endBlock()
+
+				j.endBlock()
+			}
 		}
-		// TODO hack!
-		branchPattern := "PR-*"
-
-		j.startBlock(fmt.Sprintf(`stage '%s'`, name))
-
-		if branchPattern != "" {
-			j.startBlock("when")
-			j.println(fmt.Sprintf(`branch '%s'`, branchPattern))
-			j.endBlock()
-		}
-		j.environmentBlock(branchBuild.Env)
-
-		j.startBlock("step")
-		j.startContainer()
-		for _, step := range build.Steps {
-			cmd := strings.Join(step.Args, " ")
-			j.println(fmt.Sprintf(`sh "%s"`, cmd))
-		}
-		j.endContainer()
-
-		j.endBlock()
-
-		j.endBlock()
 	}
+
 	j.endBlock()
 	j.endBlock()
 	return j.String(), nil

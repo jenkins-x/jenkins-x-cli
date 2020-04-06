@@ -1,6 +1,7 @@
 package util
 
 import (
+	"fmt"
 	"io"
 	"os"
 	"os/exec"
@@ -8,7 +9,6 @@ import (
 	"time"
 
 	"github.com/cenkalti/backoff"
-	"github.com/pkg/errors"
 )
 
 // Command is a struct containing the details of an external command to be executed
@@ -22,7 +22,31 @@ type Command struct {
 	Timeout            time.Duration
 	Out                io.Writer
 	Err                io.Writer
+	In                 io.Reader
 	Env                map[string]string
+}
+
+// CommandError is the error object encapsulating an error from a Command
+type CommandError struct {
+	Command Command
+	Output  string
+	cause   error
+}
+
+func (c CommandError) Error() string {
+	// sanitise any password arguments before printing the error string. The actual sensitive argument is still present
+	// in the Command object
+	sanitisedArgs := make([]string, len(c.Command.Args))
+	copy(sanitisedArgs, c.Command.Args)
+	for i, arg := range sanitisedArgs {
+		if strings.Contains(strings.ToLower(arg), "password") && i < len(sanitisedArgs)-1 {
+			// sanitise the subsequent argument to any 'password' fields
+			sanitisedArgs[i+1] = "*****"
+		}
+	}
+
+	return fmt.Sprintf("failed to run '%s %s' command in directory '%s', output: '%s'",
+		c.Command.Name, strings.Join(sanitisedArgs, " "), c.Command.Dir, c.Output)
 }
 
 // SetName Setter method for Name to enable use of interface instead of Command struct
@@ -70,7 +94,7 @@ func (c *Command) SetEnv(env map[string]string) {
 	c.Env = env
 }
 
-// CurrentEnv returns the current envrionment variables
+// CurrentEnv returns the current environment variables
 func (c *Command) CurrentEnv() map[string]string {
 	return c.Env
 }
@@ -155,8 +179,24 @@ func (c *Command) RunWithoutRetry() (string, error) {
 	return r, e
 }
 
+func (c *Command) String() string {
+	var builder strings.Builder
+	for k, v := range c.Env {
+		builder.WriteString(k)
+		builder.WriteString("=")
+		builder.WriteString(v)
+		builder.WriteString(" ")
+	}
+	builder.WriteString(c.Name)
+	for _, arg := range c.Args {
+		builder.WriteString(" ")
+		builder.WriteString(arg)
+	}
+	return builder.String()
+}
+
 func (c *Command) run() (string, error) {
-	e := exec.Command(c.Name, c.Args...)
+	e := exec.Command(c.Name, c.Args...) // #nosec
 	if c.Dir != "" {
 		e.Dir = c.Dir
 	}
@@ -187,22 +227,31 @@ func (c *Command) run() (string, error) {
 		e.Stderr = c.Err
 	}
 
+	if c.In != nil {
+		e.Stdin = c.In
+	}
+
 	var text string
 	var err error
 
 	if c.Out != nil {
 		err := e.Run()
 		if err != nil {
-			return text, errors.Wrapf(err, "failed to run '%s %s' command in directory '%s', output: '%s'",
-				c.Name, strings.Join(c.Args, " "), c.Dir, text)
+			return text, CommandError{
+				Command: *c,
+				cause:   err,
+			}
 		}
 	} else {
 		data, err := e.CombinedOutput()
 		output := string(data)
 		text = strings.TrimSpace(output)
 		if err != nil {
-			return text, errors.Wrapf(err, "failed to run '%s %s' command in directory '%s', output: '%s'",
-				c.Name, strings.Join(c.Args, " "), c.Dir, text)
+			return text, CommandError{
+				Command: *c,
+				Output:  text,
+				cause:   err,
+			}
 		}
 	}
 

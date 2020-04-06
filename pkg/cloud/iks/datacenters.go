@@ -2,8 +2,9 @@ package iks
 
 import (
 	"fmt"
-	"github.com/IBM-Cloud/bluemix-go/client"
 	"strings"
+
+	"github.com/IBM-Cloud/bluemix-go/client"
 )
 
 type MachineType struct {
@@ -38,13 +39,13 @@ type VLAN struct {
 }
 
 type MachineTypes interface {
-	GetMachineTypes(zone Zone) ([]MachineType, error)
-	GetMachineType(machinetypearg string, zone Zone) (*MachineType, error)
+	GetMachineTypes(zone Zone, region Region) ([]MachineType, error)
+	GetMachineType(machinetypearg string, zone Zone, region Region) (*MachineType, error)
 }
 
 type VLANs interface {
-	GetVLANs(zone Zone) ([]VLAN, error)
-	GetVLAN(vlanarg string, zone Zone) (*VLAN, error)
+	GetVLANs(zone Zone, region Region) ([]VLAN, error)
+	GetVLAN(vlanarg string, zone Zone, region Region) (*VLAN, error)
 }
 
 type machineTypes struct {
@@ -71,14 +72,15 @@ func newVLANsAPI(c *client.Client) VLANs {
 	}
 }
 
-func (v *machineTypes) fetch(zone Zone) error {
+func (v *machineTypes) fetch(zone Zone, region Region) error {
 	if v.machineTypes == nil {
 		v.machineTypes = make(map[string][]MachineType)
 	}
 	if _, ok := v.machineTypes[zone.ID]; !ok {
 		machineTypes := []MachineType{}
-		headers := make(map[string]string, 1)
+		headers := make(map[string]string, 2)
 		headers["datacenter"] = zone.ID
+		headers["X-Region"] = region.Name
 		_, err := v.Client.Get("/v1/datacenters/"+zone.ID+"/machine-types", &machineTypes, headers)
 		if err != nil {
 			return err
@@ -88,15 +90,15 @@ func (v *machineTypes) fetch(zone Zone) error {
 	return nil
 }
 
-func (v *machineTypes) GetMachineTypes(zone Zone) ([]MachineType, error) {
-	if err := v.fetch(zone); err != nil {
+func (v *machineTypes) GetMachineTypes(zone Zone, region Region) ([]MachineType, error) {
+	if err := v.fetch(zone, region); err != nil {
 		return nil, err
 	}
 	return v.machineTypes[zone.ID], nil
 }
 
-func (v *machineTypes) GetMachineType(machinetypearg string, zone Zone) (*MachineType, error) {
-	if err := v.fetch(zone); err != nil {
+func (v *machineTypes) GetMachineType(machinetypearg string, zone Zone, region Region) (*MachineType, error) {
+	if err := v.fetch(zone, region); err != nil {
 		return nil, err
 	}
 
@@ -108,14 +110,15 @@ func (v *machineTypes) GetMachineType(machinetypearg string, zone Zone) (*Machin
 	return nil, fmt.Errorf("no machine type %q not found in zone %q", machinetypearg, zone.ID)
 }
 
-func (v *vLANs) fetch(zone Zone) error {
+func (v *vLANs) fetch(zone Zone, region Region) error {
 	if v.VLANs == nil {
 		v.VLANs = make(map[string][]VLAN)
 	}
 	if _, ok := v.VLANs[zone.ID]; !ok {
 		vLANs := []VLAN{}
-		headers := make(map[string]string, 1)
+		headers := make(map[string]string, 2)
 		headers["datacenter"] = zone.ID
+		headers["X-Region"] = region.Name
 		_, err := v.Client.Get("/v1/datacenters/"+zone.ID+"/vlans", &vLANs, headers)
 		if err != nil {
 			return err
@@ -125,15 +128,15 @@ func (v *vLANs) fetch(zone Zone) error {
 	return nil
 }
 
-func (v *vLANs) GetVLANs(zone Zone) ([]VLAN, error) {
-	if err := v.fetch(zone); err != nil {
+func (v *vLANs) GetVLANs(zone Zone, region Region) ([]VLAN, error) {
+	if err := v.fetch(zone, region); err != nil {
 		return nil, err
 	}
 	return v.VLANs[zone.ID], nil
 }
 
-func (v *vLANs) GetVLAN(vlanarg string, zone Zone) (*VLAN, error) {
-	if err := v.fetch(zone); err != nil {
+func (v *vLANs) GetVLAN(vlanarg string, zone Zone, region Region) (*VLAN, error) {
+	if err := v.fetch(zone, region); err != nil {
 		return nil, err
 	}
 

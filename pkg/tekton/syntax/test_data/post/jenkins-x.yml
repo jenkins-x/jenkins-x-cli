@@ -1,0 +1,32 @@
+pipelineConfig:
+  pipelines:
+    release:
+      pipeline:
+        agent:
+          image: some-image
+        stages:
+          - name: A Working Stage
+            steps:
+              - command: echo
+                args:
+                  - hello
+                  - world
+            post:
+              - condition: success
+                actions:
+                  - name: mail
+                    options:
+                      to: foo@bar.com
+                      subject: "Yay, it passed"
+              - condition: failure
+                actions:
+                  - name: slack
+                    options:
+                      whatever: the
+                      slack: config
+                      actually: "is. =)"
+              - condition: always
+                actions:
+                  - name: junit
+                    options:
+                      pattern: "target/surefire-reports/**/*.xml"

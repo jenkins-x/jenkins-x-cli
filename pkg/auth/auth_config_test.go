@@ -1,12 +1,13 @@
+// +build unit
+
 package auth_test
 
 import (
-	"io/ioutil"
-	"path/filepath"
 	"testing"
 
 	"github.com/jenkins-x/jx/pkg/auth"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -21,17 +22,10 @@ const (
 
 func TestAuthConfig(t *testing.T) {
 	t.Parallel()
-	dir, err := ioutil.TempDir("", "jx-test-jenkins-config-")
-	assertNoError(t, err)
-
-	fileName := filepath.Join(dir, "jenkins.yaml")
-
-	t.Logf("Using config file %s\n", fileName)
-
 	configTest := ConfigTest{
 		t: t,
 	}
-	configTest.svc, err = auth.NewFileAuthConfigService(fileName)
+	configTest.svc = auth.NewMemoryAuthConfigService()
 
 	config := configTest.Load()
 
@@ -93,7 +87,7 @@ type ConfigTest struct {
 
 func (c *ConfigTest) Load() *auth.AuthConfig {
 	config, err := c.svc.LoadConfig()
-	c.AssertNoError(err)
+	require.NoError(c.t, err)
 	return config
 }
 
@@ -106,26 +100,14 @@ func (c *ConfigTest) SetUserAuth(url string, auth auth.UserAuth) *auth.AuthConfi
 
 func (c *ConfigTest) SaveAndReload() *auth.AuthConfig {
 	err := c.svc.SaveConfig()
-	c.AssertNoError(err)
+	require.NoError(c.t, err)
 	return c.Load()
-}
-
-func (c *ConfigTest) AssertNoError(err error) {
-	if err != nil {
-		assert.Fail(c.t, "Should not have received an error but got: %s", err)
-	}
 }
 
 func assertNoAuth(t *testing.T, config *auth.AuthConfig, url string, user string) {
 	found := config.FindUserAuth(url, user)
 	if found != nil {
 		assert.Fail(t, "Found auth when not expecting it for server %s and user %s", url, user)
-	}
-}
-
-func assertNoError(t *testing.T, err error) {
-	if err != nil {
-		assert.Fail(t, "Should not have received an error but got: %s", err)
 	}
 }
 
